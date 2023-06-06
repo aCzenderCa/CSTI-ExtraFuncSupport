@@ -1,0 +1,16 @@
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+
+namespace ChatTreeLoader.Util
+{
+    public static class SafeRemoveUtil
+    {
+        public static bool SafeRemove<TKey, TVal>(this Dictionary<TKey, TVal> dictionary, [CanBeNull] TKey key)
+        {
+            if (key == null) return false;
+            if (!dictionary.ContainsKey(key)) return false;
+            dictionary.Remove(key);
+            return true;
+        }
+    }
+}
