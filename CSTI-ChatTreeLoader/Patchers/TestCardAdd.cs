@@ -63,6 +63,7 @@ namespace ChatTreeLoader.Patchers
             modEncounter.ThisId = encounter.UniqueID;
             modEncounter.ModEncounterNodes = new[]
             {
+                // ReSharper disable once Unity.IncorrectScriptableObjectInstantiation
                 new ModEncounterNode
                 {
                     EndNode = true,
@@ -89,6 +90,7 @@ namespace ChatTreeLoader.Patchers
                         UseMiniTicks = MiniTicksBehavior.CostsAMiniTick
                     }
                 },
+                // ReSharper disable once Unity.IncorrectScriptableObjectInstantiation
                 new ModEncounterNode
                 {
                     EndNode = true,

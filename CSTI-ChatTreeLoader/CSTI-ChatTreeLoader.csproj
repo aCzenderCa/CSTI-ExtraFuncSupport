@@ -15,9 +15,9 @@
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
         <OutputPath>bin\Debug\</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
@@ -79,17 +79,26 @@
           <HintPath>..\..\Libs\UnityEngine.InputLegacyModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
+        <Reference Include="UnityEngine.JSONSerializeModule">
+          <HintPath>..\..\Libs\UnityEngine.JSONSerializeModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine.UI">
           <HintPath>..\..\Libs\UnityEngine.UI.dll</HintPath>
           <Private>False</Private>
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Behaviors\ChatEncounterExt.cs" />
+        <Compile Include="Behaviors\ModEncounterExt.cs" />
+        <Compile Include="Behaviors\TraderEncounterExt.cs" />
+        <Compile Include="LocalText\LocalBase.cs" />
         <Compile Include="ModEncounter.cs" />
         <Compile Include="Patchers\MainPatcher.cs" />
         <Compile Include="Patchers\TestCardAdd.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Util\BuildPathSave.cs" />
+        <Compile Include="ScriptObjects\ModEncounterBase.cs" />
+        <Compile Include="ScriptObjects\SimpleTraderEncounter.cs" />
         <Compile Include="Util\EnumHelper.cs" />
         <Compile Include="Util\SafeRemoveUtil.cs" />
     </ItemGroup>

@@ -1,34 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using ChatTreeLoader.ScriptObjects;
 using UnityEngine;
 
 namespace ChatTreeLoader
 {
-    public class ModEncounter : ScriptableObject
+    [Serializable]
+    public class ModEncounter : ModEncounterTypedBase<ModEncounter>
     {
-        public static readonly List<ModEncounter> AllModEncounters = new();
         public static readonly Dictionary<string, ModEncounter> ModEncounters = new();
         public string ThisId;
-        public ModEncounterNode[] ModEncounterNodes = {};
+        public ModEncounterNode[] ModEncounterNodes = { };
         public AudioClip DefaultPlayerAudio;
         public AudioClip DefaultEnemyAudio;
 
-        public void Init()
+        public override Dictionary<string, ModEncounter> GetValidEncounterTable()
         {
-            if (!string.IsNullOrEmpty(ThisId)&&!ModEncounters.ContainsKey(ThisId))
+            return ModEncounters;
+        }
+
+        public override void Init()
+        {
+            if (HadInit)
             {
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(ThisId) && !ModEncounters.ContainsKey(ThisId))
+            {
+                HadInit = true;
                 ModEncounters[ThisId] = this;
             }
         }
 
-        private void OnEnable()
+        public override void OnEnable()
         {
-            AllModEncounters.Add(this);
+            
+            if (AllModEncounters.TryGetValue(typeof(ModEncounter), out var modEncounterBases))
+            {
+                modEncounterBases.Add(this);
+            }
+            else
+            {
+                AllModEncounters[typeof(ModEncounter)] = new List<ModEncounterBase> {this};
+            }
         }
     }
 
     [Serializable]
-    public class ModEncounterNode
+    public class ModEncounterNode : ScriptableObject
     {
         public GeneralCondition Condition;
         public bool EndNode;

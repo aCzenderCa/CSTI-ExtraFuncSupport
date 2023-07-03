@@ -1,0 +1,6 @@
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\bin\Release\ChatTreeLoader.dll
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\bin\Release\ChatTreeLoader.pdb
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\obj\Release\ChatTreeLoader.csproj.AssemblyReference.cache
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\obj\Release\ChatTreeLoader.csproj.CoreCompileInputs.cache
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\obj\Release\ChatTreeLoader.dll
+D:\JetbrainsIdeProjects\RiderProjects\CSTI-LuaActionSupport\ChatTreeLoader\obj\Release\ChatTreeLoader.pdb
