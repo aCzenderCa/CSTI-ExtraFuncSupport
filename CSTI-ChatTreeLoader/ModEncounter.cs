@@ -51,7 +51,9 @@ namespace ChatTreeLoader
     public class ModEncounterNode : ScriptableObject
     {
         public GeneralCondition Condition;
+        public GeneralCondition ShowCondition;
         public bool EndNode;
+        public bool BackNode;
         public LocalizedString PlayerText;
         public float PlayerTextDuration;
         public AudioClip PlayerAudio;
@@ -62,5 +64,6 @@ namespace ChatTreeLoader
         public ModEncounterNode[] ChildrenEncounterNodes;
         public CardAction NodeEffect;
         public bool HasNodeEffect;
+        public bool DontShowEnd;
     }
 }

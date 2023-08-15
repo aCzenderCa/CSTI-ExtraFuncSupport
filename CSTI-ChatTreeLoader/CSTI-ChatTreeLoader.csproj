@@ -89,16 +89,22 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Attr\Note.cs" />
         <Compile Include="Behaviors\ChatEncounterExt.cs" />
         <Compile Include="Behaviors\ModEncounterExt.cs" />
         <Compile Include="Behaviors\TraderEncounterExt.cs" />
         <Compile Include="LocalText\LocalBase.cs" />
         <Compile Include="ModEncounter.cs" />
+        <Compile Include="Patchers\ExtraStatImpl.cs" />
         <Compile Include="Patchers\MainPatcher.cs" />
+        <Compile Include="Patchers\NormalPatcher.cs" />
+        <Compile Include="Patchers\SlotChangePatcher.cs" />
         <Compile Include="Patchers\TestCardAdd.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="ScriptObjects\ExtraStatTable.cs" />
         <Compile Include="ScriptObjects\ModEncounterBase.cs" />
         <Compile Include="ScriptObjects\SimpleTraderEncounter.cs" />
+        <Compile Include="Util\ActHelper.cs" />
         <Compile Include="Util\EnumHelper.cs" />
         <Compile Include="Util\SafeRemoveUtil.cs" />
     </ItemGroup>

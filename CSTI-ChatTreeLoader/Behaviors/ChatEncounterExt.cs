@@ -13,7 +13,7 @@ namespace ChatTreeLoader.Behaviors
     public class ChatEncounterExt : ModEncounterExtBase<ModEncounter>
     {
         private static readonly Regex ActionRecordRegex = new(
-            @"__\{(?<EncounterId>.+?)\}ModEncounter\.Infos__\{EncounterPath\:(?<path>(?<pathStartNode>\d+)(\.(?<pathNodes>\d+))*)\}");
+            @"__\{(?<EncounterId>.+?)\}ModEncounter\.Infos__\{EncounterPath:(?<path>(?<pathStartNode>\d+)(\.(?<pathNodes>\d+))*)\}");
 
         public static readonly Dictionary<string, List<int>> CurPaths = new();
         public static readonly Dictionary<string, ModEncounterNode[]> CurPathChildrenNodes = new();
@@ -59,7 +59,7 @@ namespace ChatTreeLoader.Behaviors
             }
 
             CurPaths[encounterModelUniqueID] = nodePath;
-            var curNode = nodePath.Aggregate((ModEncounterNode) null,
+            var curNode = nodePath.Aggregate((ModEncounterNode)null,
                 (current, i) =>
                     current == null ? modEncounter.ModEncounterNodes[i] : current.ChildrenEncounterNodes[i]);
 
@@ -74,7 +74,10 @@ namespace ChatTreeLoader.Behaviors
                                           .ConditionsValid(false, GameManager.Instance.CurrentEnvironmentCard) ||
                                       curNodes[index].Condition
                                           .ConditionsValid(false, GameManager.Instance.CurrentWeatherCard);
-                button.gameObject.SetActive(true);
+                button.gameObject.SetActive(curNodes[index].ShowCondition
+                                                .ConditionsValid(false, GameManager.Instance.CurrentEnvironmentCard) ||
+                                            curNodes[index].ShowCondition
+                                                .ConditionsValid(false, GameManager.Instance.CurrentWeatherCard));
             });
         }
 
@@ -82,18 +85,29 @@ namespace ChatTreeLoader.Behaviors
         {
             var instanceCurrentEnvironmentCard = GameManager.Instance.CurrentEnvironmentCard;
             var encounterModelUniqueID = __instance.CurrentEncounter.EncounterModel.UniqueID;
+            var modEncounter = ModEncounter.ModEncounters[encounterModelUniqueID];
+            var toRemove = instanceCurrentEnvironmentCard.DroppedCollections.Keys.FirstOrDefault(key =>
+                ActionRecordRegex.IsMatch(key));
 
             __instance.AddLogSeparator();
-            CurPaths[encounterModelUniqueID].Add(_Action);
+            var curPath = CurPaths[encounterModelUniqueID];
+            curPath.Add(_Action);
             CurPathNode[encounterModelUniqueID] = CurPathChildrenNodes[encounterModelUniqueID][_Action];
             CurPathChildrenNodes[encounterModelUniqueID] = CurPathNode[encounterModelUniqueID].ChildrenEncounterNodes;
             var modEncounterNode = CurPathNode[encounterModelUniqueID];
-            if (modEncounterNode.EndNode)
+            if (modEncounterNode.BackNode && curPath.Count >= 2)
+            {
+                curPath.RemoveRange(curPath.Count - 2, 2);
+                var curNode = curPath.Aggregate<int, ModEncounterNode>(null, (current, i) =>
+                    current == null ? modEncounter.ModEncounterNodes[i] : current.ChildrenEncounterNodes[i]);
+                CurPathNode[encounterModelUniqueID] = curNode;
+                CurPathChildrenNodes[encounterModelUniqueID] = curNode ? curNode.ChildrenEncounterNodes : null;
+            }
+
+            if (!modEncounterNode.BackNode && modEncounterNode.EndNode)
             {
                 __instance.CurrentEncounter.EncounterResult = EncounterResult.PlayerDemoralized;
-                instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(
-                    instanceCurrentEnvironmentCard.DroppedCollections.Keys.FirstOrDefault(key =>
-                        ActionRecordRegex.IsMatch(key)));
+                instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(toRemove);
                 if (modEncounterNode.HasNodeEffect)
                 {
                     __instance.ContinueButton.interactable = false;
@@ -106,6 +120,9 @@ namespace ChatTreeLoader.Behaviors
                     __instance.ContinueButton.interactable = false;
                     GameManager.Instance.StartCoroutine(WaitCloseWindow(__instance));
                 }
+
+                if (modEncounterNode.NodeEffect.ProducedCards.Any(DropEncounterOrEvent) ||
+                    modEncounterNode.DontShowEnd) return;
 
                 GraphicsManager.Instance.CardsDestroyed.Setup(
                     modEncounterNode.PlayerText + "\n\n" + modEncounterNode.EnemyText, modEncounterNode.Title);
@@ -139,9 +156,6 @@ namespace ChatTreeLoader.Behaviors
                     GameManager.Instance.CurrentEnvironmentCard));
             }
 
-            var toRemove =
-                instanceCurrentEnvironmentCard.DroppedCollections.Keys.FirstOrDefault(key =>
-                    ActionRecordRegex.IsMatch(key));
             instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(toRemove);
             instanceCurrentEnvironmentCard.DroppedCollections[
                 __instance.CurrentEncounter.EncounterModel.SavePath<ModEncounter>()] = Vector2Int.one;
@@ -176,6 +190,12 @@ namespace ChatTreeLoader.Behaviors
 
             popup.OngoingEncounter = false;
             popup.gameObject.SetActive(false);
+        }
+
+        public static bool DropEncounterOrEvent(CardsDropCollection collection)
+        {
+            return collection.DroppedEncounter || collection.DroppedCards.Any(drop =>
+                drop.DroppedCard && drop.DroppedCard.CardType == CardTypes.Event);
         }
     }
 
