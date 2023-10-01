@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using NLua;
@@ -21,6 +22,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         static CardActionPatcher()
         {
             LuaRuntime.State.OpenLibs();
+            LuaRuntime.State.Encoding = Encoding.UTF8;
             LuaRuntime["debug"] = DebugBridge;
             LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
             LuaRuntime["GetCard"] = DataAccessTool.GetCardDataIns;
