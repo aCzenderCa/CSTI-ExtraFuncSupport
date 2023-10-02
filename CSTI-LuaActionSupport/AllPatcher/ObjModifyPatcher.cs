@@ -35,7 +35,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 try
                 {
                     string? ret;
-                    _ = lua.DoString("LuaCodeDesc", value);
+                    _ = lua.DoString(value, "LuaCodeDesc");
                     if (luaScriptRetValues.CheckKey(nameof(ret), out ret))
                     {
                         __result = ret ?? __result;
