@@ -111,17 +111,17 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
 
         public object debug
         {
-            set => Debug.LogFormat("[Debug] {0}",value is LuaTable table ? TableToString(table) : value);
+            set => Debug.LogFormat("[Debug] {0}", value is LuaTable table ? TableToString(table) : value);
         }
 
         public object warn
         {
-            set => Debug.LogWarningFormat("[Warn] {0}",value is LuaTable table ? TableToString(table) : value);
+            set => Debug.LogWarningFormat("[Warn] {0}", value is LuaTable table ? TableToString(table) : value);
         }
 
         public object error
         {
-            set => Debug.LogErrorFormat("[Error] {0}",value is LuaTable table ? TableToString(table) : value);
+            set => Debug.LogErrorFormat("[Error] {0}", value is LuaTable table ? TableToString(table) : value);
         }
 
         public static string TableToString(LuaTable table, List<LuaTable>? cache = null)
@@ -651,6 +651,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                 default:
                     throw new ArgumentOutOfRangeException(nameof(types), types, null);
             }
+
             CardBase.UpdateVisibility();
         }
 
@@ -667,7 +668,20 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             {
                 i += 1;
                 CardActionPatcher.Enumerators.Add(GameManager.Instance.AddCard(cardData, CardBase, true,
-                    cardData.CardType == CardTypes.Liquid ? new TransferedDurabilities {Liquid = amount} : null, true,
+                    cardData.CardType == CardTypes.Liquid
+                        ? new TransferedDurabilities
+                        {
+                            Liquid = amount,
+                            Fuel =  cardData.FuelCapacity,
+                            Usage = cardData.UsageDurability,
+                            Special1 = cardData.SpecialDurability1,
+                            Special2 = cardData.SpecialDurability2,
+                            Special3 = cardData.SpecialDurability3,
+                            Special4 = cardData.SpecialDurability4,
+                            Spoilage = cardData.SpoilageTime,
+                            ConsumableCharges = cardData.Progress
+                        }
+                        : null, true,
                     SpawningLiquid.Empty, Vector2Int.zero, false));
             } while (i < amount && cardData.CardType != CardTypes.Liquid);
         }

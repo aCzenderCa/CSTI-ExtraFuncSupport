@@ -210,10 +210,13 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         {
             if (UniqueIDScriptable is CardData cardData)
             {
-                for (int i = 0; i < count; i++)
+                if (cardData.CardType != CardTypes.Liquid)
                 {
-                    Enumerators.Add(GameManager.Instance.AddCard(cardData, null, true,
-                        new TransferedDurabilities(), true, SpawningLiquid.Empty, Vector2Int.zero, false));
+                    for (int i = 0; i < count; i++)
+                    {
+                        Enumerators.Add(GameManager.Instance.AddCard(cardData, null, true,
+                            null, true, SpawningLiquid.Empty, Vector2Int.zero, false));
+                    }
                 }
 
                 return;
