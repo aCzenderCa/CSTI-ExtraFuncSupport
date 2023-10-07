@@ -38,6 +38,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime[nameof(SaveGlobal)] = (Action<string, object>) SaveGlobal;
             LuaRuntime[nameof(LoadCurrentSlot)] = (Func<string, object?>) LoadCurrentSlot;
             LuaRuntime[nameof(LoadGlobal)] = (Func<string, object?>) LoadGlobal;
+            LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
             LuaRuntime.NewTable("DontAccessByRawPath__UseByCSharp___________ModData");
             LuaRuntime.LoadCLRPackage();
             ModData = LuaRuntime.GetTable("DontAccessByRawPath__UseByCSharp___________ModData");

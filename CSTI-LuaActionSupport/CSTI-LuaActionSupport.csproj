@@ -215,6 +215,7 @@
         <Compile Include="LuaCodeHelper\DataChangeHelper.cs" />
         <Compile Include="LuaCodeHelper\DeconstructHelper.cs" />
         <Compile Include="LuaCodeHelper\EnumHelper.cs" />
+        <Compile Include="LuaCodeHelper\LuaEnum.cs" />
         <Compile Include="LuaCodeHelper\LuaScriptRetValues.cs" />
         <Compile Include="LuaCodeHelper\SimpleAccessTool.cs" />
         <Compile Include="LuaSupportRuntime.cs" />
