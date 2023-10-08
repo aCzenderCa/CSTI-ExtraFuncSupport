@@ -16,7 +16,9 @@ namespace CSTI_LuaActionSupport
         public static readonly string ModInfo = "ModInfo.json";
         public static readonly string LuaInit = "LuaInit";
         public static readonly string LuaOnGameLoad = "LuaOnGameLoad";
+        public static readonly string LuaOnGameSave = "LuaOnGameSave";
         public static readonly List<string> LuaFilesOnGameLoad = new();
+        public static readonly List<string> LuaFilesOnGameSave = new();
 
         static LuaSupportRuntime()
         {

@@ -90,7 +90,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     GSlotSaveData.Remove(_Index);
                 }
 
-                OnSave(__instance, -1);
+                OnSave(__instance, -1, false);
             }
             catch (Exception e)
             {
@@ -98,8 +98,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
             }
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGameDataToFile))]
-        public static void OnSave(GameLoad __instance, int _Index)
+        [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGame))]
+        public static void OnSave(GameLoad __instance, int _GameIndex, bool _Checkpoint)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 buf.WriteTo(saveDataFile);
                 saveDataFile.Flush();
 
-                if (GSlotSaveData.TryGetValue(_Index, out var save))
+                if (GSlotSaveData.TryGetValue(_GameIndex, out var save))
                 {
                     using (BeginSaveEnv(binaryWriter1, 0))
                     {
@@ -145,10 +145,10 @@ namespace CSTI_LuaActionSupport.AllPatcher
                         }
                     }
 
-                    SaveTo(__instance.Games[_Index].MainData, buf1);
-                    if (GameManager.Instance.IsSafeMode)
+                    SaveTo(__instance.Games[_GameIndex].MainData, buf1);
+                    if (_Checkpoint)
                     {
-                        SaveTo(__instance.Games[_Index].CheckpointData, buf1);
+                        SaveTo(__instance.Games[_GameIndex].CheckpointData, buf1);
                     }
                 }
             }

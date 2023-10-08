@@ -42,6 +42,12 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaFilesOnGameLoad.Do(pat => { initRuntime.DoString(File.ReadAllText(pat)); });
         }
 
+        [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGame))]
+        public static void DoOnGameSave()
+        {
+            LuaFilesOnGameSave.Do(pat => { LuaRuntime.DoString(File.ReadAllText(pat)); });
+        }
+
         [HarmonyPostfix, HarmonyPatch(typeof(UniqueIDScriptable), nameof(UniqueIDScriptable.ClearDict))]
         public static void DoOnAfterModLoader()
         {
@@ -66,6 +72,12 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 if (Directory.Exists(Path.Combine(directory, LuaOnGameLoad)))
                 {
                     LuaFilesOnGameLoad.AddRange(Directory.EnumerateFiles(Path.Combine(directory, LuaOnGameLoad),
+                        "*.lua"));
+                }
+
+                if (Directory.Exists(Path.Combine(directory, LuaOnGameSave)))
+                {
+                    LuaFilesOnGameSave.AddRange(Directory.EnumerateFiles(Path.Combine(directory, LuaOnGameSave),
                         "*.lua"));
                 }
             }
