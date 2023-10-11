@@ -34,6 +34,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime["CountCardInBase"] = DataAccessTool.CountCardInBaseIns;
             LuaRuntime["CountCardInHand"] = DataAccessTool.CountCardInHandIns;
             LuaRuntime["CountCardInLocation"] = DataAccessTool.CountCardInLocationIns;
+            LuaRuntime[nameof(DataAccessTool.CountCardEquipped)] = (Func<string, int>) DataAccessTool.CountCardEquipped;
             LuaRuntime[nameof(SaveCurrentSlot)] = (Action<string, object>) SaveCurrentSlot;
             LuaRuntime[nameof(SaveGlobal)] = (Action<string, object>) SaveGlobal;
             LuaRuntime[nameof(LoadCurrentSlot)] = (Func<string, object?>) LoadCurrentSlot;

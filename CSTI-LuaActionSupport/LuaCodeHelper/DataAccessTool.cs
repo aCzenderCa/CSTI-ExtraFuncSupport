@@ -16,7 +16,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
     {
         public static readonly Func<string, CardData> GetCardDataIns = GetCard;
         public static readonly Func<string, CardAccessBridge> GetCardAccessBridgeIns = GetGameCard;
-        public static readonly Func<string, List<CardAccessBridge>> GetCardAccessBridgesIns = GetGameCards;
+        public static readonly Func<string, LuaTable, List<CardAccessBridge>> GetCardAccessBridgesIns = GetGameCards;
         public static readonly Func<string, GameStat> GetStatModelIns = GetStat;
         public static readonly Func<string, GameStatAccessBridge> GetGameStatAccessBridgeIns = GetGameStat;
         public static readonly Func<string, bool, bool, int> CountCardOnBoardIns = CountCardOnBoard;
@@ -45,11 +45,23 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
         }
 
-        private static List<CardAccessBridge> GetGameCards(string id)
+        private static List<CardAccessBridge> GetGameCards(string id, LuaTable? ext = null)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true, _Results: list);
-            return list.Select(cardBase => new CardAccessBridge(cardBase)).ToList();
+
+            return ((string?) ext?["type"] switch
+            {
+                nameof(SlotsTypes.Equipment) => list.Where(cardBase =>
+                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment),
+                nameof(SlotsTypes.Hand) => list.Where(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Hand),
+                nameof(SlotsTypes.Base) => list.Where(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base),
+                nameof(SlotsTypes.Location) => list.Where(cardBase =>
+                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
+                nameof(SlotsTypes.Inventory) => list.Where(cardBase =>
+                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
+                _ => list
+            }).Select(cardBase => new CardAccessBridge(cardBase)).ToList();
         }
 
         private static List<CardAccessBridge> GetGameCardsByTag(string tag)
@@ -74,6 +86,13 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             GameManager.Instance.CardIsInBase(UniqueIDScriptable.GetFromID<CardData>(id), _CountInInventories, false,
                 list);
             return list.Count;
+        }
+
+        public static int CountCardEquipped(string id)
+        {
+            var list = new List<InGameCardBase>();
+            GameManager.Instance.CardIsInBase(UniqueIDScriptable.GetFromID<CardData>(id), false, false, list);
+            return list.Count(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment);
         }
 
         private static int CountCardInHand(string id, bool _CountInInventories = true)
@@ -174,6 +193,11 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         public static readonly Regex KVDataCheck = new(@"zender\.luaSupportData\.\{(?<key>.+?)\}:\{(?<val>.+?)\}");
 
         public SimpleUniqueAccess? CardModel => CardBase != null ? new SimpleUniqueAccess(CardBase.CardModel) : null;
+
+        public bool IsEquipped => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Equipment;
+        public bool IsInHand => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Hand;
+        public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
+        public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
 
         public List<CardAccessBridge>? this[long index]
         {
