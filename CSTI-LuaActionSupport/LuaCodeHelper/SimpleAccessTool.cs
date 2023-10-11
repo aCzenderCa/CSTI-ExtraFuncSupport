@@ -49,7 +49,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
     {
         public abstract object? AccessObj { get; }
 
-        public object? this[string key]
+        public virtual object? this[string key]
         {
             get
             {
@@ -138,6 +138,40 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         private static readonly Action<UniqueIDScriptable>? GenEncounter;
         public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
 
+        public override object? this[string key]
+        {
+            get
+            {
+                if (UniqueIDScriptable is not CardData cardData) return base[key];
+
+                if (cardData.TimeValues.FirstOrDefault(objective => objective.ObjectiveName == key) is
+                    { } timeObjective)
+                {
+                    return timeObjective.Value;
+                }
+
+                if (cardData.StatValues.FirstOrDefault(objective => objective.ObjectiveName == key) is
+                    { } statSubObjective)
+                {
+                    return statSubObjective.StatCondition.Stat;
+                }
+
+                if (cardData.CardsOnBoard.FirstOrDefault(objective => objective.ObjectiveName == key) is
+                    { } cardOnBoardSubObjective)
+                {
+                    return cardOnBoardSubObjective.Card;
+                }
+
+                if (cardData.TagsOnBoard.FirstOrDefault(objective => objective.ObjectiveName == key) is
+                    { } tagOnBoardSubObjective)
+                {
+                    return tagOnBoardSubObjective.Tag;
+                }
+
+                return base[key];
+            }
+        }
+
         static SimpleUniqueAccess()
         {
             var encounter = AccessTools.TypeByName("Encounter");
@@ -188,12 +222,14 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                     }
                     else
                     {
-                        SaveCurrentSlot(SaveKey,new Dictionary<string,object>
+                        SaveCurrentSlot(SaveKey, new Dictionary<string, object>
                         {
-                            {cardData.UniqueID,new Dictionary<string,object>
                             {
-                                {nameof(CardData.CardDescription), value}
-                            }}
+                                cardData.UniqueID, new Dictionary<string, object>
+                                {
+                                    {nameof(CardData.CardDescription), value}
+                                }
+                            }
                         });
                     }
                 }

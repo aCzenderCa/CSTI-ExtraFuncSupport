@@ -173,6 +173,8 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
 
         public static readonly Regex KVDataCheck = new(@"zender\.luaSupportData\.\{(?<key>.+?)\}:\{(?<val>.+?)\}");
 
+        public SimpleUniqueAccess? CardModel => CardBase != null ? new SimpleUniqueAccess(CardBase.CardModel) : null;
+
         public List<CardAccessBridge>? this[long index]
         {
             get
@@ -252,6 +254,8 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return CardBase.CardModel.CardTags.Any(cardTag =>
                 cardTag.name == tag || cardTag.InGameName.DefaultText == tag);
         }
+
+        public int TravelCardIndex => CardBase != null ? CardBase.TravelCardIndex : -1;
 
         public string Id => CardBase != null ? CardBase.CardModel.UniqueID : "";
 
@@ -672,7 +676,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                         ? new TransferedDurabilities
                         {
                             Liquid = amount,
-                            Fuel =  cardData.FuelCapacity,
+                            Fuel = cardData.FuelCapacity,
                             Usage = cardData.UsageDurability,
                             Special1 = cardData.SpecialDurability1,
                             Special2 = cardData.SpecialDurability2,
