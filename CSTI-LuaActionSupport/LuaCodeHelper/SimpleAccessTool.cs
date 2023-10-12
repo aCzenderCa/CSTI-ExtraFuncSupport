@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using NLua;
 using UnityEngine;
 using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
+using Random = UnityEngine.Random;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper
 {
@@ -134,7 +136,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
 
     public class SimpleUniqueAccess : CommonSimpleAccess
     {
-        private readonly UniqueIDScriptable UniqueIDScriptable;
+        public readonly UniqueIDScriptable UniqueIDScriptable;
         private static readonly Action<UniqueIDScriptable>? GenEncounter;
         public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
 
@@ -236,21 +238,55 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             }
         }
 
-        public void Gen()
-        {
-            Gen(1);
-        }
-
-        public void Gen(int count)
+        public void Gen(int count = 1, LuaTable? ext = null)
         {
             if (UniqueIDScriptable is CardData cardData)
             {
+                var tDur = new TransferedDurabilities
+                {
+                    Usage = cardData.UsageDurability,
+                    Fuel = cardData.FuelCapacity,
+                    Spoilage = cardData.SpoilageTime,
+                    ConsumableCharges = cardData.Progress,
+                    Special1 = cardData.SpecialDurability1,
+                    Special2 = cardData.SpecialDurability2,
+                    Special3 = cardData.SpecialDurability3,
+                    Special4 = cardData.SpecialDurability4,
+                    Liquid = Random.Range(cardData.DefaultLiquidContained.Quantity[0],
+                        cardData.DefaultLiquidContained.Quantity[1])
+                };
+                var sLiq = new SpawningLiquid
+                {
+                    LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
+                    StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
+                };
+                if (ext != null)
+                {
+                    tDur.Usage.FloatValue = ext[nameof(TransferedDurabilities.Usage)] as float? ?? 0;
+                    tDur.Fuel.FloatValue = ext[nameof(TransferedDurabilities.Fuel)] as float? ?? 0;
+                    tDur.Spoilage.FloatValue = ext[nameof(TransferedDurabilities.Spoilage)] as float? ?? 0;
+                    tDur.ConsumableCharges.FloatValue =
+                        ext[nameof(TransferedDurabilities.ConsumableCharges)] as float? ?? 0;
+                    tDur.Liquid = ext[nameof(TransferedDurabilities.Liquid)] as float? ?? 0;
+                    tDur.Special1.FloatValue = ext[nameof(TransferedDurabilities.Special1)] as float? ?? 0;
+                    tDur.Special2.FloatValue = ext[nameof(TransferedDurabilities.Special2)] as float? ?? 0;
+                    tDur.Special3.FloatValue = ext[nameof(TransferedDurabilities.Special3)] as float? ?? 0;
+                    tDur.Special4.FloatValue = ext[nameof(TransferedDurabilities.Special4)] as float? ?? 0;
+
+                    var card =
+                        (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
+                    sLiq.LiquidCard = card;
+                    sLiq.StayEmpty = !card;
+
+                    count = ext[nameof(count)] as int? ?? count;
+                }
+
                 if (cardData.CardType != CardTypes.Liquid)
                 {
-                    for (int i = 0; i < count; i++)
+                    for (var i = 0; i < count; i++)
                     {
                         Enumerators.Add(GameManager.Instance.AddCard(cardData, null, true,
-                            null, true, SpawningLiquid.Empty, Vector2Int.zero, false));
+                            tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false));
                     }
                 }
 

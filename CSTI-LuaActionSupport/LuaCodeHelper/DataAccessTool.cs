@@ -14,22 +14,12 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
 {
     public static class DataAccessTool
     {
-        public static readonly Func<string, CardData> GetCardDataIns = GetCard;
-        public static readonly Func<string, CardAccessBridge> GetCardAccessBridgeIns = GetGameCard;
-        public static readonly Func<string, LuaTable, List<CardAccessBridge>> GetCardAccessBridgesIns = GetGameCards;
-        public static readonly Func<string, GameStat> GetStatModelIns = GetStat;
-        public static readonly Func<string, GameStatAccessBridge> GetGameStatAccessBridgeIns = GetGameStat;
-        public static readonly Func<string, bool, bool, int> CountCardOnBoardIns = CountCardOnBoard;
-        public static readonly Func<string, bool, int> CountCardInBaseIns = CountCardInBase;
-        public static readonly Func<string, bool, int> CountCardInHandIns = CountCardInHand;
-        public static readonly Func<string, bool, int> CountCardInLocationIns = CountCardInLocation;
-
-        private static CardData GetCard(string id)
+        public static CardData GetCard(string id)
         {
             return UniqueIDScriptable.GetFromID<CardData>(id);
         }
 
-        private static CardAccessBridge GetGameCard(string id)
+        public static CardAccessBridge GetGameCard(string id)
         {
             var inGameCardBases = new List<InGameCardBase>();
             GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true,
@@ -37,7 +27,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return new CardAccessBridge(inGameCardBases.FirstOrDefault());
         }
 
-        private static CardAccessBridge? GetGameCardByTag(string tag)
+        public static CardAccessBridge? GetGameCardByTag(string tag)
         {
             var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
                 cardBase.CardModel.CardTags.Any(cardTag =>
@@ -45,7 +35,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
         }
 
-        private static List<CardAccessBridge> GetGameCards(string id, LuaTable? ext = null)
+        public static List<CardAccessBridge> GetGameCards(string id, LuaTable? ext = null)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true, _Results: list);
@@ -64,7 +54,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             }).Select(cardBase => new CardAccessBridge(cardBase)).ToList();
         }
 
-        private static List<CardAccessBridge> GetGameCardsByTag(string tag)
+        public static List<CardAccessBridge> GetGameCardsByTag(string tag)
         {
             var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
                 cardBase.CardModel.CardTags.Any(cardTag =>
@@ -72,7 +62,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return inGameCardBases.Select(cardBase => new CardAccessBridge(cardBase)).ToList();
         }
 
-        private static int CountCardOnBoard(string id, bool _CountInInventories = true, bool _CountInBackground = false)
+        public static int CountCardOnBoard(string id, bool _CountInInventories = true, bool _CountInBackground = false)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true,
@@ -80,7 +70,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return list.Count;
         }
 
-        private static int CountCardInBase(string id, bool _CountInInventories = true)
+        public static int CountCardInBase(string id, bool _CountInInventories = true)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsInBase(UniqueIDScriptable.GetFromID<CardData>(id), _CountInInventories, false,
@@ -95,14 +85,14 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return list.Count(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment);
         }
 
-        private static int CountCardInHand(string id, bool _CountInInventories = true)
+        public static int CountCardInHand(string id, bool _CountInInventories = true)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsInHand(UniqueIDScriptable.GetFromID<CardData>(id), _CountInInventories, list);
             return list.Count;
         }
 
-        private static int CountCardInLocation(string id, bool _CountInInventories = true)
+        public static int CountCardInLocation(string id, bool _CountInInventories = true)
         {
             var list = new List<InGameCardBase>();
             GameManager.Instance.CardIsInLocation(UniqueIDScriptable.GetFromID<CardData>(id), _CountInInventories,
@@ -110,12 +100,12 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return list.Count;
         }
 
-        private static GameStat GetStat(string id)
+        public static GameStat GetStat(string id)
         {
             return UniqueIDScriptable.GetFromID<GameStat>(id);
         }
 
-        private static GameStatAccessBridge GetGameStat(string id)
+        public static GameStatAccessBridge GetGameStat(string id)
         {
             return new GameStatAccessBridge(GameManager.Instance.StatsDict[GetStat(id)]);
         }
@@ -683,7 +673,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             CardBase.UpdateVisibility();
         }
 
-        public void AddCard(string id, int amount = 1)
+        public void AddCard(string id, int count = 1, LuaTable? ext = null)
         {
             var cardData = UniqueIDScriptable.GetFromID<CardData>(id);
             if (cardData == null)
@@ -691,27 +681,52 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                 return;
             }
 
+            var tDur = new TransferedDurabilities
+            {
+                Liquid = cardData.CardType == CardTypes.Liquid ? count : 0,
+                Fuel = cardData.FuelCapacity,
+                Usage = cardData.UsageDurability,
+                Special1 = cardData.SpecialDurability1,
+                Special2 = cardData.SpecialDurability2,
+                Special3 = cardData.SpecialDurability3,
+                Special4 = cardData.SpecialDurability4,
+                Spoilage = cardData.SpoilageTime,
+                ConsumableCharges = cardData.Progress
+            };
+            var sLiq = new SpawningLiquid
+            {
+                LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
+                StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
+            };
+            if (ext != null)
+            {
+                tDur.Usage.FloatValue = ext[nameof(TransferedDurabilities.Usage)] as float? ?? 0;
+                tDur.Fuel.FloatValue = ext[nameof(TransferedDurabilities.Fuel)] as float? ?? 0;
+                tDur.Spoilage.FloatValue = ext[nameof(TransferedDurabilities.Spoilage)] as float? ?? 0;
+                tDur.ConsumableCharges.FloatValue =
+                    ext[nameof(TransferedDurabilities.ConsumableCharges)] as float? ?? 0;
+                tDur.Liquid = ext[nameof(TransferedDurabilities.Liquid)] as float? ?? 0;
+                tDur.Special1.FloatValue = ext[nameof(TransferedDurabilities.Special1)] as float? ?? 0;
+                tDur.Special2.FloatValue = ext[nameof(TransferedDurabilities.Special2)] as float? ?? 0;
+                tDur.Special3.FloatValue = ext[nameof(TransferedDurabilities.Special3)] as float? ?? 0;
+                tDur.Special4.FloatValue = ext[nameof(TransferedDurabilities.Special4)] as float? ?? 0;
+
+                var card =
+                    (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
+                sLiq.LiquidCard = card;
+                sLiq.StayEmpty = !card;
+
+                count = ext[nameof(count)] as int? ?? count;
+            }
+
             var i = 0;
             do
             {
                 i += 1;
-                CardActionPatcher.Enumerators.Add(GameManager.Instance.AddCard(cardData, CardBase, true,
-                    cardData.CardType == CardTypes.Liquid
-                        ? new TransferedDurabilities
-                        {
-                            Liquid = amount,
-                            Fuel = cardData.FuelCapacity,
-                            Usage = cardData.UsageDurability,
-                            Special1 = cardData.SpecialDurability1,
-                            Special2 = cardData.SpecialDurability2,
-                            Special3 = cardData.SpecialDurability3,
-                            Special4 = cardData.SpecialDurability4,
-                            Spoilage = cardData.SpoilageTime,
-                            ConsumableCharges = cardData.Progress
-                        }
-                        : null, true,
-                    SpawningLiquid.Empty, Vector2Int.zero, false));
-            } while (i < amount && cardData.CardType != CardTypes.Liquid);
+
+                CardActionPatcher.Enumerators.Add(GameManager.Instance.AddCard(cardData, CardBase, true, tDur, true,
+                    sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z,-1), false));
+            } while (i < count && cardData.CardType != CardTypes.Liquid);
         }
 
         public void Remove(bool doDrop)

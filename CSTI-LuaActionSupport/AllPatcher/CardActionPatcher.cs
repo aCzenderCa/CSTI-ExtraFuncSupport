@@ -25,24 +25,37 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime.State.Encoding = Encoding.UTF8;
             LuaRuntime["debug"] = DebugBridge;
             LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
-            LuaRuntime["GetCard"] = DataAccessTool.GetCardDataIns;
-            LuaRuntime["GetGameCard"] = DataAccessTool.GetCardAccessBridgeIns;
-            LuaRuntime["GetGameCards"] = DataAccessTool.GetCardAccessBridgesIns;
-            LuaRuntime["GetStat"] = DataAccessTool.GetStatModelIns;
-            LuaRuntime["GetGameStat"] = DataAccessTool.GetGameStatAccessBridgeIns;
-            LuaRuntime["CountCardOnBoard"] = DataAccessTool.CountCardOnBoardIns;
-            LuaRuntime["CountCardInBase"] = DataAccessTool.CountCardInBaseIns;
-            LuaRuntime["CountCardInHand"] = DataAccessTool.CountCardInHandIns;
-            LuaRuntime["CountCardInLocation"] = DataAccessTool.CountCardInLocationIns;
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetCard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetCard)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCard)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCardByTag),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCardByTag)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCards),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCards)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCardsByTag),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCardsByTag)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetStat),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetStat)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameStat),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameStat)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardOnBoard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardOnBoard)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInBase),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInBase)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInHand),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInHand)));
+            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInLocation),
+                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInLocation)));
             LuaRuntime[nameof(DataAccessTool.CountCardEquipped)] = (Func<string, int>) DataAccessTool.CountCardEquipped;
             LuaRuntime[nameof(SaveCurrentSlot)] = (Action<string, object>) SaveCurrentSlot;
             LuaRuntime[nameof(SaveGlobal)] = (Action<string, object>) SaveGlobal;
             LuaRuntime[nameof(LoadCurrentSlot)] = (Func<string, object?>) LoadCurrentSlot;
             LuaRuntime[nameof(LoadGlobal)] = (Func<string, object?>) LoadGlobal;
             LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
-            LuaRuntime.NewTable("DontAccessByRawPath__UseByCSharp___________ModData");
             LuaRuntime.LoadCLRPackage();
-            ModData = LuaRuntime.GetTable("DontAccessByRawPath__UseByCSharp___________ModData");
+            LuaRuntime.NewTable(nameof(ModData));
+            ModData = LuaRuntime.GetTable(nameof(ModData));
             LuaRuntime[nameof(ModData)] = ModData;
         }
 
