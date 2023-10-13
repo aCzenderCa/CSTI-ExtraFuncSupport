@@ -113,8 +113,11 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     binaryWriter.Write(GSaveData.Count);
                     foreach (var (key, node) in GSaveData)
                     {
-                        binaryWriter.Write(key);
-                        node.Save(binaryWriter);
+                        if (node.NodeType!=DataNode.DataNodeType.Nil)
+                        {
+                            binaryWriter.Write(key);
+                            node.Save(binaryWriter);
+                        }
                     }
                 }
 
@@ -140,8 +143,11 @@ namespace CSTI_LuaActionSupport.AllPatcher
                         binaryWriter1.Write(save.Count);
                         foreach (var (key, node) in save)
                         {
-                            binaryWriter1.Write(key);
-                            node.Save(binaryWriter1);
+                            if (node.NodeType!=DataNode.DataNodeType.Nil)
+                            {
+                                binaryWriter.Write(key);
+                                node.Save(binaryWriter);
+                            }
                         }
                     }
 

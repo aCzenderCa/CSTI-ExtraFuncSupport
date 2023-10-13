@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using NLua;
@@ -252,13 +253,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
-                    waitTime = result switch
-                    {
-                        double d => Mathf.RoundToInt((float) d),
-                        float f => Mathf.RoundToInt(f),
-                        int i => i,
-                        _ => waitTime
-                    };
+                    waitTime.TryMod(result);
                 }
             }
             catch (Exception e)
@@ -307,13 +302,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
-                    waitTime = result switch
-                    {
-                        double d => Mathf.RoundToInt((float) d),
-                        float f => Mathf.RoundToInt(f),
-                        int i => i,
-                        _ => waitTime
-                    };
+                    waitTime.TryMod(result);
                 }
             }
             catch (Exception e)

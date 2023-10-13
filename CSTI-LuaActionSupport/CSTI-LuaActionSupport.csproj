@@ -211,6 +211,7 @@
         <Compile Include="AllPatcher\ObjModifyPatcher.cs" />
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
+        <Compile Include="Helper\TryModifyPack.cs" />
         <Compile Include="LuaCodeHelper\DataAccessTool.cs" />
         <Compile Include="LuaCodeHelper\DataChangeHelper.cs" />
         <Compile Include="LuaCodeHelper\DeconstructHelper.cs" />

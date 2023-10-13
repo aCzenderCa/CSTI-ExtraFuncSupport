@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CSTI_LuaActionSupport.Helper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -98,15 +99,15 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                 {
                     if (fieldInfo.FieldType == typeof(float))
                     {
-                        fieldInfo.SetValue(AccessObj, (float) value);
+                        fieldInfo.SetValue(AccessObj, value.TryFloat());
                     }
                     else if (fieldInfo.FieldType == typeof(int))
                     {
-                        fieldInfo.SetValue(AccessObj, (int) value);
+                        fieldInfo.SetValue(AccessObj, value.TryInt());
                     }
                     else if (fieldInfo.FieldType == typeof(long))
                     {
-                        fieldInfo.SetValue(AccessObj, (long) value);
+                        fieldInfo.SetValue(AccessObj, value.TryLong());
                     }
 
                     return;
@@ -260,26 +261,25 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                     LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
                     StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
                 };
-                if (ext != null)
-                {
-                    tDur.Usage.FloatValue = ext[nameof(TransferedDurabilities.Usage)] as float? ?? 0;
-                    tDur.Fuel.FloatValue = ext[nameof(TransferedDurabilities.Fuel)] as float? ?? 0;
-                    tDur.Spoilage.FloatValue = ext[nameof(TransferedDurabilities.Spoilage)] as float? ?? 0;
-                    tDur.ConsumableCharges.FloatValue =
-                        ext[nameof(TransferedDurabilities.ConsumableCharges)] as float? ?? 0;
-                    tDur.Liquid = ext[nameof(TransferedDurabilities.Liquid)] as float? ?? 0;
-                    tDur.Special1.FloatValue = ext[nameof(TransferedDurabilities.Special1)] as float? ?? 0;
-                    tDur.Special2.FloatValue = ext[nameof(TransferedDurabilities.Special2)] as float? ?? 0;
-                    tDur.Special3.FloatValue = ext[nameof(TransferedDurabilities.Special3)] as float? ?? 0;
-                    tDur.Special4.FloatValue = ext[nameof(TransferedDurabilities.Special4)] as float? ?? 0;
+            if (ext != null)
+            {
+                tDur.Usage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Usage)]);
+                tDur.Fuel.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Fuel)]);
+                tDur.Spoilage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Spoilage)]);
+                tDur.ConsumableCharges.FloatValue.TryMod(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
+                tDur.Liquid.TryMod(ext[nameof(TransferedDurabilities.Liquid)]);
+                tDur.Special1.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special1)]);
+                tDur.Special2.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special2)]);
+                tDur.Special3.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special3)]);
+                tDur.Special4.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special4)]);
 
-                    var card =
-                        (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
-                    sLiq.LiquidCard = card;
-                    sLiq.StayEmpty = !card;
+                var card =
+                    (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
+                sLiq.LiquidCard = card;
+                sLiq.StayEmpty = !card;
 
-                    count = ext[nameof(count)] as int? ?? count;
-                }
+                count.TryMod(ext[nameof(count)]);
+            }
 
                 if (cardData.CardType != CardTypes.Liquid)
                 {
