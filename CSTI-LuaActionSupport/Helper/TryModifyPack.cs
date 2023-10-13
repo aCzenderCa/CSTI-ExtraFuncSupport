@@ -2,7 +2,7 @@
 {
     public static class TryModifyPack
     {
-        public static void TryMod(this ref float self, object? o)
+        public static void TryModBy(this ref float self, object? o)
         {
             if (o is double or long or float)
             {
@@ -10,7 +10,7 @@
             }
         }
 
-        public static void TryMod(this ref int self, object? o)
+        public static void TryModBy(this ref int self, object? o)
         {
             if (o is double or long or float or int)
             {

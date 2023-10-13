@@ -190,6 +190,55 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
         public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
 
+        public bool CheckInventory(LuaTable table)
+        {
+            var check = false;
+            var i = 1;
+            while (true)
+            {
+                if (table[i] is not { } o) break;
+                switch (o)
+                {
+                    case string uid:
+                        check |= HasInInventory(uid);
+                        break;
+                    case LuaTable cond:
+                    {
+                        var _uid = cond["uid"] is string s ? s : null;
+                        var needCount = cond["needCount"].TryInt();
+                        if (_uid is not null)
+                        {
+                            check |= HasInInventory(_uid, needCount);
+                        }
+
+                        break;
+                    }
+                }
+
+                i++;
+            }
+
+            return check;
+        }
+
+        public bool CheckInventory(params string[] uid)
+        {
+            return uid.All(s => HasInInventory(s));
+        }
+
+        public bool HasInInventory(string uid, long needCount = 0)
+        {
+            if (CardBase == null) return false;
+            if (!CardBase.IsInventoryCard) return false;
+            if (UniqueIDScriptable.GetFromID<CardData>(uid) is not { } card) return false;
+            if (needCount <= 0)
+            {
+                return CardBase.CardsInInventory.Any(slot => slot.CardModel.UniqueID == uid);
+            }
+
+            return CardBase.InventoryCount(card) > needCount;
+        }
+
         public List<CardAccessBridge>? this[long index]
         {
             get
@@ -701,22 +750,22 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             };
             if (ext != null)
             {
-                tDur.Usage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Usage)]);
-                tDur.Fuel.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Fuel)]);
-                tDur.Spoilage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Spoilage)]);
-                tDur.ConsumableCharges.FloatValue.TryMod(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
-                tDur.Liquid.TryMod(ext[nameof(TransferedDurabilities.Liquid)]);
-                tDur.Special1.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special1)]);
-                tDur.Special2.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special2)]);
-                tDur.Special3.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special3)]);
-                tDur.Special4.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special4)]);
+                tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
+                tDur.Fuel.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Fuel)]);
+                tDur.Spoilage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Spoilage)]);
+                tDur.ConsumableCharges.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
+                tDur.Liquid.TryModBy(ext[nameof(TransferedDurabilities.Liquid)]);
+                tDur.Special1.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special1)]);
+                tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
+                tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
+                tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
 
                 var card =
                     (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
                 sLiq.LiquidCard = card;
                 sLiq.StayEmpty = !card;
 
-                count.TryMod(ext[nameof(count)]);
+                count.TryModBy(ext[nameof(count)]);
             }
 
             var i = 0;

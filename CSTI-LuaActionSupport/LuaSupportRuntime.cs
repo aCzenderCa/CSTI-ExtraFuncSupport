@@ -26,6 +26,7 @@ namespace CSTI_LuaActionSupport
             HarmonyInstance.PatchAll(typeof(OnGameLoad));
             HarmonyInstance.PatchAll(typeof(SavePatcher));
             HarmonyInstance.PatchAll(typeof(ObjModifyPatcher));
+            HarmonyInstance.PatchAll(typeof(LuaRegister));
         }
 
         private static void LoadLuaSave()

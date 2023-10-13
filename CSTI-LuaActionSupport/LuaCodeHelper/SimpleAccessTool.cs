@@ -263,22 +263,22 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                 };
             if (ext != null)
             {
-                tDur.Usage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Usage)]);
-                tDur.Fuel.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Fuel)]);
-                tDur.Spoilage.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Spoilage)]);
-                tDur.ConsumableCharges.FloatValue.TryMod(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
-                tDur.Liquid.TryMod(ext[nameof(TransferedDurabilities.Liquid)]);
-                tDur.Special1.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special1)]);
-                tDur.Special2.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special2)]);
-                tDur.Special3.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special3)]);
-                tDur.Special4.FloatValue.TryMod(ext[nameof(TransferedDurabilities.Special4)]);
+                tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
+                tDur.Fuel.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Fuel)]);
+                tDur.Spoilage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Spoilage)]);
+                tDur.ConsumableCharges.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
+                tDur.Liquid.TryModBy(ext[nameof(TransferedDurabilities.Liquid)]);
+                tDur.Special1.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special1)]);
+                tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
+                tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
+                tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
 
                 var card =
                     (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
                 sLiq.LiquidCard = card;
                 sLiq.StayEmpty = !card;
 
-                count.TryMod(ext[nameof(count)]);
+                count.TryModBy(ext[nameof(count)]);
             }
 
                 if (cardData.CardType != CardTypes.Liquid)

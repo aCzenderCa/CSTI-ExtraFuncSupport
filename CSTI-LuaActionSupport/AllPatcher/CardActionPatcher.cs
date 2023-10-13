@@ -5,6 +5,8 @@ using System.IO;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using static CSTI_LuaActionSupport.LuaCodeHelper.DataAccessTool;
+using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -26,34 +28,44 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime.State.Encoding = Encoding.UTF8;
             LuaRuntime["debug"] = DebugBridge;
             LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetCard),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetCard)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCard),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCard)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCardByTag),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCardByTag)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCards),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCards)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameCardsByTag),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameCardsByTag)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetStat),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetStat)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.GetGameStat),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.GetGameStat)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardOnBoard),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardOnBoard)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInBase),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInBase)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInHand),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInHand)));
-            LuaRuntime.RegisterFunction(nameof(DataAccessTool.CountCardInLocation),
-                AccessTools.Method(typeof(DataAccessTool), nameof(DataAccessTool.CountCardInLocation)));
-            LuaRuntime[nameof(DataAccessTool.CountCardEquipped)] = (Func<string, int>) DataAccessTool.CountCardEquipped;
-            LuaRuntime[nameof(SaveCurrentSlot)] = (Action<string, object>) SaveCurrentSlot;
-            LuaRuntime[nameof(SaveGlobal)] = (Action<string, object>) SaveGlobal;
-            LuaRuntime[nameof(LoadCurrentSlot)] = (Func<string, object?>) LoadCurrentSlot;
-            LuaRuntime[nameof(LoadGlobal)] = (Func<string, object?>) LoadGlobal;
+            LuaRuntime.RegisterFunction(nameof(GetCard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetCard)));
+            LuaRuntime.RegisterFunction(nameof(GetGameCard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCard)));
+            LuaRuntime.RegisterFunction(nameof(GetGameCardByTag),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCardByTag)));
+            LuaRuntime.RegisterFunction(nameof(GetGameCards),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCards)));
+            LuaRuntime.RegisterFunction(nameof(GetGameCardsByTag),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCardsByTag)));
+            LuaRuntime.RegisterFunction(nameof(GetStat),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetStat)));
+            LuaRuntime.RegisterFunction(nameof(GetGameStat),
+                AccessTools.Method(typeof(DataAccessTool), nameof(GetGameStat)));
+            LuaRuntime.RegisterFunction(nameof(CountCardOnBoard),
+                AccessTools.Method(typeof(DataAccessTool), nameof(CountCardOnBoard)));
+            LuaRuntime.RegisterFunction(nameof(CountCardInBase),
+                AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInBase)));
+            LuaRuntime.RegisterFunction(nameof(CountCardInHand),
+                AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInHand)));
+            LuaRuntime.RegisterFunction(nameof(CountCardInLocation),
+                AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInLocation)));
+            LuaRuntime.RegisterFunction(nameof(CountCardEquipped),
+                AccessTools.Method(typeof(DataAccessTool), nameof(CountCardEquipped)));
+            
+            
+            LuaRuntime.RegisterFunction(nameof(SaveCurrentSlot),
+                AccessTools.Method(typeof(CardActionPatcher), nameof(SaveCurrentSlot)));
+            LuaRuntime.RegisterFunction(nameof(SaveGlobal),
+                AccessTools.Method(typeof(CardActionPatcher), nameof(SaveGlobal)));
+            LuaRuntime.RegisterFunction(nameof(LoadCurrentSlot),
+                AccessTools.Method(typeof(CardActionPatcher), nameof(LoadCurrentSlot)));
+            LuaRuntime.RegisterFunction(nameof(LoadGlobal),
+                AccessTools.Method(typeof(CardActionPatcher), nameof(LoadGlobal)));
+            
+            
             LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
+            LuaRuntime[nameof(Register)] = Register;
             LuaRuntime.LoadCLRPackage();
             LuaRuntime.NewTable(nameof(ModData));
             ModData = LuaRuntime.GetTable(nameof(ModData));
@@ -208,6 +220,16 @@ namespace CSTI_LuaActionSupport.AllPatcher
             }
         }
 
+        [HarmonyPostfix, HarmonyPatch(typeof(CardAction), nameof(CardAction.WillHaveAnEffect))]
+        public static void LuaActionWillHaveAnEffect(CardAction __instance, ref bool __result)
+        {
+            if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true)
+            {
+                __result = true;
+            }
+        }
+
+
         [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ActionRoutine))]
         public static void LuaCardAction(CardAction _Action, InGameCardBase _ReceivingCard, GameManager __instance,
             ref IEnumerator __result)
@@ -253,7 +275,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
-                    waitTime.TryMod(result);
+                    waitTime.TryModBy(result);
                 }
             }
             catch (Exception e)
@@ -261,20 +283,11 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 Debug.LogError(e);
             }
 
-            var buf = new List<IEnumerator>(Enumerators);
-            Enumerators.Clear();
-            var queue = new Queue<CoroutineController>();
-            foreach (var enumerator in buf)
-            {
-                __instance.StartCoroutineEx(enumerator, out var controller);
-                queue.Enqueue(controller);
-            }
+            var queue = __instance.ProcessCache();
 
             if (waitTime > 0)
             {
-                __instance.StartCoroutineEx(__instance.SpendDaytimePoints(waitTime, true, true, false, _ReceivingCard,
-                    FadeToBlackTypes.None, "", false, false, null, null, null), out var controller);
-                queue.Enqueue(controller);
+                queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
             }
 
             while (queue.Count > 0)
@@ -302,7 +315,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
-                    waitTime.TryMod(result);
+                    waitTime.TryModBy(result);
                 }
             }
             catch (Exception e)
@@ -310,20 +323,11 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 Debug.LogError(e);
             }
 
-            var buf = new List<IEnumerator>(Enumerators);
-            Enumerators.Clear();
-            var queue = new Queue<CoroutineController>();
-            foreach (var enumerator in buf)
-            {
-                __instance.StartCoroutineEx(enumerator, out var controller);
-                queue.Enqueue(controller);
-            }
+            var queue = __instance.ProcessCache();
 
             if (waitTime > 0)
             {
-                __instance.StartCoroutineEx(__instance.SpendDaytimePoints(waitTime, true, true, false, _ReceivingCard,
-                    FadeToBlackTypes.None, "", false, false, null, null, null), out var controller);
-                queue.Enqueue(controller);
+                queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
             }
 
             while (queue.Count > 0)
