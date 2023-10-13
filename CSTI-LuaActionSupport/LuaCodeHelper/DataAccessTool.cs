@@ -239,6 +239,13 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return CardBase.InventoryCount(card) > needCount;
         }
 
+        public CardAccessBridge? LiquidInventory()
+        {
+            if (CardBase == null) return null;
+            if (CardBase.LiquidEmpty) return null;
+            return new CardAccessBridge(CardBase.ContainedLiquid);
+        }
+
         public List<CardAccessBridge>? this[long index]
         {
             get

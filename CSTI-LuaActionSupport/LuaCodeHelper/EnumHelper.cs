@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper
 {
@@ -14,6 +15,19 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             while (enumerator.MoveNext())
             {
                 yield return enumerator.Current;
+            }
+        }
+
+        public static IEnumerator Concat(this IEnumerator enumerator, IEnumerator other)
+        {
+            while (enumerator.MoveNext())
+            {
+                yield return enumerator.Current;
+            }
+
+            while (other.MoveNext())
+            {
+                yield return other.Current;
             }
         }
     }

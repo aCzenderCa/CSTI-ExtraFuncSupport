@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -157,8 +158,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
         [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CardDescription))]
         public static void LuaCardDescription(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
         {
-            if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardDescription), __instance.CardModel.UniqueID,
-                    out var regs)) return;
+            if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardDescription),
+                    __instance.CardModel.UniqueID, out var regs)) return;
             foreach (var luaFunction in regs)
             {
                 try
@@ -172,6 +173,82 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 catch (Exception e)
                 {
                     Debug.LogWarning(e);
+                }
+            }
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ChangeStatValue))]
+        public static void LuaChangeStat(GameManager __instance, InGameStat _Stat, float _Value,
+            StatModification _Modification, ref IEnumerator __result)
+        {
+            if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatValue),
+                    _Stat.StatModel.UniqueID, out _)) return;
+
+            __result = __result.Concat(Inner(__instance));
+            return;
+
+            IEnumerator Inner(GameManager instance)
+            {
+                if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatValue),
+                        _Stat.StatModel.UniqueID, out var regs)) yield break;
+                foreach (var luaFunction in regs)
+                {
+                    try
+                    {
+                        luaFunction.Call(instance, new GameStatAccessBridge(_Stat), _Value, _Modification);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning(e);
+                    }
+                }
+
+                var queue = instance.ProcessCache();
+                while (queue.Count > 0)
+                {
+                    var coroutineController = queue.Dequeue();
+                    while (coroutineController.state == CoroutineState.Running)
+                    {
+                        yield return null;
+                    }
+                }
+            }
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ChangeStatRate))]
+        public static void LuaChangeStatRate(GameManager __instance, InGameStat _Stat, float _Rate,
+            StatModification _Modification, ref IEnumerator __result)
+        {
+            if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatRate),
+                    _Stat.StatModel.UniqueID, out _)) return;
+
+            __result = __result.Concat(Inner(__instance));
+            return;
+
+            IEnumerator Inner(GameManager instance)
+            {
+                if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatRate),
+                        _Stat.StatModel.UniqueID, out var regs)) yield break;
+                foreach (var luaFunction in regs)
+                {
+                    try
+                    {
+                        luaFunction.Call(instance, new GameStatAccessBridge(_Stat), _Rate, _Modification);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning(e);
+                    }
+                }
+
+                var queue = instance.ProcessCache();
+                while (queue.Count > 0)
+                {
+                    var coroutineController = queue.Dequeue();
+                    while (coroutineController.state == CoroutineState.Running)
+                    {
+                        yield return null;
+                    }
                 }
             }
         }
