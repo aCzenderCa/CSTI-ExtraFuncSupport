@@ -1,19 +1,39 @@
-﻿using CSTI_LuaActionSupport.AllPatcher;
+﻿using System;
+using CSTI_LuaActionSupport.AllPatcher;
+using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper
 {
     public static class DataChangeHelper
     {
-        public static void ChangeStatValueTo(this GameManager gameManager, InGameStat inGameStat, float val)
+        public static void ChangeStatValueTo(this GameManager gameManager, InGameStat inGameStat, float _Value)
         {
-            if (val == 0 || inGameStat == null)
+            if (_Value == 0 || inGameStat == null)
             {
                 return;
             }
 
             var preVal = inGameStat.SimpleCurrentValue;
-            inGameStat.CurrentBaseValue = val - inGameStat.GlobalModifiedValue -
+
+            if (Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatValue),
+                    inGameStat.StatModel.UniqueID, out var luaFunctions))
+            {
+                var mod = _Value - preVal;
+                foreach (var luaFunction in luaFunctions)
+                {
+                    try
+                    {
+                        luaFunction.Call(gameManager, inGameStat, mod, StatModification.Permanent);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning(e);
+                    }
+                }
+            }
+
+            inGameStat.CurrentBaseValue = _Value - inGameStat.GlobalModifiedValue -
                                           (gameManager.NotInBase ? 0 : inGameStat.AtBaseModifiedValue);
             if (inGameStat.StatModel.MinMaxValue != Vector2.zero)
             {
@@ -24,14 +44,32 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             CardActionPatcher.Enumerators.Add(gameManager.UpdateStatStatuses(inGameStat, preVal, null));
         }
 
-        public static void ChangeStatRateTo(this GameManager gameManager, InGameStat inGameStat, float val)
+        public static void ChangeStatRateTo(this GameManager gameManager, InGameStat inGameStat, float _Rate)
         {
-            if (val == 0 || inGameStat == null)
+            if (_Rate == 0 || inGameStat == null)
             {
                 return;
             }
 
-            inGameStat.CurrentBaseRate = val - inGameStat.GlobalModifiedRate -
+
+            if (Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatRate),
+                    inGameStat.StatModel.UniqueID, out var luaFunctions))
+            {
+                var mod = _Rate - inGameStat.SimpleRatePerTick;
+                foreach (var luaFunction in luaFunctions)
+                {
+                    try
+                    {
+                        luaFunction.Call(gameManager, inGameStat, mod, StatModification.Permanent);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning(e);
+                    }
+                }
+            }
+
+            inGameStat.CurrentBaseRate = _Rate - inGameStat.GlobalModifiedRate -
                                          (gameManager.NotInBase ? 0 : inGameStat.AtBaseModifiedRate);
             if (inGameStat.StatModel.MinMaxRate != Vector2.zero)
             {
