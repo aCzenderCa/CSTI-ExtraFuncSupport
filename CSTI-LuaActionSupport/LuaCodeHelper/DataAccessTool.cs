@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
+using gfoidl.Base64;
 using NLua;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
@@ -329,6 +331,49 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         public int TravelCardIndex => CardBase != null ? CardBase.TravelCardIndex : -1;
 
         public string Id => CardBase != null ? CardBase.CardModel.UniqueID : "";
+
+        private DataNode? _dataNode;
+        private static readonly Regex DataNodeReg = new(@"LNbt\|\>(?<nbt>.+?)\<");
+
+        public CardActionPatcher.DataNodeTableAccessBridge? Data
+        {
+            get
+            {
+                if (CardBase == null) return null;
+                if (_dataNode is {NodeType: DataNode.DataNodeType.Table}) goto end;
+                foreach (var key in CardBase.DroppedCollections.Keys)
+                {
+                    if (DataNodeReg.Match(key) is not { } match) continue;
+                    using var memoryStream =
+                        new MemoryStream(Base64.Default.Decode(match.Groups["nbt"].Value.AsSpan()));
+                    var binaryReader = new BinaryReader(memoryStream);
+                    _dataNode = DataNode.Load(binaryReader);
+                    break;
+                }
+
+                end: ;
+                return _dataNode is {NodeType: DataNode.DataNodeType.Table}
+                    ? new CardActionPatcher.DataNodeTableAccessBridge(_dataNode.Value.table)
+                    : null;
+            }
+        }
+
+        public void InitData()
+        {
+            _dataNode = new DataNode(new Dictionary<string, DataNode>());
+        }
+
+        public void SaveData()
+        {
+            if (CardBase == null) return;
+            if (_dataNode is not {NodeType: DataNode.DataNodeType.Table}) return;
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+            _dataNode.Value.Save(binaryWriter);
+            var array = memoryStream.ToArray();
+            memoryStream.Close();
+            CardBase.DroppedCollections[Base64.Default.Encode(array)] = Vector2Int.zero;
+        }
 
         public float Spoilage
         {

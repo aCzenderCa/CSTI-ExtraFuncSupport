@@ -20,7 +20,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             if (__instance.AllEndgameLogs.Count > 0 && __instance.AllEndgameLogs[0].CategoryID == LuaLongTimeSaveId)
             {
                 GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex] = new Dictionary<string, DataNode>();
-                var data = Base64.Default.Decode(__instance.AllEndgameLogs[0].LogText.ToCharArray());
+                var data = Base64.Default.Decode(__instance.AllEndgameLogs[0].LogText.AsSpan());
                 var saveFileReader = new BinaryReader(new MemoryStream(data));
 
                 using (BeginLoadEnv(saveFileReader, out _, 0))

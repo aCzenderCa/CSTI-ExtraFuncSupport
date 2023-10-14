@@ -261,25 +261,25 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                     LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
                     StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
                 };
-            if (ext != null)
-            {
-                tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
-                tDur.Fuel.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Fuel)]);
-                tDur.Spoilage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Spoilage)]);
-                tDur.ConsumableCharges.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
-                tDur.Liquid.TryModBy(ext[nameof(TransferedDurabilities.Liquid)]);
-                tDur.Special1.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special1)]);
-                tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
-                tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
-                tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
+                if (ext != null)
+                {
+                    tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
+                    tDur.Fuel.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Fuel)]);
+                    tDur.Spoilage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Spoilage)]);
+                    tDur.ConsumableCharges.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.ConsumableCharges)]);
+                    tDur.Liquid.TryModBy(ext[nameof(TransferedDurabilities.Liquid)]);
+                    tDur.Special1.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special1)]);
+                    tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
+                    tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
+                    tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
 
-                var card =
-                    (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
-                sLiq.LiquidCard = card;
-                sLiq.StayEmpty = !card;
+                    var card =
+                        (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
+                    sLiq.LiquidCard = card;
+                    sLiq.StayEmpty = !card;
 
-                count.TryModBy(ext[nameof(count)]);
-            }
+                    count.TryModBy(ext[nameof(count)]);
+                }
 
                 if (cardData.CardType != CardTypes.Liquid)
                 {

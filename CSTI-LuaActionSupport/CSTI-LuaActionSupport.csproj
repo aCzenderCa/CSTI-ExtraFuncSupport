@@ -226,6 +226,7 @@
         <Compile Include="UIStruct\CustomUIManager.cs" />
     </ItemGroup>
     <ItemGroup>
+        <Content Include="..\ReadMe.md"/>
       <Content Include="FodyWeavers.xml" />
       <Content Include="luaActionReadMe.docx">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
