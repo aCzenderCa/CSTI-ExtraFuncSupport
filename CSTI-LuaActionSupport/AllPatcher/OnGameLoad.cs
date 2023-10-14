@@ -33,35 +33,6 @@ namespace CSTI_LuaActionSupport.AllPatcher
                         GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex][key] = DataNode.Load(saveFileReader);
                     }
                 }
-                
-                if (CurrentGSlotSaveData().TryGetValue(StatCache, out var statCache))
-                {
-                    foreach (var (key,value) in statCache.table!)
-                    {
-                        if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
-                        Vector2? statMinMaxValue = null;
-                        Vector2? statMinMaxRate = null;
-                        foreach (var (field, fVal) in value.table!)
-                        {
-                            switch (field)
-                            {
-                                case nameof(GameStat.MinMaxValue):
-                                    statMinMaxValue = stat.MinMaxValue;
-                                    stat.MinMaxValue = fVal.vector2;
-                                    break;
-                                case nameof(GameStat.MinMaxRate):
-                                    statMinMaxRate = stat.MinMaxRate;
-                                    stat.MinMaxRate = fVal.vector2;
-                                    break;
-                            }
-                        }
-
-                        if (statMinMaxValue != null)
-                            value.table[nameof(GameStat.MinMaxValue)] = new DataNode(statMinMaxValue.Value);
-                        if (statMinMaxRate != null)
-                            value.table[nameof(GameStat.MinMaxRate)] = new DataNode(statMinMaxRate.Value);
-                    }
-                }
             }
         }
 
@@ -70,6 +41,26 @@ namespace CSTI_LuaActionSupport.AllPatcher
         {
             var initRuntime = InitRuntime(__instance);
             LuaFilesOnGameLoad.Do(pat => { initRuntime.DoString(File.ReadAllText(pat)); });
+                
+            if (CurrentGSlotSaveData().TryGetValue(StatCache, out var statCache))
+            {
+                foreach (var (key,value) in statCache.table!)
+                {
+                    if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
+                    foreach (var (field, fVal) in value.table!)
+                    {
+                        switch (field)
+                        {
+                            case nameof(GameStat.MinMaxValue):
+                                stat.MinMaxValue = fVal.vector2;
+                                break;
+                            case nameof(GameStat.MinMaxRate):
+                                stat.MinMaxRate = fVal.vector2;
+                                break;
+                        }
+                    }
+                }
+            }
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGame))]

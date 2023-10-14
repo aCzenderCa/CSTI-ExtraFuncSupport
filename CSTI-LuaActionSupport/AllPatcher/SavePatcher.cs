@@ -105,29 +105,22 @@ namespace CSTI_LuaActionSupport.AllPatcher
         {
             try
             {
-                var currentGSlotSaveData = CurrentGSlotSaveData();
-                if (!currentGSlotSaveData.TryGetValue(StatCache, out var statCache))
-                {
-                    currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>());
-                }
-                else
+                if (CurrentGSlotSaveData().TryGetValue(StatCache, out var statCache))
                 {
                     foreach (var (key, value) in statCache.table!)
                     {
                         if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
                         Vector2? statMinMaxValue = null;
                         Vector2? statMinMaxRate = null;
-                        foreach (var (field, fVal) in value.table!)
+                        foreach (var (field, _) in value.table!)
                         {
                             switch (field)
                             {
                                 case nameof(GameStat.MinMaxValue):
                                     statMinMaxValue = stat.MinMaxValue;
-                                    stat.MinMaxValue = fVal.vector2;
                                     break;
                                 case nameof(GameStat.MinMaxRate):
                                     statMinMaxRate = stat.MinMaxRate;
-                                    stat.MinMaxRate = fVal.vector2;
                                     break;
                             }
                         }

@@ -342,54 +342,36 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             }
         }
 
-        public void CacheRawValRange(float? x = null, float? y = null)
+        public void CacheRawValRange(float x, float y)
         {
             if (UniqueIDScriptable is not GameStat gameStat) return;
-            gameStat.MinMaxValue = new Vector2(x ?? gameStat.MinMaxValue.x, y ?? gameStat.MinMaxValue.y);
+            gameStat.MinMaxValue = new Vector2(x, y);
             var currentGSlotSaveData = CurrentGSlotSaveData();
+
             if (!currentGSlotSaveData.ContainsKey(StatCache))
-                currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>
-                {
-                    {
-                        gameStat.UniqueID, new DataNode(new Dictionary<string, DataNode>
-                        {
-                            {nameof(GameStat.MinMaxValue), new DataNode(gameStat.MinMaxValue)}
-                        })
-                    }
-                });
+                currentGSlotSaveData[StatCache] = DataNode.EmptyTable;
+
             if (!currentGSlotSaveData[StatCache].table!.ContainsKey(gameStat.UniqueID))
-                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] =
-                    new DataNode(new Dictionary<string, DataNode>
-                    {
-                        {nameof(GameStat.MinMaxValue), new DataNode(gameStat.MinMaxValue)}
-                    });
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] = DataNode.EmptyTable;
+
             if (!currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table!.ContainsKey(
                     nameof(GameStat.MinMaxValue)))
                 currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table![nameof(GameStat.MinMaxValue)] =
                     new DataNode(gameStat.MinMaxValue);
         }
 
-        public void CacheRawRateRange(float? x = null, float? y = null)
+        public void CacheRawRateRange(float x, float y)
         {
             if (UniqueIDScriptable is not GameStat gameStat) return;
-            gameStat.MinMaxRate = new Vector2(x ?? gameStat.MinMaxRate.x, y ?? gameStat.MinMaxRate.y);
+            gameStat.MinMaxRate = new Vector2(x, y);
             var currentGSlotSaveData = CurrentGSlotSaveData();
+
             if (!currentGSlotSaveData.ContainsKey(StatCache))
-                currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>
-                {
-                    {
-                        gameStat.UniqueID, new DataNode(new Dictionary<string, DataNode>
-                        {
-                            {nameof(GameStat.MinMaxRate), new DataNode(gameStat.MinMaxRate)}
-                        })
-                    }
-                });
+                currentGSlotSaveData[StatCache] = DataNode.EmptyTable;
+
             if (!currentGSlotSaveData[StatCache].table!.ContainsKey(gameStat.UniqueID))
-                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] =
-                    new DataNode(new Dictionary<string, DataNode>
-                    {
-                        {nameof(GameStat.MinMaxRate), new DataNode(gameStat.MinMaxRate)}
-                    });
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] = DataNode.EmptyTable;
+
             if (!currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table!.ContainsKey(
                     nameof(GameStat.MinMaxRate)))
                 currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table![nameof(GameStat.MinMaxRate)] =

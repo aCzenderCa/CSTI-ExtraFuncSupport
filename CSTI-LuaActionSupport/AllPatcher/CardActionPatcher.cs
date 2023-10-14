@@ -361,6 +361,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public Vector2 vector2;
         public Dictionary<string, DataNode>? table;
 
+        public static DataNode EmptyTable => new(new Dictionary<string, DataNode>());
+
         public static DataNode Nil
         {
             get
