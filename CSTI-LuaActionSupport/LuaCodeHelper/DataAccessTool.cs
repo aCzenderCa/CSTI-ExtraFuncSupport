@@ -333,7 +333,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         public string Id => CardBase != null ? CardBase.CardModel.UniqueID : "";
 
         private DataNode? _dataNode;
-        private static readonly Regex DataNodeReg = new(@"LNbt\|\>(?<nbt>.+?)\<");
+        private static readonly Regex DataNodeReg = new(@"LNbt\|\>(?<nbt>.+?)\<\|");
 
         public CardActionPatcher.DataNodeTableAccessBridge? Data
         {
@@ -375,7 +375,12 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             _dataNode.Value.Save(binaryWriter);
             var array = memoryStream.ToArray();
             memoryStream.Close();
-            CardBase.DroppedCollections[Base64.Default.Encode(array)] = Vector2Int.zero;
+            if (CardBase.DroppedCollections.FirstOrDefault(pair => DataNodeReg.IsMatch(pair.Key)) is {Key: not null} p)
+            {
+                CardBase.DroppedCollections.Remove(p.Key);
+            }
+
+            CardBase.DroppedCollections[$"LNbt|>{Base64.Default.Encode(array)}<|"] = Vector2Int.zero;
         }
 
         public float Spoilage
