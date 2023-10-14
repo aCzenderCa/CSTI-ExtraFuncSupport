@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
 using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
+using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using Random = UnityEngine.Random;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper
@@ -340,6 +342,60 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             }
         }
 
+        public void CacheRawValRange(float? x = null, float? y = null)
+        {
+            if (UniqueIDScriptable is not GameStat gameStat) return;
+            gameStat.MinMaxValue = new Vector2(x ?? gameStat.MinMaxValue.x, y ?? gameStat.MinMaxValue.y);
+            var currentGSlotSaveData = CurrentGSlotSaveData();
+            if (!currentGSlotSaveData.ContainsKey(StatCache))
+                currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>
+                {
+                    {
+                        gameStat.UniqueID, new DataNode(new Dictionary<string, DataNode>
+                        {
+                            {nameof(GameStat.MinMaxValue), new DataNode(gameStat.MinMaxValue)}
+                        })
+                    }
+                });
+            if (!currentGSlotSaveData[StatCache].table!.ContainsKey(gameStat.UniqueID))
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] =
+                    new DataNode(new Dictionary<string, DataNode>
+                    {
+                        {nameof(GameStat.MinMaxValue), new DataNode(gameStat.MinMaxValue)}
+                    });
+            if (!currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table!.ContainsKey(
+                    nameof(GameStat.MinMaxValue)))
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table![nameof(GameStat.MinMaxValue)] =
+                    new DataNode(gameStat.MinMaxValue);
+        }
+
+        public void CacheRawRateRange(float? x = null, float? y = null)
+        {
+            if (UniqueIDScriptable is not GameStat gameStat) return;
+            gameStat.MinMaxRate = new Vector2(x ?? gameStat.MinMaxRate.x, y ?? gameStat.MinMaxRate.y);
+            var currentGSlotSaveData = CurrentGSlotSaveData();
+            if (!currentGSlotSaveData.ContainsKey(StatCache))
+                currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>
+                {
+                    {
+                        gameStat.UniqueID, new DataNode(new Dictionary<string, DataNode>
+                        {
+                            {nameof(GameStat.MinMaxRate), new DataNode(gameStat.MinMaxRate)}
+                        })
+                    }
+                });
+            if (!currentGSlotSaveData[StatCache].table!.ContainsKey(gameStat.UniqueID))
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID] =
+                    new DataNode(new Dictionary<string, DataNode>
+                    {
+                        {nameof(GameStat.MinMaxRate), new DataNode(gameStat.MinMaxRate)}
+                    });
+            if (!currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table!.ContainsKey(
+                    nameof(GameStat.MinMaxRate)))
+                currentGSlotSaveData[StatCache].table![gameStat.UniqueID].table![nameof(GameStat.MinMaxRate)] =
+                    new DataNode(gameStat.MinMaxRate);
+        }
+
         public float StatRate
         {
             get
@@ -407,7 +463,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return null;
         }
 
-        public override object? AccessObj => UniqueIDScriptable;
+        public override object AccessObj => UniqueIDScriptable;
     }
 
     public class EnvDataAccessBridge : CommonSimpleAccess

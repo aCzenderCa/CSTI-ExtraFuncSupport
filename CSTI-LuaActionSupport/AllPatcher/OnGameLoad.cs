@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using BepInEx;
+using CSTI_LuaActionSupport.LuaCodeHelper;
 using gfoidl.Base64;
 using HarmonyLib;
 using UnityEngine;
@@ -30,6 +31,35 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     {
                         var key = saveFileReader.ReadString();
                         GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex][key] = DataNode.Load(saveFileReader);
+                    }
+                }
+                
+                if (CurrentGSlotSaveData().TryGetValue(StatCache, out var statCache))
+                {
+                    foreach (var (key,value) in statCache.table!)
+                    {
+                        if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
+                        Vector2? statMinMaxValue = null;
+                        Vector2? statMinMaxRate = null;
+                        foreach (var (field, fVal) in value.table!)
+                        {
+                            switch (field)
+                            {
+                                case nameof(GameStat.MinMaxValue):
+                                    statMinMaxValue = stat.MinMaxValue;
+                                    stat.MinMaxValue = fVal.vector2;
+                                    break;
+                                case nameof(GameStat.MinMaxRate):
+                                    statMinMaxRate = stat.MinMaxRate;
+                                    stat.MinMaxRate = fVal.vector2;
+                                    break;
+                            }
+                        }
+
+                        if (statMinMaxValue != null)
+                            value.table[nameof(GameStat.MinMaxValue)] = new DataNode(statMinMaxValue.Value);
+                        if (statMinMaxRate != null)
+                            value.table[nameof(GameStat.MinMaxRate)] = new DataNode(statMinMaxRate.Value);
                     }
                 }
             }

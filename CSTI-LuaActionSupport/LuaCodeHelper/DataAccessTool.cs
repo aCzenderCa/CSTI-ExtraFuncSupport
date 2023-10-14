@@ -360,7 +360,10 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
 
         public void InitData()
         {
-            _dataNode = new DataNode(new Dictionary<string, DataNode>());
+            if (Data == null)
+            {
+                _dataNode = new DataNode(new Dictionary<string, DataNode>());
+            }
         }
 
         public void SaveData()

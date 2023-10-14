@@ -52,8 +52,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInLocation)));
             LuaRuntime.RegisterFunction(nameof(CountCardEquipped),
                 AccessTools.Method(typeof(DataAccessTool), nameof(CountCardEquipped)));
-            
-            
+
+
             LuaRuntime.RegisterFunction(nameof(SaveCurrentSlot),
                 AccessTools.Method(typeof(CardActionPatcher), nameof(SaveCurrentSlot)));
             LuaRuntime.RegisterFunction(nameof(SaveGlobal),
@@ -62,8 +62,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 AccessTools.Method(typeof(CardActionPatcher), nameof(LoadCurrentSlot)));
             LuaRuntime.RegisterFunction(nameof(LoadGlobal),
                 AccessTools.Method(typeof(CardActionPatcher), nameof(LoadGlobal)));
-            
-            
+
+
             LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
             LuaRuntime[nameof(Register)] = Register;
             LuaRuntime.LoadCLRPackage();
@@ -72,7 +72,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime[nameof(ModData)] = ModData;
         }
 
-        private static Dictionary<string, DataNode> CurrentGSlotSaveData()
+        public static Dictionary<string, DataNode> CurrentGSlotSaveData()
         {
             if (GSlotSaveData.TryGetValue(GameLoad.Instance.CurrentGameDataIndex, out var dataNodes))
             {
@@ -350,13 +350,15 @@ namespace CSTI_LuaActionSupport.AllPatcher
             Str,
             Bool,
             Table,
-            Nil
+            Nil,
+            Vector2
         }
 
         public DataNodeType NodeType;
         public double number;
         public string str;
         public bool _bool;
+        public Vector2 vector2;
         public Dictionary<string, DataNode>? table;
 
         public static DataNode Nil
@@ -376,6 +378,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             _bool = false;
             table = null;
             NodeType = DataNodeType.Number;
+            vector2 = Vector2.zero;
         }
 
         public DataNode(string str)
@@ -385,6 +388,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             _bool = false;
             table = null;
             NodeType = DataNodeType.Str;
+            vector2 = Vector2.zero;
         }
 
         public DataNode(bool b)
@@ -394,6 +398,17 @@ namespace CSTI_LuaActionSupport.AllPatcher
             _bool = b;
             table = null;
             NodeType = DataNodeType.Bool;
+            vector2 = Vector2.zero;
+        }
+
+        public DataNode(Vector2 vector2)
+        {
+            number = 0;
+            str = "";
+            _bool = false;
+            table = null;
+            NodeType = DataNodeType.Vector2;
+            this.vector2 = vector2;
         }
 
         public DataNode(Dictionary<string, DataNode> dataNodes)
@@ -403,6 +418,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             _bool = false;
             table = dataNodes;
             NodeType = DataNodeType.Table;
+            vector2 = Vector2.zero;
         }
 
         public void Save(BinaryWriter binaryWriter)
@@ -437,6 +453,10 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     break;
                 case DataNodeType.Nil:
                     break;
+                case DataNodeType.Vector2:
+                    binaryWriter.Write(vector2.x);
+                    binaryWriter.Write(vector2.y);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -470,6 +490,11 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     node.table = dataNodes;
                     break;
                 case DataNodeType.Nil:
+                    break;
+                case DataNodeType.Vector2:
+                    var x = binaryReader.ReadSingle();
+                    var y = binaryReader.ReadSingle();
+                    node.vector2 = new Vector2(x, y);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

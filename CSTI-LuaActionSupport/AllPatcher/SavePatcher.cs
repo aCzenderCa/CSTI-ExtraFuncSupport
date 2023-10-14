@@ -98,11 +98,47 @@ namespace CSTI_LuaActionSupport.AllPatcher
             }
         }
 
+        public const string StatCache = "__StatCache";
+
         [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGame))]
         public static void OnSave(GameLoad __instance, int _GameIndex, bool _Checkpoint)
         {
             try
             {
+                var currentGSlotSaveData = CurrentGSlotSaveData();
+                if (!currentGSlotSaveData.TryGetValue(StatCache, out var statCache))
+                {
+                    currentGSlotSaveData[StatCache] = new DataNode(new Dictionary<string, DataNode>());
+                }
+                else
+                {
+                    foreach (var (key, value) in statCache.table!)
+                    {
+                        if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
+                        Vector2? statMinMaxValue = null;
+                        Vector2? statMinMaxRate = null;
+                        foreach (var (field, fVal) in value.table!)
+                        {
+                            switch (field)
+                            {
+                                case nameof(GameStat.MinMaxValue):
+                                    statMinMaxValue = stat.MinMaxValue;
+                                    stat.MinMaxValue = fVal.vector2;
+                                    break;
+                                case nameof(GameStat.MinMaxRate):
+                                    statMinMaxRate = stat.MinMaxRate;
+                                    stat.MinMaxRate = fVal.vector2;
+                                    break;
+                            }
+                        }
+
+                        if (statMinMaxValue != null)
+                            value.table[nameof(GameStat.MinMaxValue)] = new DataNode(statMinMaxValue.Value);
+                        if (statMinMaxRate != null)
+                            value.table[nameof(GameStat.MinMaxRate)] = new DataNode(statMinMaxRate.Value);
+                    }
+                }
+
                 var buf = new MemoryStream();
                 var binaryWriter = new BinaryWriter(buf);
                 var buf1 = new MemoryStream();
@@ -113,7 +149,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     binaryWriter.Write(GSaveData.Count);
                     foreach (var (key, node) in GSaveData)
                     {
-                        if (node.NodeType!=DataNode.DataNodeType.Nil)
+                        if (node.NodeType != DataNode.DataNodeType.Nil)
                         {
                             binaryWriter.Write(key);
                             node.Save(binaryWriter);
@@ -143,7 +179,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                         binaryWriter1.Write(save.Count);
                         foreach (var (key, node) in save)
                         {
-                            if (node.NodeType!=DataNode.DataNodeType.Nil)
+                            if (node.NodeType != DataNode.DataNodeType.Nil)
                             {
                                 binaryWriter.Write(key);
                                 node.Save(binaryWriter);
