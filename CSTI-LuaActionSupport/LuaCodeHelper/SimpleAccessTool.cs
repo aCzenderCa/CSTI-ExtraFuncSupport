@@ -101,15 +101,15 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                 {
                     if (fieldInfo.FieldType == typeof(float))
                     {
-                        fieldInfo.SetValue(AccessObj, value.TryFloat());
+                        fieldInfo.SetValue(AccessObj, value.TryNum<float>());
                     }
                     else if (fieldInfo.FieldType == typeof(int))
                     {
-                        fieldInfo.SetValue(AccessObj, value.TryInt());
+                        fieldInfo.SetValue(AccessObj, value.TryNum<int>());
                     }
                     else if (fieldInfo.FieldType == typeof(long))
                     {
-                        fieldInfo.SetValue(AccessObj, value.TryLong());
+                        fieldInfo.SetValue(AccessObj, value.TryNum<long>());
                     }
 
                     return;
@@ -241,6 +241,11 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             }
         }
 
+        /**
+         * local uid = "cee786e0869369d4597877e838f2586f"
+local ext = { Usage = 5 }
+SimpleAccessTool[uid]:Gen(1,ext)
+         */
         public void Gen(int count = 1, LuaTable? ext = null)
         {
             if (UniqueIDScriptable is CardData cardData)

@@ -49,6 +49,13 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 ### 方法`void CacheRawRateRange(float x, float y)`
 激活`MinMaxRate`的缓存机制，传入x,y被视为原始的`MinMaxRate.x,y`
 
+#### 示例
+```lua
+local statX = SimpleAccessTool[x]
+statX.CacheRawValRange(statX.StatValueMin,statX.StatValueMax)--需要修改状态值的范围
+statX.CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态速率的范围
+```
+
 ### 索引器：传入字符串key，获取对应字段的值或者修改对应字段
 获取值时返回``SimpleObjAccess``或``SimpleUniqueAccess``（如果获取的是UniqueIDScriptable），访问``AccessObj``可得到实际值
 
@@ -96,10 +103,10 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 
 ## ``CardAccessBridge``的属性
 
-``CardType``：卡牌类型，是字符串，只读
-``Weight``：卡的总重，是单浮点数，只读
-``Id``：卡的uid，是字符串，只读
-`Data`:`DataNodeTableAccessBridge`类型，与卡绑定的数据，不存在且未初始化时返回null
+* ``CardType``：卡牌类型，是字符串，只读
+* ``Weight``：卡的总重，是单浮点数，只读
+* ``Id``：卡的uid，是字符串，只读
+* `Data`:`DataNodeTableAccessBridge`类型，与卡绑定的数据，不存在且未初始化时返回null
 
 ```
 Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
@@ -112,12 +119,12 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 
 ### 索引器
 
-参数 ``int index``
-访问的卡为容器时，获取容器内对应槽位的卡 类型``CardAccessBridge``的列表
+* 参数 ``int index``
+  * 访问的卡为容器时，获取容器内对应槽位的卡 类型``CardAccessBridge``的列表
 
-参数 ``string key``:从卡的``DroppedCollections``（存档数据）读写内容
-设置的值直接为整数时，直接以``key``保存整数值
-其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
+* 参数 ``string key``:从卡的``DroppedCollections``（存档数据）读写内容
+  * 设置的值直接为整数时，直接以``key``保存整数值
+  * 其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
 
 ### `InitData`:
 初始化与卡绑定的数据，即Data属性
@@ -125,18 +132,30 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 ### `SaveData`:
 保存与卡绑定的数据
 
+#### Data操作示例：
+```lua
+receive.InitData()
+local d = receive.Data
+if(d["i"]==nil)then
+  d["i"] = 1
+else
+  d["i"] = d["i"] + 1
+end
+receive.SaveData()
+```
+
 ### ``HasTag``：
 
-参数：``string tag``
-返回值：``bool``
-返回卡牌是否包含名称为参数tag的``CardTag``
+* 参数：``string tag``
+* 返回值：``bool``
+  * 返回卡牌是否包含名称为参数tag的``CardTag``
 
 ### ``AddCard``：
 
-参数：``string id，int amount=1`` 无返回值
-以本卡为基础生成``UniqueId``为id的卡牌，若id对应卡牌为液体，``amout``代表流体量，否则``amout``代表生成次数
-额外参数：
-TransferedDurabilities部分:`float`类型：\
+* 参数：``string id，int amount=1`` 无返回值
+* 以本卡为基础生成``UniqueId``为id的卡牌，若id对应卡牌为液体，``amout``代表流体量，否则``amout``代表生成次数
+* 额外参数： 
+  * TransferedDurabilities部分:`float`类型：
 
 ```
 "Usage"
@@ -156,16 +175,26 @@ TransferedDurabilities部分:`float`类型：\
 
 ### `Remove`：
 
-参数：``bool doDrop``
-无返回值
-删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处）
+* 参数：``bool doDrop``
+* 无返回值
+  * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处）
+
+## 类型`DataNodeTableAccessBridge`:
+* 索引器：`string key`
+  * 返回值为DataNode支持的类型：
+    * Number -> double
+    * Str
+    * Bool
+    * Table -> DataNodeTableAccessBridge
+    * Nil
+    * Vector2
 
 ## ``GameStatAccessBridge``（游戏状态访问桥）
 
 ### 属性
 
-``Value``：读取时返回状态当前值（考虑modifier），赋值时修改基础值而非modifier值
-``Rate``：读取时返回状态当前速率（考虑modifier），赋值时修改基础速率而非modifier值
+* ``Value``：读取时返回状态当前值（考虑modifier），赋值时修改基础值而非modifier值
+* ``Rate``：读取时返回状态当前速率（考虑modifier），赋值时修改基础速率而非modifier值
 
 ## 全局变量
 
@@ -173,8 +202,8 @@ TransferedDurabilities部分:`float`类型：\
 
 ### ``Ret`` 用于返回值
 
-在动态卡牌描述中，``Ret[“ret”]``为要将描述改为的内容,不填就不变
-在lua卡牌action中,``Ret[“result”]``为lua代码执行后要额外等待多少tp,不填就不等待
+* 在动态卡牌描述中，``Ret[“ret”]``为要将描述改为的内容,不填就不变
+* 在lua卡牌action中,``Ret[“result”]``为lua代码执行后要额外等待多少tp,不填就不等待
 
 ## 持久化存储辅助内容
 

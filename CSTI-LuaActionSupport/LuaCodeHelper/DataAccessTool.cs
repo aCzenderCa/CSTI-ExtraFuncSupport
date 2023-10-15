@@ -38,23 +38,38 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
             return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
         }
 
-        public static List<CardAccessBridge> GetGameCards(string id, LuaTable? ext = null)
+        /**
+         * local uid = "8695a7aa22521aa45be582d3c1558f78"
+local ext = { type = "Base" }
+debug.debug = GetGameCards(uid,ext)[0].CardBase
+         */
+        public static List<CardAccessBridge>? GetGameCards(string id, LuaTable? ext = null)
         {
-            var list = new List<InGameCardBase>();
-            GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true, _Results: list);
-
-            return ((string?) ext?["type"] switch
+            try
             {
-                nameof(SlotsTypes.Equipment) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment),
-                nameof(SlotsTypes.Hand) => list.Where(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Hand),
-                nameof(SlotsTypes.Base) => list.Where(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base),
-                nameof(SlotsTypes.Location) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
-                nameof(SlotsTypes.Inventory) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
-                _ => list
-            }).Select(cardBase => new CardAccessBridge(cardBase)).ToList();
+                var list = new List<InGameCardBase>();
+                GameManager.Instance.CardIsOnBoard(UniqueIDScriptable.GetFromID<CardData>(id), true, _Results: list);
+
+                return ((string?) ext?["type"] switch
+                {
+                    nameof(SlotsTypes.Equipment) => list.Where(cardBase =>
+                        cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment),
+                    nameof(SlotsTypes.Hand) => list.Where(cardBase =>
+                        cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Hand),
+                    nameof(SlotsTypes.Base) => list.Where(cardBase =>
+                        cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base),
+                    nameof(SlotsTypes.Location) => list.Where(cardBase =>
+                        cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
+                    nameof(SlotsTypes.Inventory) => list.Where(cardBase =>
+                        cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
+                    _ => list
+                }).Select(cardBase => new CardAccessBridge(cardBase)).ToList();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+                return null;
+            }
         }
 
         public static List<CardAccessBridge> GetGameCardsByTag(string tag)
@@ -207,7 +222,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                     case LuaTable cond:
                     {
                         var _uid = cond["uid"] is string s ? s : null;
-                        var needCount = cond["needCount"].TryInt();
+                        var needCount = cond["needCount"].TryNum<int>();
                         if (_uid is not null)
                         {
                             check |= HasInInventory(_uid, needCount);
@@ -440,165 +455,33 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
         private IEnumerator ModifyDurability(float val, DurabilitiesTypes types)
         {
             if (CardBase == null) yield break;
+            var cardBaseCardModel = CardBase.CardModel;
+            IEnumerator? enumerator;
             switch (types)
             {
                 case DurabilitiesTypes.Spoilage:
-                    if (!CardBase.CardModel.SpoilageTime)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentSpoilage = CardBase.CurrentSpoilage;
-                    if (val >= CardBase.CardModel.SpoilageTime.Max)
-                    {
-                        CardBase.SpoilEmpty = false;
-                        CardBase.CurrentSpoilage = CardBase.CardModel.SpoilageTime.Max;
-                        if (rawCurrentSpoilage < CardBase.CardModel.SpoilageTime.Max)
-                        {
-                            CardBase.SpoilFull = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.SpoilageTime.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.SpoilFull = false;
-                        CardBase.CurrentSpoilage = 0;
-                        if (rawCurrentSpoilage > 0)
-                        {
-                            CardBase.SpoilEmpty = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.SpoilageTime.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentSpoilage = val;
-                    CardBase.SpoilEmpty = false;
-                    CardBase.SpoilFull = false;
+                    if (inner_modify(cardBaseCardModel.SpoilageTime, CardBase.CurrentSpoilage, CardBase,
+                            ref CardBase.CurrentSpoilage, ref CardBase.SpoilEmpty, ref CardBase.SpoilFull,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Usage:
-                    if (!CardBase.CardModel.UsageDurability)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentUsage = CardBase.CurrentUsageDurability;
-                    if (val >= CardBase.CardModel.UsageDurability.Max)
-                    {
-                        CardBase.UsageEmpty = false;
-                        CardBase.CurrentUsageDurability = CardBase.CardModel.UsageDurability.Max;
-                        if (rawCurrentUsage < CardBase.CardModel.UsageDurability.Max)
-                        {
-                            CardBase.UsageFull = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.UsageDurability.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.UsageFull = false;
-                        CardBase.CurrentUsageDurability = 0;
-                        if (rawCurrentUsage > 0)
-                        {
-                            CardBase.UsageEmpty = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.UsageDurability.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentUsageDurability = val;
-                    CardBase.UsageEmpty = false;
-                    CardBase.UsageFull = false;
+                    if (inner_modify(cardBaseCardModel.UsageDurability, CardBase.CurrentUsageDurability, CardBase,
+                            ref CardBase.CurrentUsageDurability, ref CardBase.UsageEmpty, ref CardBase.UsageFull,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Fuel:
-                    if (!CardBase.CardModel.FuelCapacity)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentFuel = CardBase.CurrentFuel;
-                    if (val >= CardBase.CardModel.FuelCapacity.Max)
-                    {
-                        CardBase.FuelEmpty = false;
-                        CardBase.CurrentFuel = CardBase.CardModel.FuelCapacity.Max;
-                        if (rawCurrentFuel < CardBase.CardModel.FuelCapacity.Max)
-                        {
-                            CardBase.FuelFull = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.FuelCapacity.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.FuelFull = false;
-                        CardBase.CurrentFuel = 0;
-                        if (rawCurrentFuel > 0)
-                        {
-                            CardBase.FuelEmpty = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.FuelCapacity.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentFuel = val;
-                    CardBase.FuelEmpty = false;
-                    CardBase.FuelFull = false;
+                    if (inner_modify(cardBaseCardModel.FuelCapacity, CardBase.CurrentFuel, CardBase,
+                            ref CardBase.CurrentFuel, ref CardBase.FuelEmpty, ref CardBase.FuelFull,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Progress:
-                    if (!CardBase.CardModel.Progress)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentProgress = CardBase.CurrentProgress;
-                    if (val >= CardBase.CardModel.Progress.Max)
-                    {
-                        CardBase.ProgressEmpty = false;
-                        CardBase.CurrentProgress = CardBase.CardModel.Progress.Max;
-                        if (rawCurrentProgress < CardBase.CardModel.Progress.Max)
-                        {
-                            CardBase.ProgressFull = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.Progress.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.ProgressFull = false;
-                        CardBase.CurrentProgress = 0;
-                        if (rawCurrentProgress > 0)
-                        {
-                            CardBase.ProgressEmpty = true;
-                            yield return GameManager.Instance.ActionRoutine(CardBase.CardModel.Progress.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentProgress = val;
-                    CardBase.ProgressEmpty = false;
-                    CardBase.ProgressFull = false;
+                    if (inner_modify(cardBaseCardModel.Progress, CardBase.CurrentProgress, CardBase,
+                            ref CardBase.CurrentProgress, ref CardBase.ProgressEmpty, ref CardBase.ProgressFull,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Liquid:
                     if (!CardBase.IsLiquid)
@@ -606,181 +489,91 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper
                         yield break;
                     }
 
+                    var rawLiquidEmpty = CardBase.LiquidEmpty;
                     CardBase.CurrentLiquidQuantity += val;
                     CardBase.CurrentLiquidQuantity = CardBase.CurrentMaxLiquidQuantity > 0f
                         ? Mathf.Clamp(CardBase.CurrentLiquidQuantity, 0f, CardBase.CurrentMaxLiquidQuantity)
                         : Mathf.Min(CardBase.CurrentLiquidQuantity, 0f);
                     CardBase.WeightHasChanged();
+                    if (!rawLiquidEmpty&&CardBase.LiquidEmpty)
+                    {
+                        yield return GameManager.PerformActionAsEnumerator(CardData.OnEvaporatedAction, CardBase, false);
+                    }
                     break;
                 case DurabilitiesTypes.Special1:
-                    if (!CardBase.CardModel.SpecialDurability1)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentSpecialDurability1 = CardBase.CurrentSpecial1;
-                    if (val >= CardBase.CardModel.SpecialDurability1.Max)
-                    {
-                        CardBase.Special1Empty = false;
-                        CardBase.CurrentSpecial1 = CardBase.CardModel.SpecialDurability1.Max;
-                        if (rawCurrentSpecialDurability1 < CardBase.CardModel.SpecialDurability1.Max)
-                        {
-                            CardBase.Special1Full = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability1.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.Special1Full = false;
-                        CardBase.CurrentSpecial1 = 0;
-                        if (rawCurrentSpecialDurability1 > 0)
-                        {
-                            CardBase.Special1Empty = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability1.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentSpecial1 = val;
-                    CardBase.Special1Empty = false;
-                    CardBase.Special1Full = false;
+                    if (inner_modify(cardBaseCardModel.SpecialDurability1, CardBase.CurrentSpecial1, CardBase,
+                            ref CardBase.CurrentSpecial1, ref CardBase.Special1Empty, ref CardBase.Special1Full,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Special2:
-                    if (!CardBase.CardModel.SpecialDurability2)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentSpecialDurability2 = CardBase.CurrentSpecial2;
-                    if (val >= CardBase.CardModel.SpecialDurability2.Max)
-                    {
-                        CardBase.Special2Empty = false;
-                        CardBase.CurrentSpecial2 = CardBase.CardModel.SpecialDurability2.Max;
-                        if (rawCurrentSpecialDurability2 < CardBase.CardModel.SpecialDurability2.Max)
-                        {
-                            CardBase.Special2Full = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability2.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.Special2Full = false;
-                        CardBase.CurrentSpecial2 = 0;
-                        if (rawCurrentSpecialDurability2 > 0)
-                        {
-                            CardBase.Special2Empty = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability2.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentSpecial2 = val;
-                    CardBase.Special2Empty = false;
-                    CardBase.Special2Full = false;
+                    if (inner_modify(cardBaseCardModel.SpecialDurability2, CardBase.CurrentSpecial2, CardBase,
+                            ref CardBase.CurrentSpecial2, ref CardBase.Special2Empty, ref CardBase.Special2Full,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Special3:
-                    if (!CardBase.CardModel.SpecialDurability3)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentSpecialDurability3 = CardBase.CurrentSpecial3;
-                    if (val >= CardBase.CardModel.SpecialDurability3.Max)
-                    {
-                        CardBase.Special3Empty = false;
-                        CardBase.CurrentSpecial3 = CardBase.CardModel.SpecialDurability3.Max;
-                        if (rawCurrentSpecialDurability3 < CardBase.CardModel.SpecialDurability3.Max)
-                        {
-                            CardBase.Special3Full = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability3.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.Special3Full = false;
-                        CardBase.CurrentSpecial3 = 0;
-                        if (rawCurrentSpecialDurability3 > 0)
-                        {
-                            CardBase.Special3Empty = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability3.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentSpecial3 = val;
-                    CardBase.Special3Empty = false;
-                    CardBase.Special3Full = false;
+                    if (inner_modify(cardBaseCardModel.SpecialDurability3, CardBase.CurrentSpecial3, CardBase,
+                            ref CardBase.CurrentSpecial3, ref CardBase.Special3Empty, ref CardBase.Special3Full,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 case DurabilitiesTypes.Special4:
-                    if (!CardBase.CardModel.SpecialDurability4)
-                    {
-                        yield break;
-                    }
-
-                    var rawCurrentSpecialDurability4 = CardBase.CurrentSpecial4;
-                    if (val >= CardBase.CardModel.SpecialDurability4.Max)
-                    {
-                        CardBase.Special4Empty = false;
-                        CardBase.CurrentSpecial4 = CardBase.CardModel.SpecialDurability4.Max;
-                        if (rawCurrentSpecialDurability4 < CardBase.CardModel.SpecialDurability4.Max)
-                        {
-                            CardBase.Special4Full = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability4.OnFull,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    if (val <= 0)
-                    {
-                        CardBase.Special4Full = false;
-                        CardBase.CurrentSpecial4 = 0;
-                        if (rawCurrentSpecialDurability4 > 0)
-                        {
-                            CardBase.Special4Empty = true;
-                            yield return GameManager.Instance.ActionRoutine(
-                                CardBase.CardModel.SpecialDurability4.OnZero,
-                                CardBase, false);
-                        }
-
-                        break;
-                    }
-
-                    CardBase.CurrentSpecial4 = val;
-                    CardBase.Special4Empty = false;
-                    CardBase.Special4Full = false;
+                    if (inner_modify(cardBaseCardModel.SpecialDurability4, CardBase.CurrentSpecial4, CardBase,
+                            ref CardBase.CurrentSpecial4, ref CardBase.Special4Empty, ref CardBase.Special4Full,
+                            out enumerator))
+                        yield return enumerator;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(types), types, null);
             }
 
-            CardBase.UpdateVisibility();
+            CardBase.CardVisuals.RefreshDurabilities();
+            yield break;
+
+            bool inner_modify(DurabilityStat durabilityStat, float rawCurrentSpoilage, InGameCardBase card,
+                ref float durabilityStat_ref, ref bool durabilityStat_ref_empty, ref bool durabilityStat_ref_full,
+                out IEnumerator? _enumerator)
+            {
+                _enumerator = null;
+                if (!durabilityStat)
+                {
+                    return false;
+                }
+
+                if (val >= durabilityStat.Max)
+                {
+                    durabilityStat_ref_empty = false;
+                    durabilityStat_ref = durabilityStat.Max;
+                    if (rawCurrentSpoilage < durabilityStat.Max)
+                    {
+                        durabilityStat_ref_full = true;
+                        _enumerator = card.PerformDurabilitiesActions(true);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                if (val <= 0)
+                {
+                    durabilityStat_ref_full = false;
+                    durabilityStat_ref = 0;
+                    if (rawCurrentSpoilage > 0)
+                    {
+                        durabilityStat_ref_empty = true;
+                        _enumerator = card.PerformDurabilitiesActions(true);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                durabilityStat_ref = val;
+                durabilityStat_ref_empty = false;
+                durabilityStat_ref_full = false;
+                return false;
+            }
         }
 
         public void AddCard(string id, int count = 1, LuaTable? ext = null)

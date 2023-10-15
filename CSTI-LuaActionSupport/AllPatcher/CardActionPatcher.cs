@@ -28,6 +28,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime.State.Encoding = Encoding.UTF8;
             LuaRuntime["debug"] = DebugBridge;
             LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
+            
             LuaRuntime.RegisterFunction(nameof(GetCard),
                 AccessTools.Method(typeof(DataAccessTool), nameof(GetCard)));
             LuaRuntime.RegisterFunction(nameof(GetGameCard),

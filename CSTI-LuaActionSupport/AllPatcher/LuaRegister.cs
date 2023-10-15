@@ -68,6 +68,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public static void LuaCanReceiveInInventory(InGameCardBase __instance, CardData _Card, CardData _WithLiquid,
             ref bool __result)
         {
+            if (__instance == null || __instance.CardModel == null) return;
             if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CanReceiveInInventory),
                     __instance.CardModel.UniqueID, out var regs)) return;
             foreach (var luaFunction in regs)
@@ -92,6 +93,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public static void LuaCanReceiveInInventoryInstance(InGameCardBase __instance, InGameCardBase _Card,
             ref bool __result)
         {
+            if (__instance == null || __instance.CardModel == null) return;
             if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CanReceiveInInventoryInstance),
                     __instance.CardModel.UniqueID, out var regs)) return;
             foreach (var luaFunction in regs)
@@ -114,6 +116,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.InventoryWeight))]
         public static void LuaInventoryWeight(InGameCardBase __instance, ref float __result)
         {
+            if (__instance == null || __instance.CardModel == null) return;
             if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.InventoryWeight),
                     __instance.CardModel.UniqueID, out var regs)) return;
             foreach (var luaFunction in regs)
@@ -136,6 +139,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CardName))]
         public static void LuaCardName(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
         {
+            if (__instance == null || __instance.CardModel == null) return;
             if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardName), __instance.CardModel.UniqueID,
                     out var regs)) return;
             foreach (var luaFunction in regs)
@@ -158,6 +162,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CardDescription))]
         public static void LuaCardDescription(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
         {
+            if (__instance == null || __instance.CardModel == null) return;
             if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardDescription),
                     __instance.CardModel.UniqueID, out var regs)) return;
             foreach (var luaFunction in regs)
@@ -181,6 +186,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public static void LuaChangeStat(GameManager __instance, InGameStat _Stat, float _Value,
             StatModification _Modification, ref IEnumerator __result)
         {
+            if (_Stat == null || _Stat.StatModel == null) return;
             if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatValue),
                     _Stat.StatModel.UniqueID, out _)) return;
 
@@ -219,6 +225,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public static void LuaChangeStatRate(GameManager __instance, InGameStat _Stat, float _Rate,
             StatModification _Modification, ref IEnumerator __result)
         {
+            if (_Stat == null || _Stat.StatModel == null) return;
             if (!Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatRate),
                     _Stat.StatModel.UniqueID, out _)) return;
 
@@ -257,6 +264,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         public static void LuaDismantleActionButton_Setup(DismantleActionButton __instance, DismantleCardAction _Action,
             InGameCardBase _Card)
         {
+            if (_Card == null || _Card.CardModel == null) return;
             if (!Register.TryGet(nameof(DismantleActionButton), nameof(DismantleActionButton.Setup),
                     _Card.CardModel.UniqueID, out var regs)) return;
 
