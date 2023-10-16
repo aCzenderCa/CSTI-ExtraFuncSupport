@@ -47,6 +47,7 @@ namespace CSTI_LuaActionSupport.Helper
         {
             {typeof(double), OpCodes.Conv_R8}, {typeof(float), OpCodes.Conv_R4}, {typeof(long), OpCodes.Conv_I8},
             {typeof(ulong), OpCodes.Conv_U8}, {typeof(int), OpCodes.Conv_I4}, {typeof(uint), OpCodes.Conv_U4},
+            {typeof(nint), OpCodes.Conv_I}, {typeof(nuint), OpCodes.Conv_U}
         };
 
         public static void TryModBy(this ref float self, object? o)

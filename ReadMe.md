@@ -204,6 +204,7 @@ receive.SaveData()
 
 * 在动态卡牌描述中，``Ret[“ret”]``为要将描述改为的内容,不填就不变
 * 在lua卡牌action中,``Ret[“result”]``为lua代码执行后要额外等待多少tp,不填就不等待
+  * `Ret["miniTime"]`为lua代码执行后要等待多少mini tp
 
 ## 持久化存储辅助内容
 

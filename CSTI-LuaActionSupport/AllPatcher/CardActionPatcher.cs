@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -28,7 +29,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
             LuaRuntime.State.Encoding = Encoding.UTF8;
             LuaRuntime["debug"] = DebugBridge;
             LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
-            
+
             LuaRuntime.RegisterFunction(nameof(GetCard),
                 AccessTools.Method(typeof(DataAccessTool), nameof(GetCard)));
             LuaRuntime.RegisterFunction(nameof(GetGameCard),
@@ -123,6 +124,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 DataNode.DataNodeType.Bool => node._bool,
                 DataNode.DataNodeType.Table => new DataNodeTableAccessBridge(node.table),
                 DataNode.DataNodeType.Nil => null,
+                DataNode.DataNodeType.Vector2 => node.vector2,
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -214,6 +216,8 @@ namespace CSTI_LuaActionSupport.AllPatcher
             }
 
             public readonly Dictionary<string, DataNode>? Table;
+            public Dictionary<string, DataNode>.KeyCollection? Keys => Table?.Keys;
+            public int Count => Table?.Count ?? 0;
 
             public DataNodeTableAccessBridge(Dictionary<string, DataNode>? table)
             {
@@ -267,16 +271,23 @@ namespace CSTI_LuaActionSupport.AllPatcher
         {
             var lua = InitRuntime(__instance);
             var waitTime = 0;
+            var miniWaitTime = 0;
             lua["receive"] = new CardAccessBridge(_ReceivingCard);
             var luaScriptRetValues = new LuaScriptRetValues();
             lua["Ret"] = luaScriptRetValues;
             try
             {
                 object? result;
+                object? miniTime;
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
                     waitTime.TryModBy(result);
+                }
+
+                if (luaScriptRetValues.CheckKey(nameof(miniTime), out miniTime))
+                {
+                    miniWaitTime.TryModBy(miniTime);
                 }
             }
             catch (Exception e)
@@ -284,12 +295,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 Debug.LogError(e);
             }
 
-            var queue = __instance.ProcessCache();
-
-            if (waitTime > 0)
-            {
-                queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
-            }
+            var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, miniWaitTime, waitTime);
 
             while (queue.Count > 0)
             {
@@ -306,6 +312,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
         {
             var lua = InitRuntime(__instance);
             var waitTime = 0;
+            var miniWaitTime = 0;
             lua["receive"] = new CardAccessBridge(_ReceivingCard);
             lua["given"] = new CardAccessBridge(_GivenCard);
             var luaScriptRetValues = new LuaScriptRetValues();
@@ -313,10 +320,16 @@ namespace CSTI_LuaActionSupport.AllPatcher
             try
             {
                 object? result;
+                object? miniTime;
                 _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
                 if (luaScriptRetValues.CheckKey(nameof(result), out result))
                 {
                     waitTime.TryModBy(result);
+                }
+
+                if (luaScriptRetValues.CheckKey(nameof(miniTime), out miniTime))
+                {
+                    miniWaitTime.TryModBy(miniTime);
                 }
             }
             catch (Exception e)
@@ -324,12 +337,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 Debug.LogError(e);
             }
 
-            var queue = __instance.ProcessCache();
-
-            if (waitTime > 0)
-            {
-                queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
-            }
+            var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, miniWaitTime, waitTime);
 
             while (queue.Count > 0)
             {
@@ -339,6 +347,27 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     yield return null;
                 }
             }
+        }
+
+        private static Queue<CoroutineController> ProcessTime(this Queue<CoroutineController> queue,
+            InGameCardBase _ReceivingCard,
+            int miniWaitTime, int waitTime)
+        {
+            var __instance = GameManager.Instance;
+            if (miniWaitTime > 0)
+            {
+                GameManager.Instance.CurrentMiniTicks += miniWaitTime;
+                waitTime += GameManager.Instance.CurrentMiniTicks / 5;
+                GameManager.Instance.CurrentMiniTicks %= 5;
+                GraphicsManager.Instance.UpdateTimeInfo(false);
+            }
+
+            if (waitTime > 0)
+            {
+                queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
+            }
+
+            return queue;
         }
     }
 
