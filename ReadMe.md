@@ -270,7 +270,7 @@ receive:SaveData()
 * `DismantleActionButton`：
 
   * `Setup`：卡牌的按钮初始化函数
-    * `LuaFunction`要求：`输入CardAccessBridge this，DismantleCardAction _Action，CardAccessBridge _Card，string _Action.ActionName.LocalizationKey`
+    * `LuaFunction`要求：`输入DismantleActionButton this，DismantleCardAction _Action，CardAccessBridge _Card，string _Action.ActionName.LocalizationKey`
     * `_Action`：用来初始化按钮的`DismantleCardAction`数据，`_Card`要初始化按钮的卡牌实例，`_Action.ActionName.LocalizationKey`，用于区分同个卡牌的不同按钮，action名的翻译key
 * `GameManager`：
 

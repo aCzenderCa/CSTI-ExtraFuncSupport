@@ -1,34 +1,33 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace CSTI_LuaActionSupport.LuaCodeHelper
-{
-    public static class EnumHelper
-    {
-        public static IEnumerator Prepend(this IEnumerator enumerator, IEnumerator other)
-        {
-            while (other.MoveNext())
-            {
-                yield return other.Current;
-            }
+namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
-            while (enumerator.MoveNext())
-            {
-                yield return enumerator.Current;
-            }
+public static class EnumHelper
+{
+    public static IEnumerator Prepend(this IEnumerator enumerator, IEnumerator other)
+    {
+        while (other.MoveNext())
+        {
+            yield return other.Current;
         }
 
-        public static IEnumerator Concat(this IEnumerator enumerator, IEnumerator other)
+        while (enumerator.MoveNext())
         {
-            while (enumerator.MoveNext())
-            {
-                yield return enumerator.Current;
-            }
+            yield return enumerator.Current;
+        }
+    }
 
-            while (other.MoveNext())
-            {
-                yield return other.Current;
-            }
+    public static IEnumerator Concat(this IEnumerator enumerator, IEnumerator other)
+    {
+        while (enumerator.MoveNext())
+        {
+            yield return enumerator.Current;
+        }
+
+        while (other.MoveNext())
+        {
+            yield return other.Current;
         }
     }
 }

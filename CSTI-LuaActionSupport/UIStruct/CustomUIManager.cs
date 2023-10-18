@@ -2,11 +2,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CSTI_LuaActionSupport.UIStruct
+namespace CSTI_LuaActionSupport.UIStruct;
+
+[RequireComponent(typeof(Canvas))]
+public class CustomUIManager : MonoBehaviour
 {
-    [RequireComponent(typeof(Canvas))]
-    public class CustomUIManager : MonoBehaviour
-    {
-        public Canvas CustomUICanvas = null!;
-    }
+    public Canvas CustomUICanvas = null!;
 }
