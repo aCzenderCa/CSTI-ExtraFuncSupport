@@ -52,8 +52,8 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 #### 示例
 ```lua
 local statX = SimpleAccessTool[x]
-statX.CacheRawValRange(statX.StatValueMin,statX.StatValueMax)--需要修改状态值的范围
-statX.CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态速率的范围
+statX:CacheRawValRange(statX.StatValueMin,statX.StatValueMax)--需要修改状态值的范围
+statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态速率的范围
 ```
 
 ### 索引器：传入字符串key，获取对应字段的值或者修改对应字段
@@ -134,14 +134,14 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 
 #### Data操作示例：
 ```lua
-receive.InitData()
+receive:InitData()
 local d = receive.Data
 if(d["i"]==nil)then
   d["i"] = 1
 else
   d["i"] = d["i"] + 1
 end
-receive.SaveData()
+receive:SaveData()
 ```
 
 ### ``HasTag``：

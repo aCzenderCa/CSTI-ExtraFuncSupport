@@ -15,23 +15,37 @@ namespace CSTI_LuaActionSupport.AllPatcher
 {
     public static class OnGameLoad
     {
+        private static byte[] Decode(string data)
+        {
+            return Base64.Default.Decode(data.AsSpan());
+        }
+        
         [HarmonyPrefix, HarmonyPatch(typeof(GameSaveData), nameof(GameSaveData.CreateDicts))]
         public static void LoadLuaLongTimeData(GameSaveData __instance)
         {
             if (__instance.AllEndgameLogs.Count > 0 && __instance.AllEndgameLogs[0].CategoryID == LuaLongTimeSaveId)
             {
                 GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex] = new Dictionary<string, DataNode>();
-                var data = Base64.Default.Decode(__instance.AllEndgameLogs[0].LogText.AsSpan());
-                var saveFileReader = new BinaryReader(new MemoryStream(data));
+                var logText = __instance.AllEndgameLogs[0].LogText;
+                var data = Base64.Default.Decode(logText.AsSpan());
+                var memoryStream = new MemoryStream(data);
+                var saveFileReader = new BinaryReader(memoryStream);
 
-                using (BeginLoadEnv(saveFileReader, out _, 0))
+                try
                 {
-                    var gCount = saveFileReader.ReadInt32();
-                    for (var i = 0; i < gCount; i++)
+                    using (BeginLoadEnv(saveFileReader, out _, 0))
                     {
-                        var key = saveFileReader.ReadString();
-                        GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex][key] = DataNode.Load(saveFileReader);
+                        var gCount = saveFileReader.ReadInt32();
+                        for (var i = 0; i < gCount; i++)
+                        {
+                            var key = saveFileReader.ReadString();
+                            GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex][key] = DataNode.Load(saveFileReader);
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
                 }
             }
         }

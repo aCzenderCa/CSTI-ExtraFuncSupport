@@ -2,6 +2,7 @@
 using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.SaveEnv;
@@ -139,7 +140,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
 
                 using (BeginSaveEnv(binaryWriter, 0))
                 {
-                    binaryWriter.Write(GSaveData.Count);
+                    binaryWriter.Write(GSaveData.Count(pair => pair.Value.NodeType != DataNode.DataNodeType.Nil));
                     foreach (var (key, node) in GSaveData)
                     {
                         if (node.NodeType != DataNode.DataNodeType.Nil)
@@ -169,13 +170,13 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 {
                     using (BeginSaveEnv(binaryWriter1, 0))
                     {
-                        binaryWriter1.Write(save.Count);
+                        binaryWriter1.Write(save.Count(pair => pair.Value.NodeType != DataNode.DataNodeType.Nil));
                         foreach (var (key, node) in save)
                         {
                             if (node.NodeType != DataNode.DataNodeType.Nil)
                             {
-                                binaryWriter.Write(key);
-                                node.Save(binaryWriter);
+                                binaryWriter1.Write(key);
+                                node.Save(binaryWriter1);
                             }
                         }
                     }
@@ -219,5 +220,19 @@ namespace CSTI_LuaActionSupport.AllPatcher
                 saveData.AllEndgameLogs.Insert(0, saveDataAllEndgameLog);
             }
         }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(EndgameMenu), nameof(EndgameMenu.Setup))]
+        public static void FixEndgameMenu_Setup(ref GameSaveData _SaveData, out List<LogSaveData> __state)
+        {
+            __state = _SaveData.AllEndgameLogs;
+            _SaveData.AllEndgameLogs = __state.Where(data => data.CategoryID != LuaLongTimeSaveId).ToList();
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(EndgameMenu), nameof(EndgameMenu.Setup))]
+        public static void FixEndgameMenu_Setup_Post(ref GameSaveData _SaveData, List<LogSaveData> __state)
+        {
+            _SaveData.AllEndgameLogs = __state;
+        }
+        
     }
 }

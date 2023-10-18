@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -85,6 +86,9 @@ namespace CSTI_LuaActionSupport.AllPatcher
             return GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex];
         }
 
+        /**
+         * SaveCurrentSlot("__test",10)
+         */
         public static void SaveCurrentSlot(string key, object val)
         {
             CurrentGSlotSaveData().CommonSave(key, val);
@@ -374,6 +378,42 @@ namespace CSTI_LuaActionSupport.AllPatcher
 
     public struct DataNode
     {
+        [StructLayout(LayoutKind.Explicit)]
+        public struct DataNodeDataUnion
+        {
+            [FieldOffset(8)] public double number;
+            [FieldOffset(8)] public bool _bool;
+            [FieldOffset(8)] public Vector2 vector2;
+
+            [FieldOffset(0)] public string? str;
+            [FieldOffset(0)] public Dictionary<string, DataNode>? table;
+
+            public DataNodeDataUnion(double num)
+            {
+                number = num;
+            }
+
+            public DataNodeDataUnion(string str)
+            {
+                this.str = str;
+            }
+
+            public DataNodeDataUnion(bool b)
+            {
+                _bool = b;
+            }
+
+            public DataNodeDataUnion(Vector2 vector2)
+            {
+                this.vector2 = vector2;
+            }
+
+            public DataNodeDataUnion(Dictionary<string, DataNode> table)
+            {
+                this.table = table;
+            }
+        }
+
         public enum DataNodeType
         {
             Number,
@@ -385,11 +425,13 @@ namespace CSTI_LuaActionSupport.AllPatcher
         }
 
         public DataNodeType NodeType;
-        public double number;
-        public string str;
-        public bool _bool;
-        public Vector2 vector2;
-        public Dictionary<string, DataNode>? table;
+        public DataNodeDataUnion NodeData;
+
+        public double number => NodeData.number;
+        public string? str => NodeData.str;
+        public bool _bool => NodeData._bool;
+        public Vector2 vector2 => NodeData.vector2;
+        public Dictionary<string, DataNode>? table => NodeData.table;
 
         public static DataNode EmptyTable => new(new Dictionary<string, DataNode>());
 
@@ -405,52 +447,32 @@ namespace CSTI_LuaActionSupport.AllPatcher
 
         public DataNode(double number)
         {
-            this.number = number;
-            str = "";
-            _bool = false;
-            table = null;
             NodeType = DataNodeType.Number;
-            vector2 = Vector2.zero;
+            NodeData = new DataNodeDataUnion(number);
         }
 
         public DataNode(string str)
         {
-            number = 0;
-            this.str = str;
-            _bool = false;
-            table = null;
             NodeType = DataNodeType.Str;
-            vector2 = Vector2.zero;
+            NodeData = new DataNodeDataUnion(str);
         }
 
         public DataNode(bool b)
         {
-            number = 0;
-            str = "";
-            _bool = b;
-            table = null;
             NodeType = DataNodeType.Bool;
-            vector2 = Vector2.zero;
+            NodeData = new DataNodeDataUnion(b);
         }
 
         public DataNode(Vector2 vector2)
         {
-            number = 0;
-            str = "";
-            _bool = false;
-            table = null;
             NodeType = DataNodeType.Vector2;
-            this.vector2 = vector2;
+            NodeData = new DataNodeDataUnion(vector2);
         }
 
         public DataNode(Dictionary<string, DataNode> dataNodes)
         {
-            number = 0;
-            str = "";
-            _bool = false;
-            table = dataNodes;
             NodeType = DataNodeType.Table;
-            vector2 = Vector2.zero;
+            NodeData = new DataNodeDataUnion(dataNodes);
         }
 
         public void Save(BinaryWriter binaryWriter)
@@ -462,7 +484,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     binaryWriter.Write(number);
                     break;
                 case DataNodeType.Str:
-                    binaryWriter.Write(str);
+                    binaryWriter.Write(str ?? "");
                     break;
                 case DataNodeType.Bool:
                     binaryWriter.Write(_bool);
@@ -474,11 +496,14 @@ namespace CSTI_LuaActionSupport.AllPatcher
                     }
                     else
                     {
-                        binaryWriter.Write(table.Count);
+                        binaryWriter.Write(table.Count(pair => pair.Value.NodeType != DataNodeType.Nil));
                         foreach (var (key, node) in table)
                         {
-                            binaryWriter.Write(key);
-                            node.Save(binaryWriter);
+                            if (node.NodeType != DataNodeType.Nil)
+                            {
+                                binaryWriter.Write(key);
+                                node.Save(binaryWriter);
+                            }
                         }
                     }
 
@@ -501,13 +526,13 @@ namespace CSTI_LuaActionSupport.AllPatcher
             switch (node.NodeType)
             {
                 case DataNodeType.Number:
-                    node.number = binaryReader.ReadDouble();
+                    node.NodeData = new DataNodeDataUnion(binaryReader.ReadDouble());
                     break;
                 case DataNodeType.Str:
-                    node.str = binaryReader.ReadString();
+                    node.NodeData = new DataNodeDataUnion(binaryReader.ReadString());
                     break;
                 case DataNodeType.Bool:
-                    node._bool = binaryReader.ReadBoolean();
+                    node.NodeData = new DataNodeDataUnion(binaryReader.ReadBoolean());
                     break;
                 case DataNodeType.Table:
                     var count = binaryReader.ReadInt32();
@@ -519,14 +544,14 @@ namespace CSTI_LuaActionSupport.AllPatcher
                         dataNodes[key] = dataNode;
                     }
 
-                    node.table = dataNodes;
+                    node.NodeData = new DataNodeDataUnion(dataNodes);
                     break;
                 case DataNodeType.Nil:
                     break;
                 case DataNodeType.Vector2:
                     var x = binaryReader.ReadSingle();
                     var y = binaryReader.ReadSingle();
-                    node.vector2 = new Vector2(x, y);
+                    node.NodeData = new DataNodeDataUnion(new Vector2(x, y));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

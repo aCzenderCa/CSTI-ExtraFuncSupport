@@ -10,7 +10,7 @@ namespace CSTI_LuaActionSupport.AllPatcher
     [HarmonyPatch]
     public static class ObjModifyPatcher
     {
-        public static readonly Regex LuaDesc = new(@"\#\#\#luaAction CardDescription\n(?<luaCode>[\s\S]*?)\n\#\#\#");
+        public static readonly Regex LuaDesc = new(@"^\#\#\#luaAction CardDescription\n(?<luaCode>[\s\S]*?)\n\#\#\#$");
 
         [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CardDescription))]
         public static void ModifyCardDescription(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
