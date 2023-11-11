@@ -37,7 +37,7 @@ public static class MoniEnum
                 var managerLatestCreatedCard = manager.LatestCreatedCards[manager.LatestCreatedCards.Count - 1];
                 next = enumerator.MoveNext();
                 if (manager.LatestCreatedCards[manager.LatestCreatedCards.Count - 1] is var card &&
-                    managerLatestCreatedCard != card)
+                    managerLatestCreatedCard != card && card.CardModel == _Data)
                 {
                     action(card, arg);
                 }
