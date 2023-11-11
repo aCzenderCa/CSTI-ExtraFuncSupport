@@ -10,8 +10,10 @@ using CSTI_LuaActionSupport.LuaCodeHelper;
 using static CSTI_LuaActionSupport.LuaCodeHelper.DataAccessTool;
 using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using HarmonyLib;
+using KeraLua;
 using NLua;
 using UnityEngine;
+using Lua = NLua.Lua;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 
@@ -205,6 +207,22 @@ public static class CardActionPatcher
 
     public class DataNodeTableAccessBridge
     {
+        public LuaTable? LuaKeys
+        {
+            get
+            {
+                if (Keys == null) return null;
+                LuaRuntime.NewTable("__temp");
+                var luaTable = LuaRuntime.GetTable("__temp");
+                foreach (var key in Keys)
+                {
+                    luaTable[luaTable.Keys.Count] = key;
+                }
+
+                return luaTable;
+            }
+        }
+
         public object? this[string key]
         {
             get
@@ -374,7 +392,6 @@ public static class CardActionPatcher
         return queue;
     }
 }
-
 
 public struct DataNode
 {

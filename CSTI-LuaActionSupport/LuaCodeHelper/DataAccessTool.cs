@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
+using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
 using gfoidl.Base64;
@@ -355,7 +356,7 @@ public class CardAccessBridge
     private DataNode? _dataNode;
     private static readonly Regex DataNodeReg = new(@"^LNbt\|\>(?<nbt>.+?)\<\|$");
 
-    public CardActionPatcher.DataNodeTableAccessBridge? Data
+    public DataNodeTableAccessBridge? Data
     {
         get
         {
@@ -373,16 +374,18 @@ public class CardAccessBridge
 
             end: ;
             return _dataNode is {NodeType: DataNode.DataNodeType.Table}
-                ? new CardActionPatcher.DataNodeTableAccessBridge(_dataNode.Value.table)
+                ? new DataNodeTableAccessBridge(_dataNode.Value.table)
                 : null;
         }
     }
 
-    public void InitData()
+    public void InitData(DataNodeTableAccessBridge? initData = null)
     {
         if (Data == null)
         {
-            _dataNode = new DataNode(new Dictionary<string, DataNode>());
+            _dataNode = initData?.Table == null
+                ? new DataNode(new Dictionary<string, DataNode>())
+                : new DataNode(initData.Table);
         }
     }
 
@@ -406,55 +409,55 @@ public class CardAccessBridge
     public float Spoilage
     {
         get => CardBase != null ? CardBase.CurrentSpoilage : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Spoilage));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Spoilage));
     }
 
     public float Usage
     {
         get => CardBase != null ? CardBase.CurrentUsageDurability : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Usage));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Usage));
     }
 
     public float Fuel
     {
         get => CardBase != null ? CardBase.CurrentFuel : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Fuel));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Fuel));
     }
 
     public float Progress
     {
         get => CardBase != null ? CardBase.CurrentProgress : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Progress));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Progress));
     }
 
     public float Special1
     {
         get => CardBase != null ? CardBase.CurrentSpecial1 : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special1));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special1));
     }
 
     public float Special2
     {
         get => CardBase != null ? CardBase.CurrentSpecial2 : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special2));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special2));
     }
 
     public float Special3
     {
         get => CardBase != null ? CardBase.CurrentSpecial3 : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special3));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special3));
     }
 
     public float Special4
     {
         get => CardBase != null ? CardBase.CurrentSpecial4 : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special4));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special4));
     }
 
     public float LiquidQuantity
     {
         get => CardBase != null && CardBase.IsLiquid ? CardBase.CurrentLiquidQuantity : 0;
-        set => CardActionPatcher.Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Liquid));
+        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Liquid));
     }
 
     private IEnumerator ModifyDurability(float val, DurabilitiesTypes types)
@@ -607,6 +610,7 @@ public class CardAccessBridge
             LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
             StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
         };
+        DataNodeTableAccessBridge? initData = null;
         if (ext != null)
         {
             tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -625,6 +629,9 @@ public class CardAccessBridge
             sLiq.StayEmpty = !card;
 
             count.TryModBy(ext[nameof(count)]);
+
+            if (ext[nameof(initData)] is DataNodeTableAccessBridge dataNodeTable)
+                initData = dataNodeTable;
         }
 
         var i = 0;
@@ -632,14 +639,15 @@ public class CardAccessBridge
         {
             i += 1;
 
-            CardActionPatcher.Enumerators.Add(GameManager.Instance.AddCard(cardData, CardBase, true, tDur, true,
-                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false));
+            Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, CardBase, true, tDur, true,
+                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false, SimpleUniqueAccess.SetInitData,
+                initData));
         } while (i < count && cardData.CardType != CardTypes.Liquid);
     }
 
     public void Remove(bool doDrop)
     {
-        CardActionPatcher.Enumerators.Add(GameManager.Instance.RemoveCard(CardBase, true, doDrop));
+        Enumerators.Add(GameManager.Instance.RemoveCard(CardBase, true, doDrop));
     }
 }
 
@@ -676,10 +684,10 @@ public static class CLR2Lua
             Debug.LogWarning($"Dict to LuaTable{TableIndex:X} with no name and not in an env");
         }
 
-        CardActionPatcher.LuaRuntime.NewTable(
+        LuaRuntime.NewTable(
             name ?? $"____zender____CLR2Lua_DataBase_Tables_zender_TmpTable_{TableIndex:X}");
         var luaTable =
-            CardActionPatcher.LuaRuntime.GetTable(
+            LuaRuntime.GetTable(
                 name ?? $"____zender____CLR2Lua_DataBase_Tables_zender_TmpTable_{TableIndex:X}");
         foreach (var (key, value) in dictionary)
         {
@@ -699,10 +707,10 @@ public static class CLR2Lua
             Debug.LogWarning($"List to LuaTable{ListTableIndex:X} with no name and not in an env");
         }
 
-        CardActionPatcher.LuaRuntime.NewTable(
+        LuaRuntime.NewTable(
             name ?? $"____zender____CLR2Lua_DataBase_ListTables_zender_TmpTable_{ListTableIndex:X}");
         var luaTable =
-            CardActionPatcher.LuaRuntime.GetTable(
+            LuaRuntime.GetTable(
                 name ?? $"____zender____CLR2Lua_DataBase_ListTables_zender_TmpTable_{ListTableIndex:X}");
         for (int i = 0; i < list.Count; i++)
         {

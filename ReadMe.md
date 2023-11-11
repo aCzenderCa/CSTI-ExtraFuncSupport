@@ -39,17 +39,21 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 ### 方法Gen ：
 
 * 参数``count`` 生成次数
+
   * ``UniqueIDScriptable``为``CardData``时生成count张对应卡
   * ``UniqueIDScriptable``为``Encounter``时生成一次Encounter
-
 * 额外参数：同``CardAccessBridge``的``AddCard``
 
 ### 方法`void CacheRawValRange(float x, float y)`
+
 激活`MinMaxValue`的缓存机制，传入x,y被视为原始的`MinMaxValue.x,y`
+
 ### 方法`void CacheRawRateRange(float x, float y)`
+
 激活`MinMaxRate`的缓存机制，传入x,y被视为原始的`MinMaxRate.x,y`
 
 #### 示例
+
 ```lua
 local statX = SimpleAccessTool[x]
 statX:CacheRawValRange(statX.StatValueMin,statX.StatValueMax)--需要修改状态值的范围
@@ -57,11 +61,15 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 ```
 
 ### 索引器：传入字符串key，获取对应字段的值或者修改对应字段
+
 获取值时返回``SimpleObjAccess``或``SimpleUniqueAccess``（如果获取的是UniqueIDScriptable），访问``AccessObj``可得到实际值
 
 #### 属性``CardDescription`` 可读写字符串属性，修改卡牌描述
+
 #### 属性``StatValue``和``StatRate``: 若对应``UniqueIDScriptable``为gamestat，获取或修改状态的值
+
 ##### 子属性~Min，~Max，浮点数，修改对应的上下限
+
 #### 属性AccessObj，获取正在访问的对象
 
 ## SimpleObjAccess
@@ -120,19 +128,23 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 ### 索引器
 
 * 参数 ``int index``
-  * 访问的卡为容器时，获取容器内对应槽位的卡 类型``CardAccessBridge``的列表
 
+  * 访问的卡为容器时，获取容器内对应槽位的卡 类型``CardAccessBridge``的列表
 * 参数 ``string key``:从卡的``DroppedCollections``（存档数据）读写内容
+
   * 设置的值直接为整数时，直接以``key``保存整数值
   * 其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
 
 ### `InitData`:
+
 初始化与卡绑定的数据，即Data属性
 
 ### `SaveData`:
+
 保存与卡绑定的数据
 
 #### Data操作示例：
+
 ```lua
 receive:InitData()
 local d = receive.Data
@@ -154,7 +166,7 @@ receive:SaveData()
 
 * 参数：``string id，int amount=1`` 无返回值
 * 以本卡为基础生成``UniqueId``为id的卡牌，若id对应卡牌为液体，``amout``代表流体量，否则``amout``代表生成次数
-* 额外参数： 
+* 额外参数：
   * TransferedDurabilities部分:`float`类型：
 
 ```
@@ -180,6 +192,7 @@ receive:SaveData()
   * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处）
 
 ## 类型`DataNodeTableAccessBridge`:
+
 * 索引器：`string key`
   * 返回值为DataNode支持的类型：
     * Number -> double
@@ -270,7 +283,8 @@ receive:SaveData()
 * `DismantleActionButton`：
 
   * `Setup`：卡牌的按钮初始化函数
-    * `LuaFunction`要求：`输入DismantleActionButton this，DismantleCardAction _Action，CardAccessBridge _Card，string _Action.ActionName.LocalizationKey`
+    * `LuaFunction`要求：`输入DismantleActionButton this，DismantleCardAction _Action，CardAccessBridge _Card，string _Action.ActionName.LocalizationKey 返回两个bool`
+    * 第一个bool返回值决定该按钮是否可见，第二个bool返回值决定该按钮是否可以按下
     * `_Action`：用来初始化按钮的`DismantleCardAction`数据，`_Card`要初始化按钮的卡牌实例，`_Action.ActionName.LocalizationKey`，用于区分同个卡牌的不同按钮，action名的翻译key
 * `GameManager`：
 

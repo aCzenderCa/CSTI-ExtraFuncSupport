@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using CSTI_LuaActionSupport.Helper;
 using NLua;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
@@ -21,7 +22,7 @@ public class LuaEnum
         foreach (var o in enumerable)
         {
             var call = func.Call(init, o);
-            if (call.Length > 0 && call[0] is double d)
+            if (call.Length > 0 && call[0].TryNum<double>() is var d)
             {
                 init = d;
             }

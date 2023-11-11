@@ -220,6 +220,7 @@
         <Compile Include="LuaCodeHelper\EnumHelper.cs" />
         <Compile Include="LuaCodeHelper\LuaEnum.cs" />
         <Compile Include="LuaCodeHelper\LuaScriptRetValues.cs" />
+        <Compile Include="LuaCodeHelper\MoniEnum.cs" />
         <Compile Include="LuaCodeHelper\SimpleAccessTool.cs" />
         <Compile Include="LuaSupportRuntime.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

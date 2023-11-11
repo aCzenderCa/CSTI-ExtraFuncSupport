@@ -28,6 +28,45 @@ public class SimpleAccessTool
             return null;
         }
     }
+
+    public void ClearCurrentEnv()
+    {
+        var gameManager = GameManager.Instance;
+        var gameManagerCurrentExplorableCard = gameManager.CurrentExplorableCard;
+        gameManagerCurrentExplorableCard.ExplorationData.CurrentExploration = 0;
+        gameManagerCurrentExplorableCard.ExplorationData.ExplorationResults.Do(data =>
+        {
+            data.Triggered = false;
+            data.TriggeredWithoutResults = false;
+        });
+        gameManagerCurrentExplorableCard.DroppedCollections = new Dictionary<string, Vector2Int>();
+        ClearStats(gameManagerCurrentExplorableCard);
+
+        var gameManagerCurrentEnvironmentCard = gameManager.CurrentEnvironmentCard;
+        gameManagerCurrentEnvironmentCard.DroppedCollections = new Dictionary<string, Vector2Int>();
+        ClearStats(gameManagerCurrentEnvironmentCard);
+
+        foreach (var card in gameManager.AllVisibleCards.Where(card =>
+                     card.CurrentSlotInfo.SlotType is SlotsTypes.Base or SlotsTypes.Location
+                     && gameManagerCurrentEnvironmentCard.CardModel.DefaultEnvCards.All(data =>
+                         data != card.CardModel)))
+        {
+            Enumerators.Add(gameManager.RemoveCard(card, true, false, GameManager.RemoveOption.RemoveAll));
+        }
+    }
+
+    public static void ClearStats(InGameCardBase cardBase)
+    {
+        cardBase.CurrentUsageDurability = cardBase.CardModel.UsageDurability.FloatValue;
+        cardBase.CurrentProgress = cardBase.CardModel.Progress.FloatValue;
+        cardBase.CurrentFuel = cardBase.CardModel.FuelCapacity.FloatValue;
+        cardBase.CurrentSpoilage = cardBase.CardModel.SpoilageTime.FloatValue;
+        cardBase.CurrentSpecial1 = cardBase.CardModel.SpecialDurability1.FloatValue;
+        cardBase.CurrentSpecial2 = cardBase.CardModel.SpecialDurability2.FloatValue;
+        cardBase.CurrentSpecial3 = cardBase.CardModel.SpecialDurability3.FloatValue;
+        cardBase.CurrentSpecial4 = cardBase.CardModel.SpecialDurability4.FloatValue;
+        cardBase.CardVisuals.RefreshDurabilities();
+    }
 }
 
 public static class FuncFor1_0_5
@@ -268,6 +307,7 @@ SimpleAccessTool[uid]:Gen(1,ext)
                 LiquidCard = cardData.DefaultLiquidContained.LiquidCard,
                 StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
             };
+            DataNodeTableAccessBridge? initData = null;
             if (ext != null)
             {
                 tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -286,14 +326,18 @@ SimpleAccessTool[uid]:Gen(1,ext)
                 sLiq.StayEmpty = !card;
 
                 count.TryModBy(ext[nameof(count)]);
+
+                if (ext[nameof(initData)] is DataNodeTableAccessBridge dataNodeTable)
+                    initData = dataNodeTable;
             }
 
             if (cardData.CardType != CardTypes.Liquid)
             {
                 for (var i = 0; i < count; i++)
                 {
-                    Enumerators.Add(GameManager.Instance.AddCard(cardData, null, true,
-                        tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false));
+                    Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, null, true,
+                        tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false,
+                        SetInitData, initData));
                 }
             }
 
@@ -301,6 +345,14 @@ SimpleAccessTool[uid]:Gen(1,ext)
         }
 
         GenEncounter?.Invoke(UniqueIDScriptable);
+    }
+
+    public static void SetInitData(InGameCardBase cardBase, DataNodeTableAccessBridge? data)
+    {
+        if (data == null) return;
+        var cardAccessBridge = new CardAccessBridge(cardBase);
+        cardAccessBridge.InitData(data);
+        cardAccessBridge.SaveData();
     }
 
     public float StatValue
@@ -347,6 +399,9 @@ SimpleAccessTool[uid]:Gen(1,ext)
         }
     }
 
+    /**
+     * SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]:CacheRawValRange(0,100)
+     */
     public void CacheRawValRange(float x, float y)
     {
         if (UniqueIDScriptable is not GameStat gameStat) return;

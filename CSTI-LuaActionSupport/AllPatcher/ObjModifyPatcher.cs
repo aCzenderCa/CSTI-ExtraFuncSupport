@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
@@ -44,6 +47,26 @@ public static class ObjModifyPatcher
             catch (Exception e)
             {
                 Debug.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(GameManager))]
+    public static class Patch_GameManager_AddCard
+    {
+        [HarmonyTargetMethod]
+        public static MethodBase FindTargetAddCard()
+        {
+            return AccessTools.GetDeclaredMethods(typeof(GameManager)).First(info =>
+                info.Name == nameof(GameManager.AddCard) && info.GetParameters().Length > 16);
+        }
+
+        [HarmonyPostfix]
+        public static void MoniRawAddCard(ref IEnumerator __result)
+        {
+            if (MoniEnum.OnMoniAddCard)
+            {
+                __result = MoniEnum.MoniFunc(__result);
             }
         }
     }
