@@ -27,7 +27,7 @@
 ---@field public Special3 number
 ---@field public Special4 number
 ---@field public LiquidQuantity number
----@field public AddCard fun(this:CardAccessBridge, id:string, count:number, ext:table):void @opt:count, ext
+---@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table):void
 ---@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
 CardAccessBridge = {}
 
@@ -38,9 +38,15 @@ CardAccessBridge = {}
 ---@field public Count number
 DataNodeTableAccessBridge = {}
 
----@class Dictionary<TKey,TVal>:IEnumerable
+---@class Dictionary<TKey,TVal>:IEnumerable<KeyValuePair<TKey, TVal>>
 ---@field [TKey] TVal
+---@field Count number
 Dictionary = {}
+
+---@class KeyValuePair<TKey,TVal>
+---@field Key TKey
+---@field Value TVal
+KeyValuePair = {}
 
 ---@class CommonSimpleAccess
 ---@field public AccessObj any @readonly
@@ -71,12 +77,11 @@ CardData = {}
 ---@class GameStat
 GameStat = {}
 
----@class IList:IEnumerable
----@field public [number] any
+---@class IList<TItem>:IEnumerable<TItem>
+---@field public [number] TItem
 IList = {}
 
-
----@class List<TItem>:IList
+---@class List<TItem>:IList<TItem>
 ---@field public [number] TItem
 ---@field public Count number @readonly
 List = {}

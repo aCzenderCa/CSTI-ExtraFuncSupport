@@ -1,12 +1,18 @@
 ---@alias DataNodeData number|string|boolean|DataNodeTableAccessBridge|nil|Vector2
 ---@class Enum
----@field public Foreach fun(this:Enum, enumerable:IEnumerable, func:fun(x:any):void):void
----@field public Sum fun(this:Enum, enumerable:IEnumerable, init:number, func:fun(sum:number, x:any):number):number
----@field public Map fun(this:Enum, enumerable:IEnumerable, func:fun(x:any):any):IList
+---@field public Foreach fun<TItem>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):void):void
+---@field public Sum fun<TItem>(this:Enum, enumerable:IEnumerable<TItem>, init:number, func:fun(sum:number, x:TItem):number):number
+---@field public Map fun<TItem, TInto>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):TInto):IList<TInto>
 Enum = {}
 
----@class IEnumerable
+---@class IEnumerable<TItem>
+---@field GetEnumerator fun(this:IEnumerable<TItem>):IEnumerator<TItem>
 IEnumerable = {}
+
+---@class IEnumerator<TItem>
+---@field MoveNext fun(this:IEnumerator<TItem>):boolean
+---@field Current TItem
+IEnumerator = {}
 
 ---@class DataNode
 ---@field NodeType number
@@ -70,7 +76,7 @@ function GetGameCardByTag(tag)
 end
 
 ---@param id string
----@param ext table
+---@param ext? table
 ---@return List<CardAccessBridge>
 function GetGameCards(id, ext)
     return nil
@@ -83,15 +89,15 @@ function GetGameCardsByTag(tag)
 end
 
 ---@param id string
----@param _CountInInventories boolean
----@param _CountInBackground boolean
+---@param _CountInInventories? boolean
+---@param _CountInBackground? boolean
 ---@return number
 function CountCardOnBoard(id, _CountInInventories, _CountInBackground)
     return nil
 end
 
 ---@param id string
----@param _CountInInventories boolean
+---@param _CountInInventories? boolean
 ---@return number
 function CountCardInBase(id, _CountInInventories)
     return nil
@@ -104,14 +110,14 @@ function CountCardEquipped(id)
 end
 
 ---@param id string
----@param _CountInInventories boolean
+---@param _CountInInventories? boolean
 ---@return number
 function CountCardInHand(id, _CountInInventories)
     return nil
 end
 
 ---@param id string
----@param _CountInInventories boolean
+---@param _CountInInventories? boolean
 ---@return number
 function CountCardInLocation(id, _CountInInventories)
     return nil
