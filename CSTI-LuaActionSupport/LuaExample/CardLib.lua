@@ -27,7 +27,7 @@
 ---@field public Special3 number
 ---@field public Special4 number
 ---@field public LiquidQuantity number
----@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,any>):void
+---@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
 ---@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
 
 ---@class DataNodeTableAccessBridge
@@ -48,9 +48,24 @@
 ---@field public AccessObj any @readonly
 ---@field public [string] any
 
+---@shape Gen_ext
+---@field Usage number
+---@field Fuel number
+---@field Spoilage number
+---@field ConsumableCharges number
+---@field Liquid number
+---@field Special1 number
+---@field Special2 number
+---@field Special3 number
+---@field Special4 number
+---@field LiquidCard SimpleUniqueAccess
+---@field count number
+---@field initData DataNodeTableAccessBridge
+---@field [any] nil
+
 ---@class SimpleUniqueAccess:CommonSimpleAccess
 ---@field public CardDescription string
----@field public Gen fun(this:SimpleUniqueAccess, count?:number, ext?:table<string,any>):void
+---@field public Gen fun(this:SimpleUniqueAccess, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
 ---@field public StatValue number
 ---@field public StatValueMin number
 ---@field public StatValueMax number
@@ -68,9 +83,10 @@
 
 ---@class GameStat
 
----@class IList<TItem>:IEnumerable<TItem>
+---@class ICollection<TItem>:IEnumerable<TItem>
+---@field Count number
+
+---@class IList<TItem>:ICollection<TItem>
 ---@field public [number] TItem
 
 ---@class List<TItem>:IList<TItem>
----@field public [number] TItem
----@field public Count number @readonly

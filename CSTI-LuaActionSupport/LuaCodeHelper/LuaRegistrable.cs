@@ -12,7 +12,7 @@ public static class LuaRegistrable
     {
         var type = typeof(T);
         basename ??= type.Name;
-        if (lua.GetTable(basename) != null)
+        if (lua.GetObjectFromPath(basename) != null)
         {
             return;
         }

@@ -39,16 +39,14 @@ public class SimpleAccessTool
             data.Triggered = false;
             data.TriggeredWithoutResults = false;
         });
-        gameManagerCurrentExplorableCard.DroppedCollections = new Dictionary<string, Vector2Int>();
         ClearStats(gameManagerCurrentExplorableCard);
 
         var gameManagerCurrentEnvironmentCard = gameManager.CurrentEnvironmentCard;
-        gameManagerCurrentEnvironmentCard.DroppedCollections = new Dictionary<string, Vector2Int>();
         ClearStats(gameManagerCurrentEnvironmentCard);
 
         foreach (var card in gameManager.AllVisibleCards.Where(card =>
-                     card.CurrentSlotInfo.SlotType is SlotsTypes.Base or SlotsTypes.Location
-                     && gameManagerCurrentEnvironmentCard.CardModel.DefaultEnvCards.All(data =>
+                     card.CurrentSlotInfo.SlotType is SlotsTypes.Base or SlotsTypes.Location &&
+                     gameManagerCurrentEnvironmentCard.CardModel.DefaultEnvCards.All(data =>
                          data != card.CardModel)))
         {
             Enumerators.Add(gameManager.RemoveCard(card, true, false, GameManager.RemoveOption.RemoveAll));
@@ -57,6 +55,7 @@ public class SimpleAccessTool
 
     public static void ClearStats(InGameCardBase cardBase)
     {
+        cardBase.DroppedCollections = new Dictionary<string, Vector2Int>();
         cardBase.CurrentUsageDurability = cardBase.CardModel.UsageDurability.FloatValue;
         cardBase.CurrentProgress = cardBase.CardModel.Progress.FloatValue;
         cardBase.CurrentFuel = cardBase.CardModel.FuelCapacity.FloatValue;
@@ -65,7 +64,10 @@ public class SimpleAccessTool
         cardBase.CurrentSpecial2 = cardBase.CardModel.SpecialDurability2.FloatValue;
         cardBase.CurrentSpecial3 = cardBase.CardModel.SpecialDurability3.FloatValue;
         cardBase.CurrentSpecial4 = cardBase.CardModel.SpecialDurability4.FloatValue;
-        cardBase.CardVisuals.RefreshDurabilities();
+        if (cardBase.CardVisuals)
+        {
+            cardBase.CardVisuals.RefreshDurabilities();
+        }
     }
 }
 

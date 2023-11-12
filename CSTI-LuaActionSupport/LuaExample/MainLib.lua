@@ -133,8 +133,11 @@ function GetGameCardByTag(tag)
     return nil
 end
 
+---@shape GetGameCards_ext
+---@field type string
+---@field [any] nil
 ---@param id string
----@param ext? table<string,any>
+---@param ext? GetGameCards_ext
 ---@return List<CardAccessBridge>
 function GetGameCards(id, ext)
     return nil
