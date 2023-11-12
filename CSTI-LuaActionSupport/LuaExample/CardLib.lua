@@ -27,35 +27,30 @@
 ---@field public Special3 number
 ---@field public Special4 number
 ---@field public LiquidQuantity number
----@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table):void
+---@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,any>):void
 ---@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
-CardAccessBridge = {}
 
 ---@class DataNodeTableAccessBridge
 ---@field public LuaKeys table
 ---@field public [string] DataNodeData
 ---@field public Table Dictionary<string, DataNode> @readonly
 ---@field public Count number
-DataNodeTableAccessBridge = {}
 
 ---@class Dictionary<TKey,TVal>:IEnumerable<KeyValuePair<TKey, TVal>>
 ---@field [TKey] TVal
 ---@field Count number
-Dictionary = {}
 
 ---@class KeyValuePair<TKey,TVal>
 ---@field Key TKey
 ---@field Value TVal
-KeyValuePair = {}
 
 ---@class CommonSimpleAccess
 ---@field public AccessObj any @readonly
 ---@field public [string] any
-CommonSimpleAccess = {}
 
 ---@class SimpleUniqueAccess:CommonSimpleAccess
 ---@field public CardDescription string
----@field public Gen fun(this:SimpleUniqueAccess, count:number, ext:table):void
+---@field public Gen fun(this:SimpleUniqueAccess, count?:number, ext?:table<string,any>):void
 ---@field public StatValue number
 ---@field public StatValueMin number
 ---@field public StatValueMax number
@@ -64,24 +59,18 @@ CommonSimpleAccess = {}
 ---@field public StatRateMax number
 ---@field public CacheRawValRange fun(this:SimpleUniqueAccess, x:number, y:number):void
 ---@field public CacheRawRateRange fun(this:SimpleUniqueAccess, x:number, y:number):void
-SimpleUniqueAccess = {}
 
 ---@class GameStatAccessBridge
 ---@field public Value number
 ---@field public Rate number
-GameStatAccessBridge = {}
 
 ---@class CardData
-CardData = {}
 
 ---@class GameStat
-GameStat = {}
 
 ---@class IList<TItem>:IEnumerable<TItem>
 ---@field public [number] TItem
-IList = {}
 
 ---@class List<TItem>:IList<TItem>
 ---@field public [number] TItem
 ---@field public Count number @readonly
-List = {}

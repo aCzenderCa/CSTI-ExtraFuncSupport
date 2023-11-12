@@ -5,14 +5,19 @@
 ---@field public Map fun<TItem, TInto>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):TInto):IList<TInto>
 Enum = {}
 
+---@class DebugBridge
+---@field info any @write only
+---@field debug any @write only
+---@field warn any @write only
+---@field error any @write only
+debug = {}
+
 ---@class IEnumerable<TItem>
 ---@field GetEnumerator fun(this:IEnumerable<TItem>):IEnumerator<TItem>
-IEnumerable = {}
 
 ---@class IEnumerator<TItem>
 ---@field MoveNext fun(this:IEnumerator<TItem>):boolean
 ---@field Current TItem
-IEnumerator = {}
 
 ---@class DataNode
 ---@field NodeType number
@@ -21,12 +26,10 @@ IEnumerator = {}
 ---@field _bool boolean
 ---@field vector2 Vector2
 ---@field table Dictionary<string, DataNode>
-DataNode = {}
 
 ---@class Vector2
 ---@field x number
 ---@field y number
-Vector2 = {}
 
 ---@class Register
 ---@field public Reg fun(this:Register, klass:string, method:string, uid:string, function:function)
@@ -76,7 +79,7 @@ function GetGameCardByTag(tag)
 end
 
 ---@param id string
----@param ext? table
+---@param ext? table<string,any>
 ---@return List<CardAccessBridge>
 function GetGameCards(id, ext)
     return nil
