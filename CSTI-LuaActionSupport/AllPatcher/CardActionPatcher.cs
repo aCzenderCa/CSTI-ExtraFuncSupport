@@ -31,8 +31,10 @@ public static class CardActionPatcher
         LuaRuntime["debug"] = DebugBridge;
         LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
 
-        typeof(DataAccessTool).Register(LuaRuntime);
-        typeof(CardActionPatcher).Register(LuaRuntime);
+        LuaRuntime.Register(typeof(DataAccessTool));
+        LuaRuntime.Register(typeof(CardActionPatcher));
+        LuaRuntime.Register<CardTypes>();
+        LuaRuntime.Register<DataNode.DataNodeType>();
 
         LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
         LuaRuntime[nameof(Register)] = Register;
@@ -53,7 +55,7 @@ public static class CardActionPatcher
         return GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex];
     }
 
-    [LuaFunc,TestCode("""SaveCurrentSlot("__test",10)""")]
+    [LuaFunc, TestCode("""SaveCurrentSlot("__test",10)""")]
     public static void SaveCurrentSlot(string key, object val)
     {
         CurrentGSlotSaveData().CommonSave(key, val);

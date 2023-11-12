@@ -7,7 +7,25 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class LuaRegistrable
 {
-    public static void Register(this Type typeInfo, Lua LuaRuntime, string? basePath = null)
+    public static void Register<T>(this Lua lua, string? basename = null)
+        where T : struct, Enum
+    {
+        var type = typeof(T);
+        basename ??= type.Name;
+        if (lua.GetTable(basename) != null)
+        {
+            return;
+        }
+
+        lua.NewTable(basename);
+        var luaTable = lua.GetTable(basename);
+        foreach (var value in Enum.GetValues(type))
+        {
+            luaTable[luaTable.Keys.Count + 1] = value;
+        }
+    }
+
+    public static void Register(this Lua LuaRuntime, Type typeInfo, string? basePath = null)
     {
         var declaredMethods = AccessTools.GetDeclaredMethods(typeInfo);
         if (basePath != null && LuaRuntime.GetTable(basePath) == null)
@@ -39,7 +57,7 @@ public class LuaFuncAttribute : Attribute
     public string? FuncName { get; set; }
 }
 
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Method)]
 public class TestCodeAttribute : Attribute
 {
     private string Code;

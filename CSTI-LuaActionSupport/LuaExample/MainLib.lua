@@ -1,3 +1,58 @@
+ModData = {}
+
+---@type CardAccessBridge
+receive = nil
+
+---@type CardAccessBridge
+given = nil
+
+---@class LuaScriptRetValues
+---@field [string] any
+
+---@type LuaScriptRetValues
+Ret = nil
+
+---@class GameManager
+
+---@type GameManager
+gameManager = nil
+
+---@type CardAccessBridge
+env = nil
+
+---@type CardAccessBridge
+exp = nil
+
+---@type CardAccessBridge
+weather = nil
+
+---@class CardTypes
+---@class DataNodeType
+
+---@class DataNodeTypeBase
+---@field Number DataNodeType
+---@field Str DataNodeType
+---@field Bool DataNodeType
+---@field Table DataNodeType
+---@field Nil DataNodeType
+---@field Vector2 DataNodeType
+DataNodeType = {}
+
+---@class CardTypesBase
+---@field Item CardTypes
+---@field Base CardTypes
+---@field Location CardTypes
+---@field Event CardTypes
+---@field Environment CardTypes
+---@field Weather CardTypes
+---@field Hand CardTypes
+---@field Blueprint CardTypes
+---@field Explorable CardTypes
+---@field Liquid CardTypes
+---@field EnvImprovement CardTypes
+---@field EnvDamage CardTypes
+CardTypes = {}
+
 ---@alias DataNodeData number|string|boolean|DataNodeTableAccessBridge|nil|Vector2
 ---@class Enum
 ---@field public Foreach fun<TItem>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):void):void
@@ -20,7 +75,7 @@ debug = {}
 ---@field Current TItem
 
 ---@class DataNode
----@field NodeType number
+---@field NodeType DataNodeType
 ---@field number number
 ---@field str string
 ---@field _bool boolean
