@@ -33,6 +33,8 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 
 索引器 参数类型 ``string`` 传入uid
 返回``SimpleUniqueAccess``
+* 成员函数
+  * void ClearCurrentEnv() 清空并重置当前场景
 
 ## SimpleUniqueAccess——UniqueIDScriptable快速操作接口
 
@@ -184,6 +186,7 @@ receive:SaveData()
 对应同名字段的值
 
 ``"LiquidCard"``：``SimpleUniqueAccess``类型，伴随生成什么流体
+  * `"initData"`:`DataNodeTableAccessBridge`类型，初始化携带的lua-nbt数据
 
 ### `Remove`：
 
@@ -201,6 +204,10 @@ receive:SaveData()
     * Table -> DataNodeTableAccessBridge
     * Nil
     * Vector2
+
+* 属性
+  * LuaTable LuaKeys
+    * 以LuaTable返回字典的键
 
 ## ``GameStatAccessBridge``（游戏状态访问桥）
 

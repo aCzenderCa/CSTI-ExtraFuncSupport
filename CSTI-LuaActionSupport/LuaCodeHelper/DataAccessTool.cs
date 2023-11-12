@@ -5,24 +5,24 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using BepInEx.Logging;
 using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
 using gfoidl.Base64;
 using NLua;
 using UnityEngine;
-using Logger = BepInEx.Logging.Logger;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class DataAccessTool
 {
+    [LuaFunc, TestCode("""debug.debug=GetCard("8695a7aa22521aa45be582d3c1558f78")""")]
     public static CardData GetCard(string id)
     {
         return UniqueIDScriptable.GetFromID<CardData>(id);
     }
 
+    [LuaFunc]
     public static CardAccessBridge GetGameCard(string id)
     {
         var inGameCardBases = new List<InGameCardBase>();
@@ -31,6 +31,7 @@ public static class DataAccessTool
         return new CardAccessBridge(inGameCardBases.FirstOrDefault());
     }
 
+    [LuaFunc]
     public static CardAccessBridge? GetGameCardByTag(string tag)
     {
         var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
@@ -39,11 +40,11 @@ public static class DataAccessTool
         return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
     }
 
-    /**
-     * local uid = "8695a7aa22521aa45be582d3c1558f78"
-local ext = { type = "Base" }
-debug.debug = GetGameCards(uid,ext)[0].CardBase
-     */
+    [LuaFunc, TestCode("""
+                       local uid = "8695a7aa22521aa45be582d3c1558f78"
+                       local ext = { type = "Base" }
+                       debug.debug = GetGameCards(uid,ext)[0].CardBase
+                       """)]
     public static List<CardAccessBridge>? GetGameCards(string id, LuaTable? ext = null)
     {
         try
@@ -78,6 +79,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         }
     }
 
+    [LuaFunc]
     public static List<CardAccessBridge> GetGameCardsByTag(string tag)
     {
         var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
@@ -86,6 +88,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return inGameCardBases.Select(cardBase => new CardAccessBridge(cardBase)).ToList();
     }
 
+    [LuaFunc]
     public static int CountCardOnBoard(string id, bool _CountInInventories = true, bool _CountInBackground = false)
     {
         var list = new List<InGameCardBase>();
@@ -94,6 +97,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return list.Count;
     }
 
+    [LuaFunc]
     public static int CountCardInBase(string id, bool _CountInInventories = true)
     {
         var list = new List<InGameCardBase>();
@@ -102,6 +106,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return list.Count(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base);
     }
 
+    [LuaFunc]
     public static int CountCardEquipped(string id)
     {
         var list = new List<InGameCardBase>();
@@ -109,6 +114,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return list.Count(cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment);
     }
 
+    [LuaFunc]
     public static int CountCardInHand(string id, bool _CountInInventories = true)
     {
         var list = new List<InGameCardBase>();
@@ -116,6 +122,7 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return list.Count;
     }
 
+    [LuaFunc]
     public static int CountCardInLocation(string id, bool _CountInInventories = true)
     {
         var list = new List<InGameCardBase>();
@@ -124,11 +131,13 @@ debug.debug = GetGameCards(uid,ext)[0].CardBase
         return list.Count;
     }
 
+    [LuaFunc]
     public static GameStat GetStat(string id)
     {
         return UniqueIDScriptable.GetFromID<GameStat>(id);
     }
 
+    [LuaFunc]
     public static GameStatAccessBridge GetGameStat(string id)
     {
         return new GameStatAccessBridge(GameManager.Instance.StatsDict[GetStat(id)]);
@@ -392,10 +401,10 @@ public class CardAccessBridge
     public void SaveData()
     {
         if (CardBase == null) return;
-        if (_dataNode is not {NodeType: DataNode.DataNodeType.Table}) return;
+        if (_dataNode is not {NodeType: DataNode.DataNodeType.Table} dataNode) return;
         var memoryStream = new MemoryStream();
         var binaryWriter = new BinaryWriter(memoryStream);
-        _dataNode.Value.Save(binaryWriter);
+        dataNode.Save(binaryWriter);
         var array = memoryStream.ToArray();
         memoryStream.Close();
         if (CardBase.DroppedCollections.FirstOrDefault(pair => DataNodeReg.IsMatch(pair.Key)) is {Key: not null} p)

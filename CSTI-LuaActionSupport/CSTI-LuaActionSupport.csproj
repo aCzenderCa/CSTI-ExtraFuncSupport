@@ -218,6 +218,7 @@
         <Compile Include="LuaCodeHelper\DataChangeHelper.cs" />
         <Compile Include="LuaCodeHelper\DeconstructHelper.cs" />
         <Compile Include="LuaCodeHelper\EnumHelper.cs" />
+        <Compile Include="LuaCodeHelper\LuaRegistrable.cs" />
         <Compile Include="LuaCodeHelper\LuaEnum.cs" />
         <Compile Include="LuaCodeHelper\LuaScriptRetValues.cs" />
         <Compile Include="LuaCodeHelper\MoniEnum.cs" />
@@ -232,6 +233,8 @@
       <Content Include="luaActionReadMe.docx">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <Content Include="LuaExample\CardLib.lua" />
+      <Content Include="LuaExample\MainLib.lua" />
     </ItemGroup>
     <ItemGroup>
       <None Include="App.config" />

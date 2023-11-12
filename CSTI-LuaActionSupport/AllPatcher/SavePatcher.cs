@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.SaveEnv;
 using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;

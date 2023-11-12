@@ -280,11 +280,11 @@ public class SimpleUniqueAccess : CommonSimpleAccess
         }
     }
 
-    /**
-     * local uid = "cee786e0869369d4597877e838f2586f"
-local ext = { Usage = 5 }
-SimpleAccessTool[uid]:Gen(1,ext)
-     */
+    [TestCode("""
+              local uid = "cee786e0869369d4597877e838f2586f"
+              local ext = { Usage = 5 }
+              SimpleAccessTool[uid]:Gen(1,ext)
+              """)]
     public void Gen(int count = 1, LuaTable? ext = null)
     {
         if (UniqueIDScriptable is CardData cardData)
@@ -399,9 +399,7 @@ SimpleAccessTool[uid]:Gen(1,ext)
         }
     }
 
-    /**
-     * SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]:CacheRawValRange(0,100)
-     */
+    [TestCode("""SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]:CacheRawValRange(0,100)""")]
     public void CacheRawValRange(float x, float y)
     {
         if (UniqueIDScriptable is not GameStat gameStat) return;

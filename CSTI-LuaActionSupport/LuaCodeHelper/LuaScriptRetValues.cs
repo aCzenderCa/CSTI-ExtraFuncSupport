@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using NLua;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 

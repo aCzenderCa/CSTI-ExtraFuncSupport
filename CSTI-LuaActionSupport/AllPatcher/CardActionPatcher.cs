@@ -7,10 +7,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
-using static CSTI_LuaActionSupport.LuaCodeHelper.DataAccessTool;
 using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using HarmonyLib;
-using KeraLua;
 using NLua;
 using UnityEngine;
 using Lua = NLua.Lua;
@@ -33,41 +31,8 @@ public static class CardActionPatcher
         LuaRuntime["debug"] = DebugBridge;
         LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
 
-        LuaRuntime.RegisterFunction(nameof(GetCard),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetCard)));
-        LuaRuntime.RegisterFunction(nameof(GetGameCard),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCard)));
-        LuaRuntime.RegisterFunction(nameof(GetGameCardByTag),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCardByTag)));
-        LuaRuntime.RegisterFunction(nameof(GetGameCards),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCards)));
-        LuaRuntime.RegisterFunction(nameof(GetGameCardsByTag),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetGameCardsByTag)));
-        LuaRuntime.RegisterFunction(nameof(GetStat),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetStat)));
-        LuaRuntime.RegisterFunction(nameof(GetGameStat),
-            AccessTools.Method(typeof(DataAccessTool), nameof(GetGameStat)));
-        LuaRuntime.RegisterFunction(nameof(CountCardOnBoard),
-            AccessTools.Method(typeof(DataAccessTool), nameof(CountCardOnBoard)));
-        LuaRuntime.RegisterFunction(nameof(CountCardInBase),
-            AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInBase)));
-        LuaRuntime.RegisterFunction(nameof(CountCardInHand),
-            AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInHand)));
-        LuaRuntime.RegisterFunction(nameof(CountCardInLocation),
-            AccessTools.Method(typeof(DataAccessTool), nameof(CountCardInLocation)));
-        LuaRuntime.RegisterFunction(nameof(CountCardEquipped),
-            AccessTools.Method(typeof(DataAccessTool), nameof(CountCardEquipped)));
-
-
-        LuaRuntime.RegisterFunction(nameof(SaveCurrentSlot),
-            AccessTools.Method(typeof(CardActionPatcher), nameof(SaveCurrentSlot)));
-        LuaRuntime.RegisterFunction(nameof(SaveGlobal),
-            AccessTools.Method(typeof(CardActionPatcher), nameof(SaveGlobal)));
-        LuaRuntime.RegisterFunction(nameof(LoadCurrentSlot),
-            AccessTools.Method(typeof(CardActionPatcher), nameof(LoadCurrentSlot)));
-        LuaRuntime.RegisterFunction(nameof(LoadGlobal),
-            AccessTools.Method(typeof(CardActionPatcher), nameof(LoadGlobal)));
-
+        typeof(DataAccessTool).Register(LuaRuntime);
+        typeof(CardActionPatcher).Register(LuaRuntime);
 
         LuaRuntime[nameof(LuaEnum.Enum)] = LuaEnum.Enum;
         LuaRuntime[nameof(Register)] = Register;
@@ -88,19 +53,19 @@ public static class CardActionPatcher
         return GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex];
     }
 
-    /**
-     * SaveCurrentSlot("__test",10)
-     */
+    [LuaFunc,TestCode("""SaveCurrentSlot("__test",10)""")]
     public static void SaveCurrentSlot(string key, object val)
     {
         CurrentGSlotSaveData().CommonSave(key, val);
     }
 
+    [LuaFunc]
     public static void SaveGlobal(string key, object val)
     {
         GSaveData.CommonSave(key, val);
     }
 
+    [LuaFunc]
     public static object? LoadCurrentSlot(string key)
     {
         if (CurrentGSlotSaveData().TryGetValue(key, out var node))
@@ -111,6 +76,7 @@ public static class CardActionPatcher
         return "";
     }
 
+    [LuaFunc]
     public static object? LoadGlobal(string key)
     {
         if (GSaveData.TryGetValue(key, out var node))
@@ -216,7 +182,7 @@ public static class CardActionPatcher
                 var luaTable = LuaRuntime.GetTable("__temp");
                 foreach (var key in Keys)
                 {
-                    luaTable[luaTable.Keys.Count] = key;
+                    luaTable[luaTable.Keys.Count + 1] = key;
                 }
 
                 return luaTable;
