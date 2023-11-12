@@ -1,9 +1,9 @@
+---@alias DataNodeData number|string|boolean|DataNodeTableAccessBridge|nil|Vector2
 ---@class Enum
 ---@field public Foreach fun(this:Enum, enumerable:IEnumerable, func:fun(x:any):void):void
 ---@field public Sum fun(this:Enum, enumerable:IEnumerable, init:number, func:fun(sum:number, x:any):number):number
 ---@field public Map fun(this:Enum, enumerable:IEnumerable, func:fun(x:any):any):IList
-EnumCls = {}
-Enum = EnumCls()
+Enum = {}
 
 ---@class IEnumerable
 IEnumerable = {}
@@ -24,14 +24,12 @@ Vector2 = {}
 
 ---@class Register
 ---@field public Reg fun(this:Register, klass:string, method:string, uid:string, function:function)
-RegisterCls = {}
-Register = RegisterCls()
+Register = {}
 
 ---@class SimpleAccessTool
----@field public __index fun(key:string):SimpleUniqueAccess
+---@field public [string] SimpleUniqueAccess
 ---@field public ClearCurrentEnv fun():void
-SimpleAccessToolCls = {}
-SimpleAccessTool = SimpleAccessToolCls()
+SimpleAccessTool = {}
 
 ---@param key string
 function SaveCurrentSlot(key, val)
@@ -42,39 +40,46 @@ function SaveGlobal(key, val)
 end
 
 ---@param key string
----@return any
+---@return DataNodeData
 function LoadCurrentSlot(key)
+    return nil
 end
 
 ---@param key string
----@return any
+---@return DataNodeData
 function LoadGlobal(key)
+    return nil
 end
 
 ---@param id string
 ---@return CardData
 function GetCard(id)
+    return nil
 end
 
 ---@param id string
 ---@return CardAccessBridge
 function GetGameCard(id)
+    return nil
 end
 
 ---@param tag string
 ---@return CardAccessBridge
 function GetGameCardByTag(tag)
+    return nil
 end
 
 ---@param id string
 ---@param ext table
 ---@return List<CardAccessBridge>
 function GetGameCards(id, ext)
+    return nil
 end
 
 ---@param tag string
 ---@return List<CardAccessBridge>
 function GetGameCardsByTag(tag)
+    return nil
 end
 
 ---@param id string
@@ -82,37 +87,44 @@ end
 ---@param _CountInBackground boolean
 ---@return number
 function CountCardOnBoard(id, _CountInInventories, _CountInBackground)
+    return nil
 end
 
 ---@param id string
 ---@param _CountInInventories boolean
 ---@return number
 function CountCardInBase(id, _CountInInventories)
+    return nil
 end
 
 ---@param id string
 ---@return number
 function CountCardEquipped(id)
+    return nil
 end
 
 ---@param id string
 ---@param _CountInInventories boolean
 ---@return number
 function CountCardInHand(id, _CountInInventories)
+    return nil
 end
 
 ---@param id string
 ---@param _CountInInventories boolean
 ---@return number
 function CountCardInLocation(id, _CountInInventories)
+    return nil
 end
 
 ---@param id string
 ---@return GameStat
 function GetStat(id)
+    return nil
 end
 
 ---@param id string
 ---@return GameStatAccessBridge
 function GetStat(id)
+    return nil
 end

@@ -7,8 +7,8 @@
 ---@field public CheckInventory fun(this:CardAccessBridge, ...:string):boolean
 ---@field public HasInInventory fun(this:CardAccessBridge, uid:string, needCount:number):boolean
 ---@field public LiquidInventory fun(this:CardAccessBridge):CardAccessBridge
----@field public __index fun(key:string):any
----@field public __index fun(index:number):CardAccessBridge[]
+---@field public [string] any
+---@field public [number] List<CardAccessBridge>
 ---@field public SlotType string
 ---@field public CardType string
 ---@field public Weight number
@@ -33,17 +33,18 @@ CardAccessBridge = {}
 
 ---@class DataNodeTableAccessBridge
 ---@field public LuaKeys table
----@field public __index fun(key:string):any
+---@field public [string] DataNodeData
 ---@field public Table Dictionary<string, DataNode> @readonly
 ---@field public Count number
 DataNodeTableAccessBridge = {}
 
----@class Dictionary:IEnumerable
+---@class Dictionary<TKey,TVal>:IEnumerable
+---@field [TKey] TVal
 Dictionary = {}
 
 ---@class CommonSimpleAccess
 ---@field public AccessObj any @readonly
----@field public __index fun(key:string):any
+---@field public [string] any
 CommonSimpleAccess = {}
 
 ---@class SimpleUniqueAccess:CommonSimpleAccess
@@ -71,10 +72,11 @@ CardData = {}
 GameStat = {}
 
 ---@class IList:IEnumerable
----@field public __index fun(index:number):any
+---@field public [number] any
 IList = {}
 
----@generic TItem
----@class List:IList
----@field public __index fun(index:number):TItem
+
+---@class List<TItem>:IList
+---@field public [number] TItem
+---@field public Count number @readonly
 List = {}
