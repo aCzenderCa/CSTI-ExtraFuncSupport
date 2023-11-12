@@ -9,6 +9,7 @@ using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using HarmonyLib;
+using ILMerge;
 using NLua;
 using UnityEngine;
 using Lua = NLua.Lua;
@@ -22,6 +23,8 @@ public static class CardActionPatcher
     public static readonly LuaTable ModData;
     public static readonly Dictionary<string, DataNode> GSaveData = new();
     public static readonly Dictionary<int, Dictionary<string, DataNode>> GSlotSaveData = new();
+    private const string _InnerFuncBase = "CSTI_LuaActionSupport__InnerFunc";
+    public static LuaTable InnerFuncBase => (LuaTable) LuaRuntime[_InnerFuncBase];
 
 
     static CardActionPatcher()
@@ -55,7 +58,9 @@ public static class CardActionPatcher
         return GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex];
     }
 
-    [LuaFunc, TestCode("""SaveCurrentSlot("__test",10)""")]
+    [LuaFunc, TestCode("""
+                       SaveCurrentSlot("__test",10)
+                       """)]
     public static void SaveCurrentSlot(string key, object val)
     {
         CurrentGSlotSaveData().CommonSave(key, val);

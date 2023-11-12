@@ -58,6 +58,8 @@ CardTypes = {}
 ---@field public Foreach fun<TItem>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):void):void
 ---@field public Sum fun<TItem>(this:Enum, enumerable:IEnumerable<TItem>, init:number, func:fun(sum:number, x:TItem):number):number
 ---@field public Map fun<TItem, TInto>(this:Enum, enumerable:IEnumerable<TItem>, func:fun(x:TItem):TInto):IList<TInto>
+---@field public Pairs fun<TItem>(this:Enum, list:IList<TItem>):(fun(list:IEnumerator<TItem>, i:number):(number, TItem), IEnumerator<TItem>, number)
+---@field public Pairs fun<TKey,TVal>(this:Enum, dict:Dictionary<TKey,TVal>):(fun(dict:Dictionary<TKey,TVal>, key:TKey):(TKey,TVal), Dictionary<TKey,TVal>, TKey)
 Enum = {}
 
 ---@class DebugBridge
