@@ -83,7 +83,7 @@ public class LuaEnum
                 ((LuaIter<IDictionaryEnumerator, object?, object?>) _iter).Method);
 
 
-            object? _iter(IDictionaryEnumerator dictionaryEnumerator, object? stat, out object? value)
+            object? _iter(IDictionaryEnumerator dictionaryEnumerator, object? key, out object? value)
             {
                 if (dictionaryEnumerator.MoveNext())
                 {
@@ -131,7 +131,7 @@ public class LuaEnum
         foreach (var o in enumerable)
         {
             var call = func.Call(init, o);
-            if (call.Length > 0 && call[0].TryNum<double>() is var d)
+            if (call.Length > 0 && call[0].TryNum<double>() is { } d)
             {
                 init = d;
             }

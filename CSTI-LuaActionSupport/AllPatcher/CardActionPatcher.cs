@@ -31,6 +31,7 @@ public static class CardActionPatcher
     {
         LuaRuntime.State.OpenLibs();
         LuaRuntime.State.Encoding = Encoding.UTF8;
+        LuaRuntime["std__debug"] = LuaRuntime["debug"];
         LuaRuntime["debug"] = DebugBridge;
         LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
 

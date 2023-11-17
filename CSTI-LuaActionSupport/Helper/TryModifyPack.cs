@@ -23,7 +23,7 @@ public static class TryModifyPack
             typeof(_TryNum<int>).GetGenericTypeDefinition().MakeGenericType(self));
     }
 
-    public static T TryNum<T>(this object? o) where T : struct
+    public static T? TryNum<T>(this object? o) where T : struct
     {
         if (o == null) return default;
         var type = o.GetType();
@@ -54,9 +54,9 @@ public static class TryModifyPack
     {
         if (o == null) return;
         var type = o.GetType();
-        if (FloatLike.ContainsKey(type))
+        if (FloatLike.ContainsKey(type) && o.TryNum<float>() is { } f)
         {
-            self = o.TryNum<float>();
+            self = f;
         }
     }
 
@@ -64,9 +64,9 @@ public static class TryModifyPack
     {
         if (o == null) return;
         var type = o.GetType();
-        if (FloatLike.ContainsKey(type))
+        if (FloatLike.ContainsKey(type) && o.TryNum<int>() is { } i)
         {
-            self = o.TryNum<int>();
+            self = i;
         }
     }
 }

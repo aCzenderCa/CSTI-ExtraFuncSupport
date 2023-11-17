@@ -238,9 +238,9 @@ public class CardAccessBridge
                 {
                     var _uid = cond["uid"] is string s ? s : null;
                     var needCount = cond["needCount"].TryNum<int>();
-                    if (_uid is not null)
+                    if (_uid is not null && needCount is { } _needCount)
                     {
-                        check |= HasInInventory(_uid, needCount);
+                        check |= HasInInventory(_uid, _needCount);
                     }
 
                     break;

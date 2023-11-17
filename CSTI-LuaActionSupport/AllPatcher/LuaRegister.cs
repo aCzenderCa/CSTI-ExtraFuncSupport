@@ -64,6 +64,77 @@ public class LuaRegister
         AllReg[klass][method][uid].Add(function);
     }
 
+    [HarmonyPostfix, HarmonyPatch(typeof(CardOnCardAction), nameof(CardOnCardAction.CardsAndTagsAreCorrect))]
+    public static void Lua_CardOnCardAction_CardsAndTagsAreCorrect(CardOnCardAction __instance,
+        InGameCardBase _Receiving, InGameCardBase _Given, ref bool __result)
+    {
+        if (!Register.TryGet(nameof(CardOnCardAction), nameof(CardOnCardAction.CardsAndTagsAreCorrect),
+                __instance.ActionName.LocalizationKey, out var regs)) return;
+        foreach (var luaFunction in regs)
+        {
+            try
+            {
+                var objects = luaFunction.Call(__instance, new CardAccessBridge(_Receiving),
+                    new CardAccessBridge(_Given), __result);
+                if (objects.Length > 0 && objects[0] is bool flag)
+                {
+                    __result = flag;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        }
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(CardAction), nameof(CardAction.CardsAndTagsAreCorrect))]
+    public static void Lua_CardAction_CardsAndTagsAreCorrect(CardAction __instance,
+        InGameCardBase _ForCard, ref bool __result)
+    {
+        if (!Register.TryGet(nameof(CardAction), nameof(CardAction.CardsAndTagsAreCorrect),
+                __instance.ActionName.LocalizationKey, out var regs)) return;
+        foreach (var luaFunction in regs)
+        {
+            try
+            {
+                var objects = luaFunction.Call(__instance, new CardAccessBridge(_ForCard), __result);
+                if (objects.Length > 0 && objects[0] is bool flag)
+                {
+                    __result = flag;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        }
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(InGameStat), nameof(InGameStat.CurrentValue))]
+    public static void LuaGameStatValue(InGameStat __instance, bool _NotAtBase, ref float __result)
+    {
+        if (__instance == null || __instance.StatModel == null) return;
+        if (!Register.TryGet(nameof(InGameStat), nameof(InGameStat.CurrentValue), __instance.StatModel.UniqueID,
+                out var regs)) return;
+        foreach (var luaFunction in regs)
+        {
+            try
+            {
+                var objects = luaFunction.Call(new GameStatAccessBridge(__instance),
+                    new SimpleUniqueAccess(__instance.StatModel), __result, _NotAtBase);
+                if (objects.Length > 0 && objects[0] is { } val && val.TryNum<float>() is { } f)
+                {
+                    __result = f;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        }
+    }
+
     [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CanReceiveInInventory))]
     public static void LuaCanReceiveInInventory(InGameCardBase __instance, CardData _Card, CardData _WithLiquid,
         ref bool __result)

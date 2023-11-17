@@ -1,4 +1,5 @@
 ---@class CardAccessBridge
+---@field public CardBase InGameCardBase
 ---@field public CardModel SimpleUniqueAccess @readonly
 ---@field public IsEquipped boolean @readonly
 ---@field public IsInHand boolean @readonly
@@ -30,14 +31,16 @@
 ---@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
 ---@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
 
+---@class InGameCardBase
+
 ---@class DataNodeTableAccessBridge
 ---@field public LuaKeys table
 ---@field public [string] DataNodeData
 ---@field public Table Dictionary<string, DataNode> @readonly
 ---@field public Count number
 
----@class Dictionary<TKey,TVal>:IEnumerable<KeyValuePair<TKey, TVal>>
----@field [TKey] TVal
+---@class Dictionary<TKey1,TVal1>:IEnumerable<KeyValuePair<TKey1, TVal1>>
+---@field [TKey1] TVal1
 ---@field Count number
 
 ---@class KeyValuePair<TKey,TVal>

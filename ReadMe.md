@@ -271,7 +271,11 @@ receive:SaveData()
 
 全局变量`Register`：`LuaRegister`类型
 
-函数`Reg`：`string klass, string method, string uid, LuaFunction function``klass`：要patch的类的名字，如`"InGameCardBase"``method`：要patch的函数的名字，如`"CanReceiveInInventory"``uid`：如果patch的函数基于`UniqueIDScriptable`类型对象执行，那么只有`uid`匹配，注册的func才会被用到，其他情况另行讨论（暂无）
+函数`Reg`：`string klass, string method, string uid, LuaFunction function`\
+`klass`：要patch的类的名字，如`"InGameCardBase"`\
+`method`：要patch的函数的名字，如`"CanReceiveInInventory"`\
+`uid`：如果patch的函数基于`UniqueIDScriptable`类型对象执行，那么只有`uid`匹配，注册的func才会被用到，如果patch的函数
+基于`CardAction`（及其子类）类型对象执行，那么`uid`需要与`ActionName.LocalizationKey`匹配
 
 * `InGameCardBase`：
 
@@ -301,6 +305,25 @@ receive:SaveData()
     * 可以在这里进行状态修改，生成卡等非即时操作
   * `ChangeStatRate`：修改状态速率的函数
     * `LuaFunction`要求：输入`GameManager this，GameStatAccessBridge _Stat，float _Rate，StatModification _Modification` 无返回值
+
+* `InGameStat`
+  * `CurrentValue`:返回状态当前数值（修正+基础值+考虑上下限）
+    * `LuaFunction`要求：输入`GameStatAccessBridge __instance, SimpleUniqueAccess __instance.StatModel, float __result, bool _NotAtBase`
+      * `__result`:C#代码计算得的结果或按顺序上一个Lua Patch返回的结果
+    * 返回float:若返回，将__result改为返回值
+
+* `CardOnCardAction`
+  * `CardsAndTagsAreCorrect`:某个Given Card是否满足交互条件
+    * `LuaFunction`要求：输入`CardOnCardAction __instance, CardAccessBridge _Receiving, CardAccessBridge _Given, bool __result`
+      * `__result`:C#代码计算得的条件结果或按顺序上一个Lua Patch返回的结果
+    * 返回bool:若返回，将__result改为返回值
+
+* `CardAction`
+  * `CardsAndTagsAreCorrect`:某个Receiving Card是否满足交互条件
+    * `LuaFunction`要求：输入`CardAction __instance, CardAccessBridge _ForCard, bool __result`
+      * `__result`:C#代码计算得的条件结果或按顺序上一个Lua Patch返回的结果
+    * 返回bool:若返回，将__result改为返回值
+
 
 ## LuaCodeCardDescription
 
