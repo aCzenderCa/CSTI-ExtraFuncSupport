@@ -93,3 +93,11 @@
 ---@field public [number] TItem
 
 ---@class List<TItem>:IList<TItem>
+
+---@class CardOnCardAction:CardAction
+
+---@class CardAction
+
+---@class DismantleActionButton
+
+---@class DismantleCardAction:CardAction

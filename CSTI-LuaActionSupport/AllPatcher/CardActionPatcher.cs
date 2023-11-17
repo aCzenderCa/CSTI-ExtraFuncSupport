@@ -59,6 +59,7 @@ public static class CardActionPatcher
         return GSlotSaveData[GameLoad.Instance.CurrentGameDataIndex];
     }
 
+    // language=Lua
     [LuaFunc, TestCode("""
                        SaveCurrentSlot("__test",10)
                        """)]

@@ -16,6 +16,7 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class DataAccessTool
 {
+    // language=Lua
     [LuaFunc, TestCode("""debug.debug=GetCard("8695a7aa22521aa45be582d3c1558f78")""")]
     public static CardData GetCard(string id)
     {
@@ -40,6 +41,7 @@ public static class DataAccessTool
         return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
     }
 
+    // language=Lua
     [LuaFunc, TestCode("""
                        local uid = "8695a7aa22521aa45be582d3c1558f78"
                        local ext = { type = "Base" }
@@ -365,6 +367,17 @@ public class CardAccessBridge
     private DataNode? _dataNode;
     private static readonly Regex DataNodeReg = new(@"^LNbt\|\>(?<nbt>.+?)\<\|$");
 
+    // language=Lua
+    [TestCode("""
+              receive:InitData()
+              local d = receive.Data
+              if d["i"] == nil then
+                d["i"] = 10
+              else
+                d["i"] = d["i"] + 1
+              end 
+              receive:SaveData()
+              """)]
     public DataNodeTableAccessBridge? Data
     {
         get

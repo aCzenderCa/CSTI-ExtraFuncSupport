@@ -97,6 +97,7 @@ public class LuaEnum
         }
     }
 
+    // language=Lua
     [TestCode("""
               for i,v in Enum:Pairs(GetGameCards("6b87970979841684bb6d6a7471430798")) do
                 debug.debug = v.Id

@@ -89,7 +89,18 @@ debug = {}
 ---@field y number
 
 ---@class Register
----@field public Reg fun(this:Register, klass:string, method:string, uid:string, function:function)
+---@field Reg fun(this:Register, klass:string, method:string, uid:string, function:function)
+---@field Reg fun(this:Register, klass:"CardOnCardAction", method:"CardsAndTagsAreCorrect", uid:string, function:fun(__instance:CardOnCardAction,_Receiving:CardAccessBridge,_Given:CardAccessBridge,result:boolean):boolean)
+---@field Reg fun(this:Register, klass:"CardAction", method:"CardsAndTagsAreCorrect", uid:string, function:fun(__instance:CardAction,_Receiving:CardAccessBridge,result:boolean):boolean)
+---@field Reg fun(this:Register, klass:"InGameStat", method:"CurrentValue", uid:string, function:fun(__instance:GameStatAccessBridge,__instance_StatModel:SimpleUniqueAccess,result:number,_NotAtBase:boolean):number)
+---@field Reg fun(this:Register, klass:"InGameCardBase", method:"CanReceiveInInventory", uid:string, function:fun(__instance:CardAccessBridge,_Card:SimpleUniqueAccess,_WithLiquid:SimpleUniqueAccess):boolean)
+---@field Reg fun(this:Register, klass:"InGameCardBase", method:"CanReceiveInInventoryInstance", uid:string, function:fun(__instance:CardAccessBridge,_Card:CardAccessBridge):boolean)
+---@field Reg fun(this:Register, klass:"InGameCardBase", method:"InventoryWeight", uid:string, function:fun(__instance:CardAccessBridge,result:number):number)
+---@field Reg fun(this:Register, klass:"InGameCardBase", method:"CardName", uid:string, function:fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string)
+---@field Reg fun(this:Register, klass:"InGameCardBase", method:"CardDescription", uid:string, function:fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string)
+---@field Reg fun(this:Register, klass:"GameManager", method:"ChangeStatValue", uid:string, function:fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Value:number,_Modification:number):void)
+---@field Reg fun(this:Register, klass:"GameManager", method:"ChangeStatRate", uid:string, function:fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Rate:number,_Modification:number):void)
+---@field Reg fun(this:Register, klass:"DismantleActionButton", method:"Setup", uid:string, function:fun(__instance:DismantleActionButton,_Action:DismantleCardAction,_Card:CardAccessBridge,_Action_ActionName_LocalizationKey:string):(boolean,boolean))
 Register = {}
 
 ---@class SimpleAccessTool

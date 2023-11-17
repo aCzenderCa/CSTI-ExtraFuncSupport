@@ -281,7 +281,8 @@ public class SimpleUniqueAccess : CommonSimpleAccess
             }
         }
     }
-
+    
+    // language=Lua
     [TestCode("""
               local uid = "cee786e0869369d4597877e838f2586f"
               local ext = { Usage = 5 }
@@ -401,6 +402,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
         }
     }
 
+    // language=Lua
     [TestCode("""SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]:CacheRawValRange(0,100)""")]
     public void CacheRawValRange(float x, float y)
     {
