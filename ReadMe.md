@@ -327,7 +327,8 @@ receive:SaveData()
 
 ## LuaCodeCardDescription
 
-若卡牌的描述本该显示为如下（包括前后两行）
+（1）若卡牌的描述本该显示为如下（包括前后两行）\
+（2）若DismantleActionButton按钮上文本本应显示为如下
 
 ```
 ###luaAction CardDescription
@@ -335,12 +336,22 @@ Ret[“ret”] = "test"
 ###
 ```
 
-则卡牌的描述会显示为
-`test`
+（1）则卡牌的描述会显示为`test`
+
+（2）则DismantleActionButton按钮上文本显示为`test`(额外：设置Ret["show"]以决定按钮是否显示\
+设置Ret["canUse"]以决定按钮是否可用)
 
 在
 `###luaAction CardDescription`
 和
 `###`
-之间的内容会作为lua代码执行，其第一个返回值就是要显示的内容
+之间的内容会作为lua代码执行，其第一个返回值就是要显示的内容\
 全局表中的`receive`是对应的卡实体
+
+* 仅DismantleActionButton:
+  * ModData表内
+    * Args__instance:DismantleActionButton实例
+    * Args__Index:按钮在card的按钮列表内的位置
+    * Args__Action:DismantleCardAction _Action
+    * Args__Highlighted:bool Setup的参数
+    * Args__StackVersion:bool Setup的参数

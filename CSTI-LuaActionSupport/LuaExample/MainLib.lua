@@ -88,19 +88,26 @@ debug = {}
 ---@field x number
 ---@field y number
 
----@class Register
----@field Reg fun(this:Register, klass:string, method:string, uid:string, function:function)
----@field Reg fun(this:Register, klass:"CardOnCardAction", method:"CardsAndTagsAreCorrect", uid:string, function:fun(__instance:CardOnCardAction,_Receiving:CardAccessBridge,_Given:CardAccessBridge,result:boolean):boolean)
----@field Reg fun(this:Register, klass:"CardAction", method:"CardsAndTagsAreCorrect", uid:string, function:fun(__instance:CardAction,_Receiving:CardAccessBridge,result:boolean):boolean)
----@field Reg fun(this:Register, klass:"InGameStat", method:"CurrentValue", uid:string, function:fun(__instance:GameStatAccessBridge,__instance_StatModel:SimpleUniqueAccess,result:number,_NotAtBase:boolean):number)
----@field Reg fun(this:Register, klass:"InGameCardBase", method:"CanReceiveInInventory", uid:string, function:fun(__instance:CardAccessBridge,_Card:SimpleUniqueAccess,_WithLiquid:SimpleUniqueAccess):boolean)
----@field Reg fun(this:Register, klass:"InGameCardBase", method:"CanReceiveInInventoryInstance", uid:string, function:fun(__instance:CardAccessBridge,_Card:CardAccessBridge):boolean)
----@field Reg fun(this:Register, klass:"InGameCardBase", method:"InventoryWeight", uid:string, function:fun(__instance:CardAccessBridge,result:number):number)
----@field Reg fun(this:Register, klass:"InGameCardBase", method:"CardName", uid:string, function:fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string)
----@field Reg fun(this:Register, klass:"InGameCardBase", method:"CardDescription", uid:string, function:fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string)
----@field Reg fun(this:Register, klass:"GameManager", method:"ChangeStatValue", uid:string, function:fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Value:number,_Modification:number):void)
----@field Reg fun(this:Register, klass:"GameManager", method:"ChangeStatRate", uid:string, function:fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Rate:number,_Modification:number):void)
----@field Reg fun(this:Register, klass:"DismantleActionButton", method:"Setup", uid:string, function:fun(__instance:DismantleActionButton,_Action:DismantleCardAction,_Card:CardAccessBridge,_Action_ActionName_LocalizationKey:string):(boolean,boolean))
+---@alias COCA_CardsAndTagsAreCorrectF fun(__instance:CardOnCardAction,_Receiving:CardAccessBridge,_Given:CardAccessBridge,result:boolean):boolean
+---@alias CA_CardsAndTagsAreCorrectF fun(__instance:CardAction,_Receiving:CardAccessBridge,result:boolean):boolean
+---@alias IGS_CValueF fun(__instance:GameStatAccessBridge,__instance_StatModel:SimpleUniqueAccess,result:number,_NotAtBase:boolean):number
+---@alias IGCB_CanRecInInveF fun(__instance:CardAccessBridge,_Card:SimpleUniqueAccess,_WithLiquid:SimpleUniqueAccess):boolean
+---@alias IGCB_CanRecInInveInsF fun(__instance:CardAccessBridge,_Card:CardAccessBridge):boolean
+---@alias IGCB_InveWeightF fun(__instance:CardAccessBridge,result:number):number
+---@alias IGCB_CNameF fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string
+---@alias IGCB_CDesF fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string
+---@alias IGCB_ALL IGCB_CanRecInInveF|IGCB_CanRecInInveInsF|IGCB_InveWeightF|IGCB_CNameF|IGCB_CDesF
+---@alias GM_ChgSVal fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Value:number,_Modification:number):void
+---@alias GM_ChgSRate fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Rate:number,_Modification:number):void
+---@alias GM_ALL GM_ChgSVal|GM_ChgSRate
+---@alias DAB_Setup fun(__instance:DismantleActionButton,_Action:DismantleCardAction,_Card:CardAccessBridge,_Action_ActionName_LocalizationKey:string):(boolean,boolean)
+
+---@alias RegFunc COCA_CardsAndTagsAreCorrectF|CA_CardsAndTagsAreCorrectF|IGS_CValueF|IGCB_ALL|GM_ALL|DAB_Setup
+---@alias RegClass "DismantleActionButton"|"GameManager"|"InGameCardBase"|"InGameStat"|"CardOnCardAction"|"CardAction"
+---@alias IGCB_RegMethod "CanReceiveInInventory"|"CanReceiveInInventoryInstance"|"InventoryWeight"|"CardName"|"CardDescription"
+---@alias RegMethod "CardsAndTagsAreCorrect"|"CurrentValue"|IGCB_RegMethod|"ChangeStatValue"|"ChangeStatRate"|"Setup"
+---@class Register 
+---@field Reg fun(this:Register, klass:RegClass, method:RegMethod, uid:string, function:RegFunc)
 Register = {}
 
 ---@class SimpleAccessTool

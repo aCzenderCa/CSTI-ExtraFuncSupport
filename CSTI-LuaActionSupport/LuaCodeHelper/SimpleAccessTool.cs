@@ -403,7 +403,12 @@ public class SimpleUniqueAccess : CommonSimpleAccess
     }
 
     // language=Lua
-    [TestCode("""SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]:CacheRawValRange(0,100)""")]
+    [TestCode("""
+              local sua = SimpleAccessTool["79290cafb08e48f4d871704c20e69b1c"]
+              sua:CacheRawValRange(0,100)
+              sua.StatValueMin = -100
+              sua.StatValueMax = 200
+              """)]
     public void CacheRawValRange(float x, float y)
     {
         if (UniqueIDScriptable is not GameStat gameStat) return;
