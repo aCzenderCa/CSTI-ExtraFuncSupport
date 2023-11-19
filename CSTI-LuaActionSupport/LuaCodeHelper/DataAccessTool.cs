@@ -375,7 +375,7 @@ public class CardAccessBridge
                 d["i"] = 10
               else
                 d["i"] = d["i"] + 1
-              end 
+              end
               receive:SaveData()
               """)]
     public DataNodeTableAccessBridge? Data
@@ -697,49 +697,25 @@ public class GameStatAccessBridge
 
 public static class CLR2Lua
 {
-    private static ulong TableIndex;
-
-    public static LuaTable ToLuaTable<TK, TV>(this Dictionary<TK, TV> dictionary, string? name = null)
+    public static LuaTable ToLuaTable<TK, TV>(this Dictionary<TK, TV> dictionary)
     {
-        if (name == null)
-        {
-            Debug.LogWarning($"Dict to LuaTable{TableIndex:X} with no name and not in an env");
-        }
-
-        LuaRuntime.NewTable(
-            name ?? $"____zender____CLR2Lua_DataBase_Tables_zender_TmpTable_{TableIndex:X}");
-        var luaTable =
-            LuaRuntime.GetTable(
-                name ?? $"____zender____CLR2Lua_DataBase_Tables_zender_TmpTable_{TableIndex:X}");
+        var luaTable = LuaRuntime.TempTable();
         foreach (var (key, value) in dictionary)
         {
             luaTable[key] = value;
         }
 
-        TableIndex += 1;
         return luaTable;
     }
 
-    private static ulong ListTableIndex;
-
-    public static LuaTable ToLuaTable<TItem>(this List<TItem> list, string? name = null)
+    public static LuaTable ToLuaTable<TItem>(this List<TItem> list)
     {
-        if (name == null)
+        var luaTable = LuaRuntime.TempTable();
+        for (var i = 0; i < list.Count; i++)
         {
-            Debug.LogWarning($"List to LuaTable{ListTableIndex:X} with no name and not in an env");
+            luaTable[i + 1] = list[i];
         }
 
-        LuaRuntime.NewTable(
-            name ?? $"____zender____CLR2Lua_DataBase_ListTables_zender_TmpTable_{ListTableIndex:X}");
-        var luaTable =
-            LuaRuntime.GetTable(
-                name ?? $"____zender____CLR2Lua_DataBase_ListTables_zender_TmpTable_{ListTableIndex:X}");
-        for (int i = 0; i < list.Count; i++)
-        {
-            luaTable[i] = list[i];
-        }
-
-        ListTableIndex += 1;
         return luaTable;
     }
 }

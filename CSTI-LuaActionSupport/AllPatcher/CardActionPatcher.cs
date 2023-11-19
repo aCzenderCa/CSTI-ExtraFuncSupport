@@ -96,7 +96,7 @@ public static class CardActionPatcher
         return "";
     }
 
-    private static object? CommonLoad(this ref DataNode node)
+    private static object? CommonLoad(this in DataNode node)
     {
         return node.NodeType switch
         {
@@ -108,6 +108,11 @@ public static class CardActionPatcher
             DataNode.DataNodeType.Vector2 => node.vector2,
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+    private static object? CommonLoad(this IDictionary<string, DataNode>? dataNodes, string key)
+    {
+        return dataNodes?.SafeGet(key)?.CommonLoad();
     }
 
     private static void CommonSave(this IDictionary<string, DataNode>? dataNodes, string key, object? val)
@@ -182,13 +187,40 @@ public static class CardActionPatcher
 
     public class DataNodeTableAccessBridge
     {
+        public LuaTable? LuaTable
+        {
+            get
+            {
+                if (Table == null) return null;
+                var tempTable = LuaRuntime.TempTable();
+                foreach (var (key, value) in Table)
+                {
+                    if (value.NodeType == DataNode.DataNodeType.Nil) continue;
+                    var commonLoad = value.CommonLoad();
+
+                    if (commonLoad is DataNodeTableAccessBridge bridge) tempTable[key] = bridge.LuaTable;
+                    else tempTable[key] = commonLoad;
+                }
+
+                return tempTable;
+            }
+            set
+            {
+                if (value == null) return;
+                foreach (var key in value.Keys)
+                {
+                    if (key is not string s_key) continue;
+                    Table.CommonSave(s_key, value[s_key]);
+                }
+            }
+        }
+
         public LuaTable? LuaKeys
         {
             get
             {
                 if (Keys == null) return null;
-                LuaRuntime.NewTable("__temp");
-                var luaTable = LuaRuntime.GetTable("__temp");
+                var luaTable = LuaRuntime.TempTable();
                 foreach (var key in Keys)
                 {
                     luaTable[luaTable.Keys.Count + 1] = key;

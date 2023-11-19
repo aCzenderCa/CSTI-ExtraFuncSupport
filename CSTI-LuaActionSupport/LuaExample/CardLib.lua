@@ -32,11 +32,13 @@
 ---@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
 
 ---@class InGameCardBase
-
+---
+---@alias DataNodeData_lua number|string|boolean|table<string,DataNodeData_lua>|nil|Vector2
 ---@class DataNodeTableAccessBridge
----@field public LuaKeys table
+---@field public LuaKeys table<number,string>
 ---@field public [string] DataNodeData
 ---@field public Table Dictionary<string, DataNode> @readonly
+---@field public LuaTable table<string,DataNodeData_lua>
 ---@field public Count number
 
 ---@class Dictionary<TKey1,TVal1>:IEnumerable<KeyValuePair<TKey1, TVal1>>

@@ -9,10 +9,7 @@ public static class DataChangeHelper
 {
     public static void ChangeStatValueTo(this GameManager gameManager, InGameStat inGameStat, float _Value)
     {
-        if (_Value == 0 || inGameStat == null)
-        {
-            return;
-        }
+        if (inGameStat == null) return;
 
         var preVal = inGameStat.SimpleCurrentValue;
 
@@ -46,11 +43,7 @@ public static class DataChangeHelper
 
     public static void ChangeStatRateTo(this GameManager gameManager, InGameStat inGameStat, float _Rate)
     {
-        if (_Rate == 0 || inGameStat == null)
-        {
-            return;
-        }
-
+        if (inGameStat == null) return;
 
         if (Register.TryGet(nameof(GameManager), nameof(GameManager.ChangeStatRate),
                 inGameStat.StatModel.UniqueID, out var luaFunctions))

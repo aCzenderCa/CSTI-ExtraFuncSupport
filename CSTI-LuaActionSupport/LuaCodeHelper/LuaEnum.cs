@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CSTI_LuaActionSupport.Helper;
 using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using NLua;
+using UnityEngine;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
@@ -158,5 +160,27 @@ public class LuaEnum
 
     private LuaEnum()
     {
+    }
+}
+
+public static class TableHelper
+{
+    public static LuaTable TempTable(this Lua lua)
+    {
+        lua.NewTable("__temp");
+        return lua.GetTable("__temp");
+    }
+
+    // ReSharper disable once MethodOverloadWithOptionalParameter
+    public static TVal? SafeGet<TKey, TVal>(this IDictionary<TKey, TVal> dictionary, TKey key, object? __ = null)
+        where TVal : class
+    {
+        return dictionary.TryGetValue(key, out var value) ? value : null;
+    }
+
+    public static TVal? SafeGet<TKey, TVal>(this IDictionary<TKey, TVal> dictionary, TKey key)
+        where TVal : struct
+    {
+        return dictionary.TryGetValue(key, out var value) ? value : null;
     }
 }

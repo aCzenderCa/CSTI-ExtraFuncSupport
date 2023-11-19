@@ -62,6 +62,8 @@ CardTypes = {}
 ---@field public Pairs fun<TKey,TVal>(this:Enum, dict:Dictionary<TKey,TVal>):(fun(dict:Dictionary<TKey,TVal>, key:TKey):(TKey,TVal), Dictionary<TKey,TVal>, TKey)
 Enum = {}
 
+std__debug = debug
+
 ---@class DebugBridge
 ---@field info any @write only
 ---@field debug any @write only
@@ -88,21 +90,21 @@ debug = {}
 ---@field x number
 ---@field y number
 
----@alias COCA_CardsAndTagsAreCorrectF fun(__instance:CardOnCardAction,_Receiving:CardAccessBridge,_Given:CardAccessBridge,result:boolean):boolean
----@alias CA_CardsAndTagsAreCorrectF fun(__instance:CardAction,_Receiving:CardAccessBridge,result:boolean):boolean
+---@alias COCA_CardATagAreCorrectF fun(__instance:CardOnCardAction,_Receiving:CardAccessBridge,_Given:CardAccessBridge,result:boolean):boolean
+---@alias CA_CardATagAreCorrectF fun(__instance:CardAction,_Receiving:CardAccessBridge,result:boolean):boolean
 ---@alias IGS_CValueF fun(__instance:GameStatAccessBridge,__instance_StatModel:SimpleUniqueAccess,result:number,_NotAtBase:boolean):number
 ---@alias IGCB_CanRecInInveF fun(__instance:CardAccessBridge,_Card:SimpleUniqueAccess,_WithLiquid:SimpleUniqueAccess):boolean
 ---@alias IGCB_CanRecInInveInsF fun(__instance:CardAccessBridge,_Card:CardAccessBridge):boolean
 ---@alias IGCB_InveWeightF fun(__instance:CardAccessBridge,result:number):number
 ---@alias IGCB_CNameF fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string
 ---@alias IGCB_CDesF fun(__instance:CardAccessBridge,_IgnoreLiquid:boolean):string
----@alias IGCB_ALL IGCB_CanRecInInveF|IGCB_CanRecInInveInsF|IGCB_InveWeightF|IGCB_CNameF|IGCB_CDesF
+---@alias IGCB_F_ALL IGCB_CanRecInInveF|IGCB_CanRecInInveInsF|IGCB_InveWeightF|IGCB_CNameF|IGCB_CDesF
 ---@alias GM_ChgSVal fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Value:number,_Modification:number):void
 ---@alias GM_ChgSRate fun(__instance:GameManager,_Stat:GameStatAccessBridge,_Rate:number,_Modification:number):void
----@alias GM_ALL GM_ChgSVal|GM_ChgSRate
+---@alias GM_F_ALL GM_ChgSVal|GM_ChgSRate
 ---@alias DAB_Setup fun(__instance:DismantleActionButton,_Action:DismantleCardAction,_Card:CardAccessBridge,_Action_ActionName_LocalizationKey:string):(boolean,boolean)
 
----@alias RegFunc COCA_CardsAndTagsAreCorrectF|CA_CardsAndTagsAreCorrectF|IGS_CValueF|IGCB_ALL|GM_ALL|DAB_Setup
+---@alias RegFunc COCA_CardATagAreCorrectF|CA_CardATagAreCorrectF|IGS_CValueF|IGCB_F_ALL|GM_F_ALL|DAB_Setup
 ---@alias RegClass "DismantleActionButton"|"GameManager"|"InGameCardBase"|"InGameStat"|"CardOnCardAction"|"CardAction"
 ---@alias IGCB_RegMethod "CanReceiveInInventory"|"CanReceiveInInventoryInstance"|"InventoryWeight"|"CardName"|"CardDescription"
 ---@alias RegMethod "CardsAndTagsAreCorrect"|"CurrentValue"|IGCB_RegMethod|"ChangeStatValue"|"ChangeStatRate"|"Setup"
