@@ -7,12 +7,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
-using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using HarmonyLib;
-using ILMerge;
 using NLua;
 using UnityEngine;
-using Lua = NLua.Lua;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 
@@ -255,7 +252,7 @@ public static class CardActionPatcher
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(CardAction), nameof(CardAction.WillHaveAnEffect))]
-    public static void LuaActionWillHaveAnEffect(CardAction __instance, ref bool __result)
+    private static void LuaActionWillHaveAnEffect(CardAction __instance, ref bool __result)
     {
         if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true)
         {
@@ -265,7 +262,7 @@ public static class CardActionPatcher
 
 
     [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ActionRoutine))]
-    public static void LuaCardAction(CardAction _Action, InGameCardBase _ReceivingCard, GameManager __instance,
+    private static void LuaCardAction(CardAction _Action, InGameCardBase _ReceivingCard, GameManager __instance,
         ref IEnumerator __result)
     {
         if (_Action.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true)
@@ -275,7 +272,7 @@ public static class CardActionPatcher
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.CardOnCardActionRoutine))]
-    public static void LuaCardOnCardAction(CardOnCardAction _Action, InGameCardBase _ReceivingCard,
+    private static void LuaCardOnCardAction(CardOnCardAction _Action, InGameCardBase _ReceivingCard,
         InGameCardBase _GivenCard, GameManager __instance, ref IEnumerator __result)
     {
         if (_Action.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true)
@@ -301,6 +298,7 @@ public static class CardActionPatcher
         var lua = InitRuntime(__instance);
         var waitTime = 0;
         var miniWaitTime = 0;
+        var tickWaitTime = 0;
         lua["receive"] = new CardAccessBridge(_ReceivingCard);
         var luaScriptRetValues = new LuaScriptRetValues();
         lua["Ret"] = luaScriptRetValues;
@@ -308,6 +306,7 @@ public static class CardActionPatcher
         {
             object? result;
             object? miniTime;
+            object? tickTime;
             _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
             if (luaScriptRetValues.CheckKey(nameof(result), out result))
             {
@@ -318,13 +317,18 @@ public static class CardActionPatcher
             {
                 miniWaitTime.TryModBy(miniTime);
             }
+
+            if (luaScriptRetValues.CheckKey(nameof(tickTime), out tickTime))
+            {
+                tickWaitTime.TryModBy(tickTime);
+            }
         }
         catch (Exception e)
         {
             Debug.LogError(e);
         }
 
-        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, miniWaitTime, waitTime);
+        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime);
 
         while (queue.Count > 0)
         {
@@ -342,6 +346,7 @@ public static class CardActionPatcher
         var lua = InitRuntime(__instance);
         var waitTime = 0;
         var miniWaitTime = 0;
+        var tickWaitTime = 0;
         lua["receive"] = new CardAccessBridge(_ReceivingCard);
         lua["given"] = new CardAccessBridge(_GivenCard);
         var luaScriptRetValues = new LuaScriptRetValues();
@@ -350,6 +355,7 @@ public static class CardActionPatcher
         {
             object? result;
             object? miniTime;
+            object? tickTime;
             _ = lua.DoString(_Action.ActionName.ParentObjectID, _Action.ActionName.LocalizationKey);
             if (luaScriptRetValues.CheckKey(nameof(result), out result))
             {
@@ -360,13 +366,18 @@ public static class CardActionPatcher
             {
                 miniWaitTime.TryModBy(miniTime);
             }
+
+            if (luaScriptRetValues.CheckKey(nameof(tickTime), out tickTime))
+            {
+                tickWaitTime.TryModBy(tickTime);
+            }
         }
         catch (Exception e)
         {
             Debug.LogError(e);
         }
 
-        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, miniWaitTime, waitTime);
+        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime);
 
         while (queue.Count > 0)
         {
@@ -378,11 +389,24 @@ public static class CardActionPatcher
         }
     }
 
-    private static Queue<CoroutineController> ProcessTime(this Queue<CoroutineController> queue,
+    public static Queue<CoroutineController> ProcessTime(this Queue<CoroutineController> queue,
         InGameCardBase _ReceivingCard,
-        int miniWaitTime, int waitTime)
+        int waitTime, int miniWaitTime, int tickWaitTime)
     {
         var __instance = GameManager.Instance;
+
+        if (tickWaitTime > 0)
+        {
+            if (LoadCurrentSlot($"C#Used__{nameof(tickWaitTime)}") is { } o)
+            {
+                tickWaitTime += o.TryNum<int>() ?? 0;
+            }
+
+            miniWaitTime += tickWaitTime / 10;
+            tickWaitTime %= 10;
+            SaveCurrentSlot($"C#Used__{nameof(tickWaitTime)}", tickWaitTime);
+        }
+
         if (miniWaitTime > 0)
         {
             GameManager.Instance.CurrentMiniTicks += miniWaitTime;
@@ -523,11 +547,9 @@ public struct DataNode
                     binaryWriter.Write(table.Count(pair => pair.Value.NodeType != DataNodeType.Nil));
                     foreach (var (key, node) in table)
                     {
-                        if (node.NodeType != DataNodeType.Nil)
-                        {
-                            binaryWriter.Write(key);
-                            node.Save(binaryWriter);
-                        }
+                        if (node.NodeType == DataNodeType.Nil) continue;
+                        binaryWriter.Write(key);
+                        node.Save(binaryWriter);
                     }
                 }
 

@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using ChatTreeLoader.Util;
 using HarmonyLib;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace ChatTreeLoader.Behaviors
 {

@@ -9,7 +9,6 @@ using UnityEngine;
 using static CSTI_LuaActionSupport.LuaSupportRuntime;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 

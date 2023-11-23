@@ -3,13 +3,12 @@ using System.IO;
 using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using HarmonyLib;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.1.8")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.1.9")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");

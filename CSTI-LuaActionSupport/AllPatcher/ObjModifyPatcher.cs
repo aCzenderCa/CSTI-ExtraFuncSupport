@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using UnityEngine;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 

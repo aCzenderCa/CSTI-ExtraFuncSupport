@@ -1,6 +1,5 @@
 ﻿using System;
 using CSTI_LuaActionSupport.AllPatcher;
-using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;

@@ -208,6 +208,8 @@ receive:SaveData()
 * 属性
   * LuaTable LuaKeys
     * 以LuaTable返回字典的键
+  * LuaTable LuaTable（属性类型和属性名都是LuaTable）
+    * 将保存的数据以LuaTable返回
 
 ## ``GameStatAccessBridge``（游戏状态访问桥）
 

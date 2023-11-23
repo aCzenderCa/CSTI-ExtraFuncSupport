@@ -212,6 +212,7 @@
         <Compile Include="AllPatcher\ObjModifyPatcher.cs" />
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
+        <Compile Include="GlobalUsings.cs" />
         <Compile Include="Helper\CoroutineHelper.cs" />
         <Compile Include="Helper\TryModifyPack.cs" />
         <Compile Include="LuaCodeHelper\DataAccessTool.cs" />

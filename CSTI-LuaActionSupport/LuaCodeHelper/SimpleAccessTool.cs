@@ -7,7 +7,6 @@ using CSTI_LuaActionSupport.Helper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using Random = UnityEngine.Random;
 

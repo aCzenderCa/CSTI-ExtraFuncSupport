@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.SaveEnv;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using HarmonyLib;
 using UnityEngine;
 using Base64 = gfoidl.Base64.Base64;

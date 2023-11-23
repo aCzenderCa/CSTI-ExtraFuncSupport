@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
 using gfoidl.Base64;
