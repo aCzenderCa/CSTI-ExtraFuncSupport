@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
+using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.1.9")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.0")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
@@ -47,5 +49,21 @@ public class LuaSupportRuntime : BaseUnityPlugin
     private void Awake()
     {
         LoadLuaSave();
+    }
+
+    private void Update()
+    {
+        foreach (var function in LuaTimer.FrameFunctions)
+        {
+            function.Call();
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        foreach (var function in LuaTimer.FixFrameFunctions)
+        {
+            function.Call();
+        }
     }
 }

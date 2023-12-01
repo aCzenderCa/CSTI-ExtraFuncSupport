@@ -17,7 +17,20 @@ public static class CoroutineHelper
 
         Enumerators.Clear();
 
+        foreach (var popup in Object.FindObjectsOfType<InspectionPopup>())
+        {
+            popup.ReCommonSetup();
+        }
+
         return queue;
+    }
+
+    private static void ReCommonSetup(this InspectionPopup popup)
+    {
+        if (popup.isActiveAndEnabled && popup.CurrentCard)
+        {
+            popup.CommonSetup(popup.CurrentCard.CardName(), popup.CurrentCard.CardDescription());
+        }
     }
 
     public static IEnumerator SpendDaytimePoints(this GameManager manager, int tp, InGameCardBase _ReceivingCard)

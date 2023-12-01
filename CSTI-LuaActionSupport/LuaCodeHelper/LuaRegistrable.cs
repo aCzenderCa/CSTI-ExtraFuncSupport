@@ -21,7 +21,7 @@ public static class LuaRegistrable
         var luaTable = lua.GetTable(basename);
         foreach (var value in Enum.GetValues(type))
         {
-            luaTable[luaTable.Keys.Count + 1] = value;
+            luaTable[Enum.GetName(type, value)] = value;
         }
     }
 
@@ -63,7 +63,7 @@ public class TestCodeAttribute : Attribute
     // language=Lua
     private string Code;
 
-    public TestCodeAttribute(/* language=Lua */string code)
+    public TestCodeAttribute( /* language=Lua */ string code)
     {
         Code = code;
     }

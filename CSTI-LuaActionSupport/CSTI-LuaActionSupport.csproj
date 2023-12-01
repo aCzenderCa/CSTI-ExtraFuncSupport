@@ -222,6 +222,7 @@
         <Compile Include="LuaCodeHelper\LuaRegistrable.cs" />
         <Compile Include="LuaCodeHelper\LuaEnum.cs" />
         <Compile Include="LuaCodeHelper\LuaScriptRetValues.cs" />
+        <Compile Include="LuaCodeHelper\LuaTimer.cs" />
         <Compile Include="LuaCodeHelper\MoniEnum.cs" />
         <Compile Include="LuaCodeHelper\SimpleAccessTool.cs" />
         <Compile Include="LuaSupportRuntime.cs" />
