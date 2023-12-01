@@ -270,9 +270,29 @@ receive:SaveData()
 * `CountCardEquipped`：`string id`
   * 只统计装备的卡，返回id对应卡数量
 
+## LuaTimer
+全局变量`LuaTimer`:lua table类型(不需要用`：`调用)
+
+* 函数
+  * `ProcessCacheEnum`:无参数，无返回值，手动执行当前累计要执行的延时函数（如生成卡，状态值修改）
+  * `Frame`：传入一个lua函数变量（要求无输入参数），无返回值，输入的函数会每一帧执行一次
+  * `FixFrame`：传入一个lua函数（要求同上），无返回值，输入的函数会每秒固定执行50次（频率是尽可能均匀的）
+  * `FrameTime`：返回两帧之间的时间间隔
+  * `FixFrameTime`：返回两次FixFrame之间的时间间隔
+
+## LuaInput
+全局变量`LuaInput`:lua table类型(不需要用`：`调用)
+
+* 函数
+  * `GetScroll`:无参数，返回两帧之间滚轮的旋转量
+  * `GetKey`：输入按键的名字（如F，L，F1），返回对应按键是否正被按下
+  * `GetKeyDown`：输入按键的名字（如F，L，F1），返回对应按键是否刚被按下
+  * `GetKeyUp`：输入按键的名字（如F，L，F1），返回对应按键是否刚刚弹起
+  * 按键名称表：https://docs.unity.cn/cn/2020.3/ScriptReference/KeyCode.html
+
 ## LuaRegister
 
-全局变量`Register`：`LuaRegister`类型
+全局变量`Register`：`LuaRegister`类型(需要用`：`调用)
 
 函数`Reg`：`string klass, string method, string uid, LuaFunction function`\
 `klass`：要patch的类的名字，如`"InGameCardBase"`\

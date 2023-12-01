@@ -2,6 +2,7 @@
 using BepInEx;
 using CSTI_LuaActionSupport.Helper;
 using NLua;
+using UnityEngine;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
@@ -27,6 +28,18 @@ public static class LuaTimer
     {
         FixFrameFunctions.Add(function);
     }
+
+    [LuaFunc]
+    public static float FrameTime()
+    {
+        return Time.deltaTime;
+    }
+
+    [LuaFunc]
+    public static float FixFrameTime()
+    {
+        return Time.fixedDeltaTime;
+    }
 }
 
 public static class LuaInput
@@ -36,7 +49,7 @@ public static class LuaInput
     {
         return UnityInput.Current.mouseScrollDelta.y;
     }
-    
+
     [LuaFunc]
     public static bool GetKey(string key)
     {

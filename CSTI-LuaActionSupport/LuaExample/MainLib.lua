@@ -26,6 +26,25 @@ exp = nil
 ---@type CardAccessBridge
 weather = nil
 
+---@class LuaInput
+---@field GetScroll fun():number
+---@field GetKey fun(key:string):boolean
+---@field GetKeyDown fun(key:string):boolean
+---@field GetKeyUp fun(key:string):boolean
+
+---@type LuaInput
+LuaInput = nil
+
+---@class LuaTimer
+---@field ProcessCacheEnum fun():void
+---@field Frame fun(function:fun():void):void
+---@field FixFrame fun(function:fun():void):void
+---@field FrameTime fun():number
+---@field FixFrameTime fun():number
+
+---@type LuaTimer
+LuaTimer = nil
+
 ---@class CardTypes
 ---@class DataNodeType
 
