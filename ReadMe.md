@@ -244,6 +244,7 @@ receive:SaveData()
 * `GetCard`：参数 `string id`，返回值`CardData`
   * 返回传入id对应卡的`CardData`
 * `GetGameCard`：返回找到的第一个id对应卡牌，是`CardAccessBridge`
+* `GetGameCardByTag`:返回找到的第一个tag对应卡牌，是`CardAccessBridge`
 * `GetGameCards`：返回找到的id对应的所有卡牌，是`CardAccessBridge`的列表
   * 额外参数：
     * `ext["type"]`：字符串，以下为内容与效果对应
@@ -252,6 +253,7 @@ receive:SaveData()
       * `"Base"`：只返回从上到下第二行的卡
       * `"Location"`：只返回从上到下第一行的卡
       * `"Inventory"`：只返回容器中的卡
+* `GetGameCardsByTag`:返回找到的tag对应的所有卡牌，是`CardAccessBridge`的列表
 * `GetStat`：返回id对应`GameStat`
 * `GetGameStat`：返回id对应`GameStatAccessBridge`
 * `CountCardOnBoard`：`string id, bool _CountInInventories = true, bool _CountInBackground = false`
