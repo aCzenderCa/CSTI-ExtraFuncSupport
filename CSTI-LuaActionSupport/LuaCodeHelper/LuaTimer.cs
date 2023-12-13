@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using BepInEx;
 using CSTI_LuaActionSupport.Helper;
 using NLua;
@@ -8,8 +9,21 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class LuaTimer
 {
-    public static readonly List<LuaFunction> FrameFunctions = new();
-    public static readonly List<LuaFunction> FixFrameFunctions = new();
+    public class SimpleTimer
+    {
+        public float Time;
+        public float CurTime;
+
+        public SimpleTimer(float time, float curTime)
+        {
+            Time = time;
+            CurTime = curTime;
+        }
+    }
+
+    public static readonly List<LuaFunction> FrameFunctions = [];
+    public static readonly List<LuaFunction> FixFrameFunctions = [];
+    public static readonly Dictionary<LuaFunction, SimpleTimer> EveryTimeFunctions = [];
 
     [LuaFunc]
     public static void ProcessCacheEnum()
@@ -30,6 +44,12 @@ public static class LuaTimer
     }
 
     [LuaFunc]
+    public static void EveryTime(LuaFunction function, float time = 0.1f)
+    {
+        EveryTimeFunctions.Add(function, new SimpleTimer(time, 0));
+    }
+
+    [LuaFunc]
     public static float FrameTime()
     {
         return Time.deltaTime;
@@ -39,6 +59,36 @@ public static class LuaTimer
     public static float FixFrameTime()
     {
         return Time.fixedDeltaTime;
+    }
+
+    [LuaFunc]
+    public static void StartCoroutine(LuaFunction function)
+    {
+        LuaSupportRuntime.Runtime.StartCoroutine(Coroutine());
+        return;
+
+        IEnumerator Coroutine()
+        {
+            while (true)
+            {
+                var objects = function.Call();
+                if (objects.Length > 0 && objects[0].TryNum<float>() is { } d)
+                {
+                    if (d == 0)
+                    {
+                        yield return null;
+                    }
+                    else
+                    {
+                        yield return new WaitForSeconds(d);
+                    }
+                }
+                else
+                {
+                    yield break;
+                }
+            }
+        }
     }
 }
 

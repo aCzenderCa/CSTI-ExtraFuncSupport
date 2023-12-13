@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
+using UnityEngine;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher;
 using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.1")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.2")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
@@ -18,9 +20,10 @@ public class LuaSupportRuntime : BaseUnityPlugin
     public static readonly string LuaInit = "LuaInit";
     public static readonly string LuaOnGameLoad = "LuaOnGameLoad";
     public static readonly string LuaOnGameSave = "LuaOnGameSave";
-    public static readonly List<string> LuaFilesOnGameLoad = new();
-    public static readonly List<string> LuaFilesOnGameSave = new();
-
+    public static readonly List<string> LuaFilesOnGameLoad = [];
+    public static readonly List<string> LuaFilesOnGameSave = [];
+    public static LuaSupportRuntime Runtime = null!;
+    
     static LuaSupportRuntime()
     {
         HarmonyInstance.PatchAll(typeof(CardActionPatcher));
@@ -48,22 +51,54 @@ public class LuaSupportRuntime : BaseUnityPlugin
 
     private void Awake()
     {
+        Runtime = this;
         LoadLuaSave();
     }
 
     private void Update()
     {
-        foreach (var function in LuaTimer.FrameFunctions)
+        var remove = (from function in LuaTimer.FrameFunctions
+            let objects = function.Call()
+            where objects.Length > 0 && objects[0] is false
+            select function).ToList();
+
+        foreach (var function in remove)
         {
-            function.Call();
+            LuaTimer.FrameFunctions.Remove(function);
+        }
+
+        remove.Clear();
+        foreach (var (function, timer) in LuaTimer.EveryTimeFunctions)
+        {
+            timer.CurTime += Time.deltaTime;
+            if (timer.CurTime >= timer.Time)
+            {
+                var objects = function.Call();
+                if (objects.Length > 0 && objects[0] is false)
+                {
+                    remove.Add(function);
+                }
+
+                timer.CurTime -= timer.Time;
+            }
+        }
+
+        foreach (var function in remove)
+        {
+            LuaTimer.EveryTimeFunctions.Remove(function);
         }
     }
 
     private void FixedUpdate()
     {
-        foreach (var function in LuaTimer.FixFrameFunctions)
+        var remove = (from function in LuaTimer.FixFrameFunctions
+            let objects = function.Call()
+            where objects.Length > 0 && objects[0] is false
+            select function).ToList();
+
+        foreach (var function in remove)
         {
-            function.Call();
+            LuaTimer.FixFrameFunctions.Remove(function);
         }
     }
 }
