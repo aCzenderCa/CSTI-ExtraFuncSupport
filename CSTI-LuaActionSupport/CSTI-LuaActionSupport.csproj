@@ -230,6 +230,9 @@
         <Compile Include="UIStruct\CustomUIManager.cs" />
     </ItemGroup>
     <ItemGroup>
+        <Content Include="..\license.txt">
+          <Link>CSTI-LuaActionSupport\license.txt</Link>
+        </Content>
         <Content Include="..\ReadMe.md"/>
       <Content Include="FodyWeavers.xml" />
       <Content Include="luaActionReadMe.docx">

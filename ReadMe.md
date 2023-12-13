@@ -1,3 +1,5 @@
+# 本项目为游戏[《卡牌生存：热带岛屿》](https://store.steampowered.com/app/1694420/)的功能扩展mod，使modder可以使用lua代码制作模组，提供了额外的自定义数据存储
+
 # LuaActionSupport(卡牌action的lua支持)
 
 ## 用法
@@ -290,7 +292,7 @@ receive:SaveData()
   * `GetKey`：输入按键的名字（如F，L，F1），返回对应按键是否正被按下
   * `GetKeyDown`：输入按键的名字（如F，L，F1），返回对应按键是否刚被按下
   * `GetKeyUp`：输入按键的名字（如F，L，F1），返回对应按键是否刚刚弹起
-  * 按键名称表：https://docs.unity.cn/cn/2020.3/ScriptReference/KeyCode.html
+  * [按键名称表](https://docs.unity.cn/cn/2020.3/ScriptReference/KeyCode.html)
 
 ## LuaRegister
 
