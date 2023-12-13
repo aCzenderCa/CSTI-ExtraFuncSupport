@@ -40,6 +40,39 @@ public static class DataAccessTool
         return inGameCardBases.FirstOrDefault() is { } card ? new CardAccessBridge(card) : null;
     }
 
+    public static IEnumerable<InGameCardBase> ProcessType(this IEnumerable<InGameCardBase> enumerable, string type,
+        CardData? cardData)
+    {
+        List<InGameCardBase> list = [];
+        return type switch
+        {
+            nameof(SlotsTypes.Equipment) => enumerable.Where(cardBase =>
+                cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment),
+            nameof(SlotsTypes.Hand) when cardData => GameManager.Instance.CardIsInHand(cardData, _Results: list)
+                ? list
+                : list,
+            nameof(SlotsTypes.Hand) => enumerable.Where(
+                cardBase => cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Hand),
+            nameof(SlotsTypes.Base) => enumerable.Where(cardBase =>
+                cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base),
+            nameof(SlotsTypes.Location) => enumerable.Where(cardBase =>
+                cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
+            nameof(SlotsTypes.Inventory) => enumerable.Where(cardBase =>
+                cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
+            nameof(SlotsTypes.Environment) => [GameManager.Instance.CurrentEnvironmentCard],
+            nameof(SlotsTypes.Weather) => [GameManager.Instance.CurrentWeatherCard],
+            nameof(SlotsTypes.Explorable) => [GameManager.Instance.CurrentExplorableCard],
+            "OnlyBackGround" => enumerable.Where(cardBase => cardBase.InBackground),
+            "NotBackGround" => enumerable.Where(cardBase => !cardBase.InBackground),
+            _ => enumerable
+        };
+    }
+
+    public static List<CardAccessBridge> IntoBridge(this IEnumerable<InGameCardBase> enumerable)
+    {
+        return enumerable.Select(card => new CardAccessBridge(card)).ToList();
+    }
+
     // language=Lua
     [LuaFunc, TestCode("""
                        local uid = "8695a7aa22521aa45be582d3c1558f78"
@@ -59,19 +92,27 @@ public static class DataAccessTool
 
             GameManager.Instance.CardIsOnBoard(cardData, true, _Results: list);
 
-            return ((string?) ext?["type"] switch
+            var o = ext?["type"];
+            switch (o)
             {
-                nameof(SlotsTypes.Equipment) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Equipment),
-                nameof(SlotsTypes.Hand) => GameManager.Instance.CardIsInHand(cardData, _Results: list) ? list : list,
-                nameof(SlotsTypes.Base) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Base),
-                nameof(SlotsTypes.Location) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
-                nameof(SlotsTypes.Inventory) => list.Where(cardBase =>
-                    cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
-                _ => list
-            }).Select(cardBase => new CardAccessBridge(cardBase)).ToList();
+                case string s:
+                    return list.ProcessType(s, cardData).IntoBridge();
+                case LuaTable table:
+                {
+                    IEnumerable<InGameCardBase> enu = list;
+                    foreach (var tableKey in table.Keys)
+                    {
+                        if (table[tableKey] is string t_s)
+                        {
+                            enu = enu.ProcessType(t_s, cardData);
+                        }
+                    }
+
+                    return enu.IntoBridge();
+                }
+                default:
+                    return list.IntoBridge();
+            }
         }
         catch (Exception e)
         {
@@ -81,12 +122,40 @@ public static class DataAccessTool
     }
 
     [LuaFunc]
-    public static List<CardAccessBridge> GetGameCardsByTag(string tag)
+    public static List<CardAccessBridge>? GetGameCardsByTag(string tag, LuaTable? ext = null)
     {
-        var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
-            cardBase.CardModel.CardTags.Any(cardTag =>
-                cardTag != null && (cardTag.InGameName.DefaultText == tag || cardTag.name == tag))));
-        return inGameCardBases.Select(cardBase => new CardAccessBridge(cardBase)).ToList();
+        try
+        {
+            var inGameCardBases = new List<InGameCardBase>(GameManager.Instance.AllCards.Where(cardBase =>
+                cardBase.CardModel.CardTags.Any(cardTag =>
+                    cardTag != null && (cardTag.InGameName.DefaultText == tag || cardTag.name == tag))));
+            var o = ext?["type"];
+            switch (o)
+            {
+                case string s:
+                    return inGameCardBases.ProcessType(s, null).IntoBridge();
+                case LuaTable table:
+                {
+                    IEnumerable<InGameCardBase> enu = inGameCardBases;
+                    foreach (var tableKey in table.Keys)
+                    {
+                        if (table[tableKey] is string t_s)
+                        {
+                            enu = enu.ProcessType(t_s, null);
+                        }
+                    }
+
+                    return enu.IntoBridge();
+                }
+                default:
+                    return inGameCardBases.IntoBridge();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning(e);
+            return null;
+        }
     }
 
     [LuaFunc]
