@@ -279,10 +279,12 @@ receive:SaveData()
 
 * 函数
   * `ProcessCacheEnum`:无参数，无返回值，手动执行当前累计要执行的延时函数（如生成卡，状态值修改）
-  * `Frame`：传入一个lua函数变量（要求无输入参数），无返回值，输入的函数会每一帧执行一次
-  * `FixFrame`：传入一个lua函数（要求同上），无返回值，输入的函数会每秒固定执行50次（频率是尽可能均匀的）
+  * `Frame`：传入一个lua函数变量（要求无输入参数，可返回一个bool），输入的函数会每一帧执行一次，若返回false，则移除该函数
+  * `FixFrame`：传入一个lua函数（要求同上），输入的函数会每秒固定执行50次（频率是尽可能均匀的）
+  * `EveryTime`:传入一个lua函数（要求同上）和一个number参数time，输入的函数每time秒会执行一次
   * `FrameTime`：返回两帧之间的时间间隔
   * `FixFrameTime`：返回两次FixFrame之间的时间间隔
+  * `StartCoroutine`：传入一个lua函数（无输入，返回float），启动一个协程，如果lua函数返回0，则等待一帧，否则等待返回值秒，若不返回则结束协程
 
 ## LuaInput
 全局变量`LuaInput`:lua table类型(不需要用`：`调用)

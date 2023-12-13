@@ -35,10 +35,12 @@ LuaInput = {}
 
 ---@class LuaTimer
 ---@field ProcessCacheEnum fun():void
----@field Frame fun(function:fun():void):void
----@field FixFrame fun(function:fun():void):void
+---@field Frame fun(function:fun():(boolean|void)):void
+---@field FixFrame fun(function:fun():(boolean|void)):void
+---@field EveryTime fun(function:(fun():(boolean|void)),time:number)
 ---@field FrameTime fun():number
 ---@field FixFrameTime fun():number
+---@field StartCoroutine fun(function:fun():(number|void)):void
 LuaTimer = {}
 
 ---@class CardTypes

@@ -9,16 +9,10 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class LuaTimer
 {
-    public class SimpleTimer
+    public class SimpleTimer(float time, float curTime)
     {
-        public float Time;
-        public float CurTime;
-
-        public SimpleTimer(float time, float curTime)
-        {
-            Time = time;
-            CurTime = curTime;
-        }
+        public readonly float Time = time;
+        public float CurTime = curTime;
     }
 
     public static readonly List<LuaFunction> FrameFunctions = [];
