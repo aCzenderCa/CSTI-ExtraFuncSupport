@@ -12,7 +12,7 @@ using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.2")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.3")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
@@ -31,6 +31,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
         HarmonyInstance.PatchAll(typeof(SavePatcher));
         HarmonyInstance.PatchAll(typeof(ObjModifyPatcher));
         HarmonyInstance.PatchAll(typeof(LuaRegister));
+        HarmonyInstance.PatchAll(typeof(LuaTimer));
     }
 
     private static void LoadLuaSave()
@@ -71,16 +72,14 @@ public class LuaSupportRuntime : BaseUnityPlugin
         foreach (var (function, timer) in LuaTimer.EveryTimeFunctions)
         {
             timer.CurTime += Time.deltaTime;
-            if (timer.CurTime >= timer.Time)
+            if (!(timer.CurTime >= timer.Time)) continue;
+            var objects = function.Call();
+            if (objects.Length > 0 && objects[0] is false)
             {
-                var objects = function.Call();
-                if (objects.Length > 0 && objects[0] is false)
-                {
-                    remove.Add(function);
-                }
-
-                timer.CurTime -= timer.Time;
+                remove.Add(function);
             }
+
+            timer.CurTime -= timer.Time;
         }
 
         foreach (var function in remove)

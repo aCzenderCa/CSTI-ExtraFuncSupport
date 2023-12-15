@@ -291,41 +291,21 @@ public class CardAccessBridge
     public bool IsInHand => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Hand;
     public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
+    public bool IsInBackground => CardBase != null && CardBase.InBackground;
 
-    public bool CheckInventory(LuaTable table)
+    public bool CheckInventory(bool useAll, params string[] uid)
     {
-        var check = false;
-        var i = 1;
-        while (true)
-        {
-            if (table[i] is not { } o) break;
-            switch (o)
-            {
-                case string uid:
-                    check |= HasInInventory(uid);
-                    break;
-                case LuaTable cond:
-                {
-                    var _uid = cond["uid"] is string s ? s : null;
-                    var needCount = cond["needCount"].TryNum<int>();
-                    if (_uid is not null && needCount is { } _needCount)
-                    {
-                        check |= HasInInventory(_uid, _needCount);
-                    }
-
-                    break;
-                }
-            }
-
-            i++;
-        }
-
-        return check;
+        return useAll ? uid.All(s => HasInInventory(s)) : uid.Any(s => HasInInventory(s));
     }
 
-    public bool CheckInventory(params string[] uid)
+    public bool CheckTagInventory(bool useAll, params string[] tags)
     {
-        return uid.All(s => HasInInventory(s));
+        return useAll ? tags.All(s => HasTagInInventory(s)) : tags.Any(s => HasTagInInventory(s));
+    }
+
+    public bool CheckRegexTagInventory(bool useAll, params string[] regexTags)
+    {
+        return useAll ? regexTags.All(s => HasRegexTagInInventory(s)) : regexTags.Any(s => HasRegexTagInInventory(s));
     }
 
     public bool HasInInventory(string uid, long needCount = 0)
@@ -339,6 +319,33 @@ public class CardAccessBridge
         }
 
         return CardBase.InventoryCount(card) > needCount;
+    }
+
+    public bool HasTagInInventory(string tag, long needCount = 0)
+    {
+        if (CardBase == null) return false;
+        if (!CardBase.IsInventoryCard) return false;
+        if (needCount <= 0)
+        {
+            return CardBase.CardsInInventory.Any(slot => HasTag(slot.CardModel, tag));
+        }
+
+        var sum = CardBase.CardsInInventory.Where(slot => HasTag(slot.CardModel, tag)).Sum(slot => slot.CardAmt);
+        return sum >= needCount;
+    }
+
+    public bool HasRegexTagInInventory(string regexTag, long needCount = 0)
+    {
+        if (CardBase == null) return false;
+        if (!CardBase.IsInventoryCard) return false;
+        if (needCount <= 0)
+        {
+            return CardBase.CardsInInventory.Any(slot => HasRegexTag(slot.CardModel, regexTag));
+        }
+
+        var sum = CardBase.CardsInInventory.Where(slot => HasRegexTag(slot.CardModel, regexTag))
+            .Sum(slot => slot.CardAmt);
+        return sum >= needCount;
     }
 
     public CardAccessBridge? LiquidInventory()
@@ -355,7 +362,7 @@ public class CardAccessBridge
             if (CardBase == null) return null;
             if (!CardBase.IsInventoryCard) return null;
             if (index < 0 || index >= CardBase.CardsInInventory.Count) return null;
-            return CardBase.CardsInInventory[Mathf.RoundToInt((float) index)].AllCards
+            return CardBase.CardsInInventory[Mathf.RoundToInt(index)].AllCards
                 .Select(cardBase => new CardAccessBridge(cardBase))
                 .ToList();
         }
@@ -424,8 +431,41 @@ public class CardAccessBridge
             return false;
         }
 
-        return CardBase.CardModel.CardTags.Any(cardTag =>
+        return HasTag(CardBase.CardModel, tag);
+    }
+
+    public static bool HasTag(CardData cardData, string tag)
+    {
+        if (cardData == null)
+        {
+            return false;
+        }
+
+        return cardData.CardTags.Any(cardTag =>
             cardTag.name == tag || cardTag.InGameName.DefaultText == tag);
+    }
+
+    public bool HasRegexTag(string regexTag)
+    {
+        if (CardBase == null)
+        {
+            return false;
+        }
+
+        return HasRegexTag(CardBase.CardModel, regexTag);
+    }
+
+    public static bool HasRegexTag(CardData cardData, string regexTag)
+    {
+        if (cardData == null)
+        {
+            return false;
+        }
+
+        var tag = new Regex(regexTag);
+
+        return cardData.CardTags.Any(cardTag =>
+            tag.IsMatch(cardTag.name) || tag.IsMatch(cardTag.InGameName.DefaultText));
     }
 
     public int TravelCardIndex => CardBase != null ? CardBase.TravelCardIndex : -1;

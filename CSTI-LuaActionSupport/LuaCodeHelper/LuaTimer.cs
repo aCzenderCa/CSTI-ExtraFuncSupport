@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BepInEx;
 using CSTI_LuaActionSupport.Helper;
+using HarmonyLib;
 using NLua;
 using UnityEngine;
 
@@ -9,6 +10,41 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class LuaTimer
 {
+    private static bool OnWaitCA;
+
+    public static Coroutine? Wait4CA()
+    {
+        if (!GameManager.Instance) return null;
+        var coroutineControllers = GameManager.Instance.ProcessCache();
+        return LuaSupportRuntime.Runtime.StartCoroutine(waitAll(coroutineControllers));
+
+        IEnumerator waitAll(Queue<CoroutineController> controllers)
+        {
+            while (OnWaitCA)
+            {
+                yield return null;
+            }
+
+            OnWaitCA = true;
+            while (controllers.Count > 0)
+            {
+                var coroutineController = controllers.Dequeue();
+                while (coroutineController.state != CoroutineState.Finished)
+                {
+                    yield return null;
+                }
+            }
+
+            OnWaitCA = false;
+        }
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.PerformingAction), MethodType.Getter)]
+    public static void SetOnWaitCA(ref bool __result)
+    {
+        __result |= OnWaitCA;
+    }
+
     public class SimpleTimer(float time, float curTime)
     {
         public readonly float Time = time;
@@ -68,7 +104,15 @@ public static class LuaTimer
                 var objects = function.Call();
                 if (objects.Length > 0 && objects[0].TryNum<float>() is { } d)
                 {
-                    if (d == 0)
+                    if (d is > -3 and <= -2)
+                    {
+                        yield return Wait4CA();
+                    }
+                    else if (d is > -2 and <= -1)
+                    {
+                        yield return new WaitForFixedUpdate();
+                    }
+                    else if (d is > -1 and <= 0)
                     {
                         yield return null;
                     }

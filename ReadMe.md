@@ -160,11 +160,58 @@ end
 receive:SaveData()
 ```
 
+### ``CheckInventory``：
+
+* 参数：``bool useAll, params string[] uid``
+* 返回值：``bool``
+  * 返回卡牌是否装有uid数组中所有对应卡牌（useAll为true）|任一对应卡牌（useAll为false）
+  * 用法示例
+```lua
+receive:CheckInventory(true, { 'a', 'b' })
+receive:CheckInventory(true, 'a', 'b')
+```
+
+### ``CheckTagInventory``：
+
+* 参数：``bool useAll, params string[] tags``
+* 返回值：``bool``
+  * 返回卡牌是否装有tags数组中所有对应卡牌（useAll为true）|任一对应卡牌（useAll为false）
+
+### ``CheckRegexTagInventory``：
+
+* 参数：``bool useAll, params string[] regexTags``
+* 返回值：``bool``
+  * 返回卡牌是否装有regexTags数组中所有对应卡牌（useAll为true）|任一对应卡牌（useAll为false）
+
+### ``HasInInventory``：
+
+* 参数：``string uid, long needCount = 0``
+* 返回值：``bool``
+  * 返回卡牌是否装有至少指定数量的uid所对应的卡牌
+
+### ``HasTagInInventory``：
+
+* 参数：``string tag, long needCount = 0``
+* 返回值：``bool``
+  * 返回卡牌是否装有至少指定数量的有对应tag的卡牌
+
+### ``HasRegexTagInInventory``：
+
+* 参数：``string regexTag, long needCount = 0``
+* 返回值：``bool``
+  * 返回卡牌是否装有至少指定数量的有对应regexTag的卡牌
+
 ### ``HasTag``：
 
 * 参数：``string tag``
 * 返回值：``bool``
   * 返回卡牌是否包含名称为参数tag的``CardTag``
+
+### ``HasRegexTag``：
+
+* 参数：``string regexTag``
+* 返回值：``bool``
+  * 返回卡牌是否包含名称与regexTag正则匹配的``CardTag``
 
 ### ``AddCard``：
 
@@ -284,7 +331,7 @@ receive:SaveData()
   * `EveryTime`:传入一个lua函数（要求同上）和一个number参数time，输入的函数每time秒会执行一次
   * `FrameTime`：返回两帧之间的时间间隔
   * `FixFrameTime`：返回两次FixFrame之间的时间间隔
-  * `StartCoroutine`：传入一个lua函数（无输入，返回float），启动一个协程，如果lua函数返回0，则等待一帧，否则等待返回值秒，若不返回则结束协程
+  * `StartCoroutine`：传入一个lua函数（无输入，返回float），启动一个协程，如果lua函数返回(-3,-2]，则等待所有延迟函数执行完成（如生成卡，修改状态值）期间阻止玩家操作，如果lua函数返回(-2,-1]，则等待一个物理帧，如果lua函数返回(-1,0]，则等待一帧，否则等待返回值秒，若不返回则结束协程
 
 ## LuaInput
 全局变量`LuaInput`:lua table类型(不需要用`：`调用)
