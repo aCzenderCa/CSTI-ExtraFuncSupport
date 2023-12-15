@@ -318,7 +318,7 @@ public class CardAccessBridge
             return CardBase.CardsInInventory.Any(slot => slot.CardModel.UniqueID == uid);
         }
 
-        return CardBase.InventoryCount(card) > needCount;
+        return CardBase.InventoryCount(card) >= needCount;
     }
 
     public bool HasTagInInventory(string tag, long needCount = 0)

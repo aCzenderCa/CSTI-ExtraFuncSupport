@@ -15,15 +15,16 @@ public static class LuaTimer
     public static Coroutine? Wait4CA()
     {
         if (!GameManager.Instance) return null;
-        var coroutineControllers = GameManager.Instance.ProcessCache();
-        return LuaSupportRuntime.Runtime.StartCoroutine(waitAll(coroutineControllers));
+        return LuaSupportRuntime.Runtime.StartCoroutine(waitAll());
 
-        IEnumerator waitAll(Queue<CoroutineController> controllers)
+        IEnumerator waitAll()
         {
             while (OnWaitCA)
             {
                 yield return null;
             }
+
+            var controllers = GameManager.Instance.ProcessCache();
 
             OnWaitCA = true;
             while (controllers.Count > 0)

@@ -12,7 +12,7 @@ using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.3")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.4")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
