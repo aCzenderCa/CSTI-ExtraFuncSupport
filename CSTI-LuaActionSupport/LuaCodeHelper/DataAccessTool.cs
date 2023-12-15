@@ -355,7 +355,7 @@ public class CardAccessBridge
         return new CardAccessBridge(CardBase.ContainedLiquid);
     }
 
-    public List<CardAccessBridge>? this[long index]
+    public CardAccessBridge[]? this[long index]
     {
         get
         {
@@ -364,9 +364,11 @@ public class CardAccessBridge
             if (index < 0 || index >= CardBase.CardsInInventory.Count) return null;
             return CardBase.CardsInInventory[Mathf.RoundToInt(index)].AllCards
                 .Select(cardBase => new CardAccessBridge(cardBase))
-                .ToList();
+                .ToArray();
         }
     }
+
+    public int InventorySlotCount => CardBase && CardBase!.IsInventoryCard ? CardBase.CardsInInventory.Count : 0;
 
     public object? this[string key]
     {
