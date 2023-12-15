@@ -119,6 +119,12 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 * ``Weight``：卡的总重，是单浮点数，只读
 * ``Id``：卡的uid，是字符串，只读
 * `Data`:`DataNodeTableAccessBridge`类型，与卡绑定的数据，不存在且未初始化时返回null
+* InventorySlotCount:返回容器中的槽位数量
+* IsEquipped 是否已被装备
+* IsInHand 是否在手卡栏位（从上到下第三行）
+* IsInBase 是否在地面栏位（从上到下第二行）
+* IsInLocation 是否在地点栏位（从上到下第一行）
+* IsInBackground 是否是来自其他场景的卡（通过AlwaysUpdate=true）
 
 ```
 Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4

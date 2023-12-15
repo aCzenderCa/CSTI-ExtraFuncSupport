@@ -5,11 +5,13 @@
 ---@field public IsInHand boolean @readonly
 ---@field public IsInBase boolean @readonly
 ---@field public IsInLocation boolean @readonly
+---@field public IsInBackground boolean @readonly
 ---@field public CheckInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
 ---@field public CheckTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
 ---@field public CheckRegexTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
 ---@field public HasInInventory fun(this:CardAccessBridge, uid:string, needCount:number):boolean
 ---@field public LiquidInventory fun(this:CardAccessBridge):CardAccessBridge
+---@field public InventorySlotCount number @readonly
 ---@field public [string] any
 ---@field public [number] List<CardAccessBridge>
 ---@field public SlotType string
