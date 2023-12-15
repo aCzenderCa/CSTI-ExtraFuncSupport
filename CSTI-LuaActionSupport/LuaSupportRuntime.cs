@@ -12,7 +12,7 @@ using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.4")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.5")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
@@ -30,6 +30,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
         HarmonyInstance.PatchAll(typeof(OnGameLoad));
         HarmonyInstance.PatchAll(typeof(SavePatcher));
         HarmonyInstance.PatchAll(typeof(ObjModifyPatcher));
+        HarmonyInstance.PatchAll(typeof(ObjModifyPatcher.Patch_GameManager_AddCard));
         HarmonyInstance.PatchAll(typeof(LuaRegister));
         HarmonyInstance.PatchAll(typeof(LuaTimer));
     }
