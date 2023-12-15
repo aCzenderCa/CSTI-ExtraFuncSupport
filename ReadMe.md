@@ -222,7 +222,7 @@ receive:CheckInventory(true, 'a', 'b')
 ### ``AddCard``：
 
 * 参数：``string id，int amount=1`` 无返回值
-* 以本卡为基础生成``UniqueId``为id的卡牌，若id对应卡牌为液体，``amout``代表流体量，否则``amout``代表生成次数
+* 以本卡为基础生成``UniqueId``为id的卡牌，若id对应卡牌为液体，``amout``代表流体量，如果Card本身可以装载该液体，液体会被自动放入容器里，否则``amout``代表生成次数，如果Card本身是容器，那么生成的卡牌会自动放进容器里面，否则放到容器同一栏位中
 * 额外参数：
   * TransferedDurabilities部分:`float`类型：
 
@@ -247,7 +247,7 @@ receive:CheckInventory(true, 'a', 'b')
 
 * 参数：``bool doDrop``
 * 无返回值
-  * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处）
+  * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处），如果是容器内的卡，会同时自动把自己从容器里移除
 
 ## 类型`DataNodeTableAccessBridge`:
 
