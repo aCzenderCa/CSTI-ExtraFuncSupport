@@ -337,6 +337,7 @@ receive:CheckInventory(true, 'a', 'b')
   * `EveryTime`:传入一个lua函数（要求同上）和一个number参数time，输入的函数每time秒会执行一次
   * `FrameTime`：返回两帧之间的时间间隔
   * `FixFrameTime`：返回两次FixFrame之间的时间间隔
+  * `Rand`：返回一个[0,1]的随机数
   * `StartCoroutine`：传入一个lua函数（无输入，返回float），启动一个协程，如果lua函数返回(-3,-2]，则等待所有延迟函数执行完成（如生成卡，修改状态值）期间阻止玩家操作，如果lua函数返回(-2,-1]，则等待一个物理帧，如果lua函数返回(-1,0]，则等待一帧，否则等待返回值秒，若不返回则结束协程
 
 ## LuaInput
