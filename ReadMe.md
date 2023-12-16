@@ -373,6 +373,23 @@ receive:CheckInventory(true, 'a', 'b')
   * `CardName`：卡牌名称  `CardDescription`：卡牌描述
     * `LuaFunction`要求：输入`CardAccessBridge this，bool _IgnoreLiquid`返回字符串或nil
     * `ignoreLiquid`参数由游戏本身传入
+
+* `InspectionPopup`
+  * `Setup`
+    * `Setup_ModBG`:在popup初始化时修改背景，只有打开与Reg时uid匹配的卡时会执行
+      * `LuaFunction`要求：输入`InspectionPopup this, InGameCardBase _Card`,返回`(string bg_fg, string bg_bg)`,可以少返回，不返回的项不会被修改，bg_fg是popup背景中的前景部分（白色那块），bg_bg是popup背景中的背景部分（白色那块后面的玩意）
+      * 示例:
+```lua
+Register:Reg('InspectionPopup', 'Setup_ModBG', 'id', function()
+  local mod_bg = LuaTimer.Rand() > 0.5
+  if mod_bg then
+    return 'name_of_fg', 'name_of_bg'
+  else
+    return 'name_of_fg'
+  end
+end)
+```
+
 * `DismantleActionButton`：
 
   * `Setup`：卡牌的按钮初始化函数

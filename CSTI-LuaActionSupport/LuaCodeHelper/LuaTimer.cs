@@ -10,6 +10,12 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class LuaTimer
 {
+    [LuaFunc]
+    public static float Rand()
+    {
+        return Random.value;
+    }
+    
     private static bool OnWaitCA;
 
     public static Coroutine? Wait4CA()

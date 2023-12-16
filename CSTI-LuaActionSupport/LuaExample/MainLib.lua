@@ -41,6 +41,7 @@ LuaInput = {}
 ---@field FrameTime fun():number
 ---@field FixFrameTime fun():number
 ---@field StartCoroutine fun(function:fun():(number|void)):void
+---@field Rand fun():number
 LuaTimer = {}
 
 ---@class CardTypes
