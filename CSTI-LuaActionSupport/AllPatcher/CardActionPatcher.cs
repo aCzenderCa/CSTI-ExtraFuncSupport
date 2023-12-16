@@ -10,6 +10,7 @@ using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
+using static CSTI_LuaActionSupport.AllPatcher.LuaRegister;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 

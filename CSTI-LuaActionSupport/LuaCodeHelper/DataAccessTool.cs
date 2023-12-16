@@ -218,7 +218,7 @@ public class DebugBridge
 {
     public object info
     {
-        set => Debug.LogFormat("[Info] {0}", (value is LuaTable table ? TableToString(table) : value));
+        set => Debug.LogFormat("[Info] {0}", value is LuaTable table ? TableToString(table) : value);
     }
 
     public object debug
@@ -250,7 +250,7 @@ public class DebugBridge
             if (key is LuaTable keyTable && cache?.Contains(keyTable) is not true)
             {
                 stringBuilder.Append(TableToString(keyTable,
-                    cache == null ? new List<LuaTable> {table} : cache.Append(table).ToList()));
+                    cache == null ? [table] : cache.Append(table).ToList()));
             }
             else
             {
@@ -261,7 +261,7 @@ public class DebugBridge
             if (val is LuaTable valTable && cache?.Contains(valTable) is not true)
             {
                 stringBuilder.Append(TableToString(valTable,
-                    cache == null ? new List<LuaTable> {table} : cache.Append(table).ToList()));
+                    cache == null ? [table] : cache.Append(table).ToList()));
             }
             else
             {
@@ -771,8 +771,8 @@ public class CardAccessBridge
         {
             i += 1;
 
-            Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, CardBase, true, tDur, true,
-                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false, SimpleUniqueAccess.SetInitData,
+            Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, true,
+                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), SimpleUniqueAccess.SetInitData,
                 initData));
         } while (i < count && cardData.CardType != CardTypes.Liquid);
     }

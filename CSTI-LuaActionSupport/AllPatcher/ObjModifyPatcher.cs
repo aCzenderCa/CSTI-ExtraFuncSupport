@@ -1,17 +1,63 @@
 ﻿using System;
-using System.Collections;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 
 [HarmonyPatch]
 public static class ObjModifyPatcher
 {
+    public static Sprite? IP_BG_BG;
+    public static Sprite? IP_BG_FG;
+
+    [HarmonyPatch(typeof(GraphicsManager), nameof(GraphicsManager.Init)), HarmonyPostfix]
+    public static void GraphicsManager_Init(GraphicsManager __instance)
+    {
+        var ShadowAndPopupWithTitle = __instance.InventoryInspectionPopup.GetComponentsInChildren<RectTransform>()
+            .First(transform => transform.name == "ShadowAndPopupWithTitle");
+        var BookCover = ShadowAndPopupWithTitle.GetComponentsInChildren<Image>()
+            .First(image => image.name == "BookCover");
+        var Page = BookCover.GetComponentsInChildren<Image>().First(image => image.name == "Page");
+        IP_BG_BG = BookCover.sprite;
+        IP_BG_FG = Page.sprite;
+    }
+
+    public static void GraphicsManager_ReInit(this GraphicsManager __instance,Sprite? ip_bg_bg = null, Sprite? ip_bg_fg = null)
+    {
+        var ShadowAndPopupWithTitle = __instance.InventoryInspectionPopup
+            .GetComponentsInChildren<RectTransform>()
+            .First(transform => transform.name == "ShadowAndPopupWithTitle");
+        var BookCover = ShadowAndPopupWithTitle.GetComponentsInChildren<Image>()
+            .First(image => image.name == "BookCover");
+        var Page = BookCover.GetComponentsInChildren<Image>().First(image => image.name == "Page");
+        if (ip_bg_bg == null)
+        {
+            if (IP_BG_BG != null)
+            {
+                BookCover.sprite = IP_BG_BG;
+            }
+        }
+        else
+        {
+            BookCover.sprite = ip_bg_bg;
+        }
+        if (ip_bg_fg == null)
+        {
+            if (IP_BG_BG != null)
+            {
+                Page.sprite = IP_BG_FG;
+            }
+        }
+        else
+        {
+            Page.sprite = ip_bg_fg;
+        }
+    }
+
     public static readonly Regex LuaDesc = new(@"^\#\#\#luaAction CardDescription\n(?<luaCode>[\s\S]*?)\n\#\#\#$");
 
     [HarmonyPostfix, HarmonyPatch(typeof(DismantleActionButton), nameof(DismantleActionButton.Setup))]
@@ -96,26 +142,6 @@ public static class ObjModifyPatcher
         catch (Exception e)
         {
             Debug.LogWarning(e);
-        }
-    }
-
-    [HarmonyPatch(typeof(GameManager))]
-    public static class Patch_GameManager_AddCard
-    {
-        [HarmonyTargetMethod]
-        public static MethodBase FindTargetAddCard()
-        {
-            return AccessTools.GetDeclaredMethods(typeof(GameManager)).First(info =>
-                info.Name == nameof(GameManager.AddCard) && info.GetParameters().Length > 16);
-        }
-
-        [HarmonyPostfix]
-        public static void MoniRawAddCard(ref IEnumerator __result)
-        {
-            if (MoniEnum.OnMoniAddCard)
-            {
-                __result = MoniEnum.MoniFunc(__result);
-            }
         }
     }
 }

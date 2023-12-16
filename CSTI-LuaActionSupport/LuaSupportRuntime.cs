@@ -12,7 +12,7 @@ using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.LoadEnv;
 
 namespace CSTI_LuaActionSupport;
 
-[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.5")]
+[BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", "1.0.2.6")]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
@@ -23,14 +23,19 @@ public class LuaSupportRuntime : BaseUnityPlugin
     public static readonly List<string> LuaFilesOnGameLoad = [];
     public static readonly List<string> LuaFilesOnGameSave = [];
     public static LuaSupportRuntime Runtime = null!;
-    
+    public static Dictionary<string, Sprite> SpriteDict = null!;
+
+    public static void Init(Dictionary<string, Sprite> spriteDict)
+    {
+        SpriteDict = spriteDict;
+    }
+
     static LuaSupportRuntime()
     {
         HarmonyInstance.PatchAll(typeof(CardActionPatcher));
         HarmonyInstance.PatchAll(typeof(OnGameLoad));
         HarmonyInstance.PatchAll(typeof(SavePatcher));
         HarmonyInstance.PatchAll(typeof(ObjModifyPatcher));
-        HarmonyInstance.PatchAll(typeof(ObjModifyPatcher.Patch_GameManager_AddCard));
         HarmonyInstance.PatchAll(typeof(LuaRegister));
         HarmonyInstance.PatchAll(typeof(LuaTimer));
     }

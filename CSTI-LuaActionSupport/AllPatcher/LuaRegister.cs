@@ -64,6 +64,37 @@ public class LuaRegister
         AllReg[klass][method][uid].Add(function);
     }
 
+    [HarmonyPostfix, HarmonyPatch(typeof(InspectionPopup), nameof(InspectionPopup.Setup), typeof(InGameCardBase))]
+    public static void Lua_InspectionPopup_Setup(InspectionPopup __instance, InGameCardBase _Card)
+    {
+        GraphicsManager.Instance.GraphicsManager_ReInit();
+        if (!_Card) return;
+        if (!Register.TryGet(nameof(InspectionPopup), nameof(InspectionPopup.Setup)+"_ModBG", _Card.CardModel.UniqueID,
+                out var regs_ModBG)) return;
+        foreach (var luaFunction in regs_ModBG)
+        {
+            try
+            {
+                var objects = luaFunction.Call(__instance, _Card);
+                if (objects.Length > 0 && objects[0] is string fg && SpriteDict.TryGetValue(fg, out var fg_sprite))
+                {
+                    if (objects.Length > 1 && objects[1] is string bg && SpriteDict.TryGetValue(bg, out var bg_sprite))
+                    {
+                        GraphicsManager.Instance.GraphicsManager_ReInit(bg_sprite, fg_sprite);
+                    }
+                    else
+                    {
+                        GraphicsManager.Instance.GraphicsManager_ReInit(null, fg_sprite);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        }
+    }
+
     [HarmonyPostfix, HarmonyPatch(typeof(CardOnCardAction), nameof(CardOnCardAction.CardsAndTagsAreCorrect))]
     public static void Lua_CardOnCardAction_CardsAndTagsAreCorrect(CardOnCardAction __instance,
         InGameCardBase _Receiving, InGameCardBase _Given, ref bool __result)

@@ -337,8 +337,8 @@ public class SimpleUniqueAccess : CommonSimpleAccess
             {
                 for (var i = 0; i < count; i++)
                 {
-                    Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, null, true,
-                        tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false,
+                    Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, null,
+                        tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
                         SetInitData, initData));
                 }
             }
