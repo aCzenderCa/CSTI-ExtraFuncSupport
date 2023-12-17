@@ -64,18 +64,18 @@ public class LuaRegister
         AllReg[klass][method][uid].Add(function);
     }
 
-    [HarmonyPostfix, HarmonyPatch(typeof(CardGraphics), nameof(CardGraphics.CurrentImage), MethodType.Getter)]
-    public static void Lua_CardGraphics_CurrentImageGetter(CardGraphics __instance, ref Sprite? __result)
+    [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.CurrentImage), MethodType.Getter)]
+    public static void Lua_CardGraphics_CurrentImageGetter(InGameCardBase __instance, ref Sprite? __result)
     {
-        if (!__instance.CardLogic || !__instance.CardLogic.CardModel) return;
-        if (!Register.TryGet(nameof(CardGraphics), nameof(CardGraphics.CurrentImage) + "_Getter",
-                __instance.CardLogic.CardModel.UniqueID, out var regs)) return;
+        if (!__instance.CardModel) return;
+        if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CurrentImage) + "_Getter",
+                __instance.CardModel.UniqueID, out var regs)) return;
         foreach (var luaFunction in regs)
         {
             try
             {
-                var objects = luaFunction.Call(__instance, new CardAccessBridge(__instance.CardLogic),
-                    new SimpleUniqueAccess(__instance.CardLogic.CardModel), __result != null ? __result.name : null);
+                var objects = luaFunction.Call(__instance, new CardAccessBridge(__instance),
+                    new SimpleUniqueAccess(__instance.CardModel), __result != null ? __result.name : null);
                 if (objects.Length > 0 && objects[0] is string spriteName &&
                     SpriteDict.TryGetValue(spriteName, out var sprite))
                 {
