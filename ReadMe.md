@@ -373,7 +373,17 @@ receive:CheckInventory(true, 'a', 'b')
 基于`CardAction`（及其子类）类型对象执行，那么`uid`需要与`ActionName.LocalizationKey`匹配
 
 * `InGameCardBase`：
-
+  * `CurrentImage`
+    * `CurrentImage_Getter`:获取槽位上的卡图
+      * `LuaFunction`要求：输入`CardGraphics __instance, CardAccessBridge CardLogic, SimpleUniqueAccess CardModel, string name`
+        * __instance卡槽本体，CardLogic卡槽上第一张卡，CardModel卡槽上卡的model，name原本图片的名字
+      * 返回string：若返回，且ModLoader加载了名称与返回值匹配的图片，则将卡图修改为该图片
+      * 示例：
+```lua
+Register:Reg('CardGraphics', 'CurrentImage_Getter', 'id', function(cg,card,model,sp_name)
+  return 'spirte_name'
+end)
+```
   * `CanReceiveInInventory`：返回是否可以装入某个卡
     * `LuaFunction`要求：输入`CardAccessBridge this,SimpleUniqueAccess card,SimpleUniqueAccess liquid` 返回`bool`或`nil`，`bool`则修改函数结果，`nil`函数结果不变
     * `this`为执行`CanReceiveInInventory`本身的卡，`card`为要装入的物品的`CardData`，`liquid`为装入流体容器时，流体的`CardData`
@@ -436,18 +446,6 @@ end)
       * `__result`:C#代码计算得的条件结果或按顺序上一个Lua Patch返回的结果
     * 返回bool:若返回，将__result改为返回值
 
-* `CardGraphics`
-  * `CurrentImage`
-    * `CurrentImage_Getter`:获取槽位上的卡图
-      * `LuaFunction`要求：输入`CardGraphics __instance, CardAccessBridge CardLogic, SimpleUniqueAccess CardModel, string name`
-        * __instance卡槽本体，CardLogic卡槽上第一张卡，CardModel卡槽上卡的model，name原本图片的名字
-      * 返回string：若返回，且ModLoader加载了名称与返回值匹配的图片，则将卡图修改为该图片
-      * 示例：
-```lua
-Register:Reg('CardGraphics', 'CurrentImage_Getter', 'id', function(cg,card,model,sp_name)
-  return 'spirte_name'
-end)
-```
 
 
 ## LuaCodeCardDescription
