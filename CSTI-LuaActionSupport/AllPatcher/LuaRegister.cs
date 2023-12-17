@@ -64,18 +64,44 @@ public class LuaRegister
         AllReg[klass][method][uid].Add(function);
     }
 
+    [HarmonyPostfix, HarmonyPatch(typeof(CardGraphics), nameof(CardGraphics.CurrentImage), MethodType.Getter)]
+    public static void Lua_CardGraphics_CurrentImageGetter(CardGraphics __instance, ref Sprite? __result)
+    {
+        if (!__instance.CardLogic || !__instance.CardLogic.CardModel) return;
+        if (!Register.TryGet(nameof(CardGraphics), nameof(CardGraphics.CurrentImage) + "_Getter",
+                __instance.CardLogic.CardModel.UniqueID, out var regs)) return;
+        foreach (var luaFunction in regs)
+        {
+            try
+            {
+                var objects = luaFunction.Call(__instance, new CardAccessBridge(__instance.CardLogic),
+                    new SimpleUniqueAccess(__instance.CardLogic.CardModel), __result != null ? __result.name : null);
+                if (objects.Length > 0 && objects[0] is string spriteName &&
+                    SpriteDict.TryGetValue(spriteName, out var sprite))
+                {
+                    __result = sprite;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        }
+    }
+
     [HarmonyPostfix, HarmonyPatch(typeof(InspectionPopup), nameof(InspectionPopup.Setup), typeof(InGameCardBase))]
     public static void Lua_InspectionPopup_Setup(InspectionPopup __instance, InGameCardBase _Card)
     {
         GraphicsManager.Instance.GraphicsManager_ReInit();
         if (!_Card) return;
-        if (!Register.TryGet(nameof(InspectionPopup), nameof(InspectionPopup.Setup)+"_ModBG", _Card.CardModel.UniqueID,
+        if (!Register.TryGet(nameof(InspectionPopup), nameof(InspectionPopup.Setup) + "_ModBG",
+                _Card.CardModel.UniqueID,
                 out var regs_ModBG)) return;
         foreach (var luaFunction in regs_ModBG)
         {
             try
             {
-                var objects = luaFunction.Call(__instance, _Card);
+                var objects = luaFunction.Call(__instance, new CardAccessBridge(_Card));
                 if (objects.Length > 0 && objects[0] is string fg && SpriteDict.TryGetValue(fg, out var fg_sprite))
                 {
                     if (objects.Length > 1 && objects[1] is string bg && SpriteDict.TryGetValue(bg, out var bg_sprite))

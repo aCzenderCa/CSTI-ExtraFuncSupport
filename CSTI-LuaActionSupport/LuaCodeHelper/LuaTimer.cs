@@ -21,11 +21,11 @@ public static class LuaTimer
     public static Coroutine? Wait4CA()
     {
         if (!GameManager.Instance) return null;
-        return LuaSupportRuntime.Runtime.StartCoroutine(waitAll());
+        return Runtime.StartCoroutine(waitAll());
 
         IEnumerator waitAll()
         {
-            while (OnWaitCA)
+            while (GameManager.PerformingAction)
             {
                 yield return null;
             }
@@ -101,7 +101,7 @@ public static class LuaTimer
     [LuaFunc]
     public static void StartCoroutine(LuaFunction function)
     {
-        LuaSupportRuntime.Runtime.StartCoroutine(Coroutine());
+        Runtime.StartCoroutine(Coroutine());
         return;
 
         IEnumerator Coroutine()

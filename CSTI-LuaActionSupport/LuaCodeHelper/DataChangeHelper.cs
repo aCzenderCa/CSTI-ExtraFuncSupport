@@ -38,7 +38,7 @@ public static class DataChangeHelper
                 inGameStat.StatModel.MinMaxValue.x, inGameStat.StatModel.MinMaxValue.y);
         }
 
-        CardActionPatcher.Enumerators.Add(gameManager.UpdateStatStatuses(inGameStat, preVal, null));
+        Enumerators.Add(gameManager.UpdateStatStatuses(inGameStat, preVal, null));
     }
 
     public static void ChangeStatRateTo(this GameManager gameManager, InGameStat inGameStat, float _Rate)

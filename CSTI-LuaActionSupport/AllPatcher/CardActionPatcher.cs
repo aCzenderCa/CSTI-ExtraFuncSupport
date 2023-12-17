@@ -37,6 +37,7 @@ public static class CardActionPatcher
         LuaRuntime.Register(typeof(CardActionPatcher));
         LuaRuntime.Register(typeof(LuaTimer), nameof(LuaTimer));
         LuaRuntime.Register(typeof(LuaInput), nameof(LuaInput));
+        LuaRuntime.Register(typeof(LuaGraphics), nameof(LuaGraphics));
         LuaRuntime.Register<CardTypes>();
         LuaRuntime.Register<DataNode.DataNodeType>();
 

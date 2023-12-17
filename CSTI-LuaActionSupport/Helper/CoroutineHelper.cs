@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using CSTI_LuaActionSupport.AllPatcher;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
@@ -17,15 +18,12 @@ public static class CoroutineHelper
 
         Enumerators.Clear();
 
-        foreach (var popup in Object.FindObjectsOfType<InspectionPopup>())
-        {
-            popup.ReCommonSetup();
-        }
+        LuaGraphics.UpdatePopup();
 
         return queue;
     }
 
-    private static void ReCommonSetup(this InspectionPopup popup)
+    public static void ReCommonSetup(this InspectionPopup popup)
     {
         if (popup.isActiveAndEnabled && popup.CurrentCard)
         {

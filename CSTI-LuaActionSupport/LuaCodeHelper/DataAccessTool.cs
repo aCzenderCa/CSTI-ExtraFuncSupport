@@ -274,14 +274,9 @@ public class DebugBridge
     }
 }
 
-public class CardAccessBridge
+public class CardAccessBridge(InGameCardBase? cardBase)
 {
-    public readonly InGameCardBase? CardBase;
-
-    public CardAccessBridge(InGameCardBase? cardBase)
-    {
-        CardBase = cardBase;
-    }
+    public readonly InGameCardBase? CardBase = cardBase;
 
     public static readonly Regex KVDataCheck = new(@"zender\.luaSupportData\.\{(?<key>.+?)\}:\{(?<val>.+?)\}");
 

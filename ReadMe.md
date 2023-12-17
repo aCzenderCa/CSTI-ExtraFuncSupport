@@ -125,6 +125,7 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 * IsInBase 是否在地面栏位（从上到下第二行）
 * IsInLocation 是否在地点栏位（从上到下第一行）
 * IsInBackground 是否是来自其他场景的卡（通过AlwaysUpdate=true）
+* `CardModel`:`SimpleUniqueAccess`类型
 
 ```
 Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
@@ -343,12 +344,23 @@ receive:CheckInventory(true, 'a', 'b')
 ## LuaInput
 全局变量`LuaInput`:lua table类型(不需要用`：`调用)
 
+键鼠输入相关
+
 * 函数
   * `GetScroll`:无参数，返回两帧之间滚轮的旋转量
   * `GetKey`：输入按键的名字（如F，L，F1），返回对应按键是否正被按下
   * `GetKeyDown`：输入按键的名字（如F，L，F1），返回对应按键是否刚被按下
   * `GetKeyUp`：输入按键的名字（如F，L，F1），返回对应按键是否刚刚弹起
   * [按键名称表](https://docs.unity.cn/cn/2020.3/ScriptReference/KeyCode.html)
+
+## LuaGraphics
+全局变量`LuaGraphics`:`LuaTable`类型（不需要`:`调用）
+
+图像UI等相关内容
+
+* 函数
+  * UpdateCards：无参数无返回值，更新所有卡槽上的图片
+  * UpdatePopup：更新所有卡牌界面的标题和介绍
 
 ## LuaRegister
 
@@ -378,10 +390,10 @@ receive:CheckInventory(true, 'a', 'b')
 * `InspectionPopup`
   * `Setup`
     * `Setup_ModBG`:在popup初始化时修改背景，只有打开与Reg时uid匹配的卡时会执行
-      * `LuaFunction`要求：输入`InspectionPopup this, InGameCardBase _Card`,返回`(string bg_fg, string bg_bg)`,可以少返回，不返回的项不会被修改，bg_fg是popup背景中的前景部分（白色那块），bg_bg是popup背景中的背景部分（白色那块后面的玩意）
+      * `LuaFunction`要求：输入`InspectionPopup this, CardAccessBridge _Card`,返回`(string bg_fg, string bg_bg)`,可以少返回，不返回的项不会被修改，bg_fg是popup背景中的前景部分（白色那块），bg_bg是popup背景中的背景部分（白色那块后面的玩意）
       * 示例:
 ```lua
-Register:Reg('InspectionPopup', 'Setup_ModBG', 'id', function()
+Register:Reg('InspectionPopup', 'Setup_ModBG', 'id', function(popup,card)
   local mod_bg = LuaTimer.Rand() > 0.5
   if mod_bg then
     return 'name_of_fg', 'name_of_bg'
@@ -423,6 +435,19 @@ end)
     * `LuaFunction`要求：输入`CardAction __instance, CardAccessBridge _ForCard, bool __result`
       * `__result`:C#代码计算得的条件结果或按顺序上一个Lua Patch返回的结果
     * 返回bool:若返回，将__result改为返回值
+
+* `CardGraphics`
+  * `CurrentImage`
+    * `CurrentImage_Getter`:获取槽位上的卡图
+      * `LuaFunction`要求：输入`CardGraphics __instance, CardAccessBridge CardLogic, SimpleUniqueAccess CardModel, string name`
+        * __instance卡槽本体，CardLogic卡槽上第一张卡，CardModel卡槽上卡的model，name原本图片的名字
+      * 返回string：若返回，且ModLoader加载了名称与返回值匹配的图片，则将卡图修改为该图片
+      * 示例：
+```lua
+Register:Reg('CardGraphics', 'CurrentImage_Getter', 'id', function(cg,card,model,sp_name)
+  return 'spirte_name'
+end)
+```
 
 
 ## LuaCodeCardDescription
