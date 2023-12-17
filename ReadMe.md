@@ -380,7 +380,7 @@ receive:CheckInventory(true, 'a', 'b')
       * 返回string：若返回，且ModLoader加载了名称与返回值匹配的图片，则将卡图修改为该图片
       * 示例：
 ```lua
-Register:Reg('CardGraphics', 'CurrentImage_Getter', 'id', function(cg,card,model,sp_name)
+Register:Reg('InGameCardBase', 'CurrentImage_Getter', 'id', function(cg,card,model,sp_name)
   return 'spirte_name'
 end)
 ```
