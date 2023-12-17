@@ -95,8 +95,7 @@ public class LuaRegister
         GraphicsManager.Instance.GraphicsManager_ReInit();
         if (!_Card) return;
         if (!Register.TryGet(nameof(InspectionPopup), nameof(InspectionPopup.Setup) + "_ModBG",
-                _Card.CardModel.UniqueID,
-                out var regs_ModBG)) return;
+                _Card.CardModel.UniqueID, out var regs_ModBG)) return;
         foreach (var luaFunction in regs_ModBG)
         {
             try

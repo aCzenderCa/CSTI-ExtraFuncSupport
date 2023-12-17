@@ -47,7 +47,7 @@ public static class ObjModifyPatcher
         }
         if (ip_bg_fg == null)
         {
-            if (IP_BG_BG != null)
+            if (IP_BG_FG != null)
             {
                 Page.sprite = IP_BG_FG;
             }

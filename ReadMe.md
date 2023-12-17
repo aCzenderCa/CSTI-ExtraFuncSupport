@@ -167,6 +167,8 @@ end
 receive:SaveData()
 ```
 
+### `UpdateVisuals`:无参数无返回，更新该卡的卡图等
+
 ### ``CheckInventory``：
 
 * 参数：``bool useAll, params string[] uid``

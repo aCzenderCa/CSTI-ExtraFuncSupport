@@ -288,6 +288,13 @@ public class CardAccessBridge(InGameCardBase? cardBase)
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
     public bool IsInBackground => CardBase != null && CardBase.InBackground;
 
+    public void UpdateVisuals()
+    {
+        if(cardBase==null)return;
+        if(cardBase.CardVisuals==null)return;
+        cardBase.CardVisuals.Setup(cardBase);
+    }
+
     public bool CheckInventory(bool useAll, params string[] uid)
     {
         return useAll ? uid.All(s => HasInInventory(s)) : uid.Any(s => HasInInventory(s));
