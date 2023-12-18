@@ -28,12 +28,12 @@ public class CardAccessBridge(InGameCardBase? cardBase)
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
     public bool IsInBackground => CardBase != null && CardBase.InBackground;
 
-    public void AddAnim(string[]? animList, float[]? animTimeList)
+    public void AddAnim(LuaTable? animList, LuaTable? animTimeList)
     {
         if (CardBase == null) return;
         RemoveAnim();
         var animCard = CardBase.gameObject.AddComponent<AnimCard>();
-        animCard.Init(animList, animTimeList);
+        animCard.Init(animList.ToList<string>(), animTimeList.ToList(o => o.TryNum<float>() ?? 0));
     }
 
     public bool RemoveAnim()

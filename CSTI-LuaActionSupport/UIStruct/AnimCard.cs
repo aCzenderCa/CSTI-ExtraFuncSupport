@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using UnityEngine;
 
@@ -8,8 +9,8 @@ namespace CSTI_LuaActionSupport.UIStruct;
 public class AnimCard : MonoBehaviour
 {
     public InGameCardBase CardBase = null!;
-    public string[]? AnimList;
-    public float[]? AnimTimeList;
+    public List<string>? AnimList;
+    public List<float>? AnimTimeList;
 
     private int _CurAnimIndex;
 
@@ -31,7 +32,7 @@ public class AnimCard : MonoBehaviour
     public float CurTime;
     private readonly LuaTimer.SimpleTimer SimpleTimer = new(0.02f, 0);
 
-    public void Init(string[]? animList, float[]? animTimeList)
+    public void Init(List<string>? animList, List<float>? animTimeList)
     {
         CurTime = 0;
         _CurAnimIndex = 0;
@@ -62,7 +63,6 @@ public class AnimCard : MonoBehaviour
         CurTime += Time.deltaTime;
         if (CurTime < AnimTimeList[CurAnimIndex]) return;
         CurTime -= AnimTimeList[CurAnimIndex];
-        CurAnimIndex += 1;
-        if (CurAnimIndex >= AnimTimeList.Length) CurAnimIndex = 0;
+        CurAnimIndex = (CurAnimIndex + 1) % AnimTimeList.Count;
     }
 }

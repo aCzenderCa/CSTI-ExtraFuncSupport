@@ -1,42 +1,43 @@
 ---@class CardAccessBridge
----@field public CardBase InGameCardBase
----@field public CardModel SimpleUniqueAccess @readonly
----@field public IsEquipped boolean @readonly
----@field public IsInHand boolean @readonly
----@field public IsInBase boolean @readonly
----@field public IsInLocation boolean @readonly
----@field public IsInBackground boolean @readonly
----@field public CheckInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
----@field public CheckTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
----@field public CheckRegexTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
----@field public HasInInventory fun(this:CardAccessBridge, uid:string, needCount:number):boolean
----@field public LiquidInventory fun(this:CardAccessBridge):CardAccessBridge
----@field public InventorySlotCount number @readonly
----@field public [string] any
----@field public [number] List<CardAccessBridge>
----@field public SlotType string
----@field public CardType string
----@field public Weight number
----@field public HasTag fun(this:CardAccessBridge, tag:string):boolean
----@field public TravelCardIndex number
----@field public Id string @readonly
----@field public Data DataNodeTableAccessBridge
----@field public InitData fun(this:CardAccessBridge):void
----@field public SaveData fun(this:CardAccessBridge):void
----@field public Spoilage number
----@field public Usage number
----@field public Fuel number
----@field public Progress number
----@field public Special1 number
----@field public Special2 number
----@field public Special3 number
----@field public Special4 number
----@field public LiquidQuantity number
----@field public AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
----@field public Remove fun(this:CardAccessBridge, doDrop:boolean):void
-
+---@field CardBase InGameCardBase
+---@field CardModel SimpleUniqueAccess @readonly
+---@field IsEquipped boolean @readonly
+---@field IsInHand boolean @readonly
+---@field IsInBase boolean @readonly
+---@field IsInLocation boolean @readonly
+---@field IsInBackground boolean @readonly
+---@field CheckInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
+---@field CheckTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
+---@field CheckRegexTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
+---@field HasInInventory fun(this:CardAccessBridge, uid:string, needCount:number):boolean
+---@field LiquidInventory fun(this:CardAccessBridge):CardAccessBridge
+---@field InventorySlotCount number @readonly
+---@field [string] any
+---@field [number] List<CardAccessBridge>
+---@field SlotType string
+---@field CardType string
+---@field Weight number
+---@field HasTag fun(this:CardAccessBridge, tag:string):boolean
+---@field TravelCardIndex number
+---@field Id string @readonly
+---@field Data DataNodeTableAccessBridge
+---@field InitData fun(this:CardAccessBridge):void
+---@field SaveData fun(this:CardAccessBridge):void
+---@field Spoilage number
+---@field Usage number
+---@field Fuel number
+---@field Progress number
+---@field Special1 number
+---@field Special2 number
+---@field Special3 number
+---@field Special4 number
+---@field LiquidQuantity number
+---@field AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
+---@field Remove fun(this:CardAccessBridge, doDrop:boolean):void
+---@field AddAnim fun(this:CardAccessBridge, animList:table<string>|nil, animTimeList:table<number>|nil):void
+---@field RemoveAnim fun(this:CardAccessBridge):boolean
 ---@class InGameCardBase
----
+
 ---@alias DataNodeData_lua number|string|boolean|table<string,DataNodeData_lua>|nil|Vector2
 ---@class DataNodeTableAccessBridge
 ---@field public LuaKeys table<number,string>
@@ -45,8 +46,8 @@
 ---@field public LuaTable table<string,DataNodeData_lua>
 ---@field public Count number
 
----@class Dictionary<TKey1,TVal1>:IEnumerable<KeyValuePair<TKey1, TVal1>>
----@field [TKey1] TVal1
+---@class Dictionary<TKey2,TVal2>:IEnumerable<KeyValuePair<TKey2, TVal2>>
+---@field [TKey2] TVal2
 ---@field Count number
 
 ---@class KeyValuePair<TKey,TVal>
@@ -95,8 +96,8 @@
 ---@class ICollection<TItem>:IEnumerable<TItem>
 ---@field Count number
 
----@class IList<TItem>:ICollection<TItem>
----@field public [number] TItem
+---@class IList<TItem1>:ICollection<TItem1>
+---@field public [number] TItem1
 
 ---@class List<TItem>:IList<TItem>
 

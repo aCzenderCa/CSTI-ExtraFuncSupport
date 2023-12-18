@@ -146,7 +146,7 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
   * 设置的值直接为整数时，直接以``key``保存整数值
   * 其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
 
-### `AddAnim(string[]? animList, float[]? animTimeList)`
+### `AddAnim(table<string>? animList, table<number>? animTimeList)`
 添加一组动画，animList是各图片的name，animTimeList是各图片的持续时间（单位秒）\
 如果输入的animList与animTimeList为null，则效果变为每间隔0.02秒更新一次卡图（50fps）
 
