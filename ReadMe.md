@@ -146,8 +146,13 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
   * 设置的值直接为整数时，直接以``key``保存整数值
   * 其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
 
-### `InitData`:
+### `AddAnim(string[]? animList, float[]? animTimeList)`
+添加一组动画，animList是各图片的name，animTimeList是各图片的持续时间（单位秒）
 
+### `RemoveAnim`
+移除卡牌上的动画
+
+### `InitData`:
 初始化与卡绑定的数据，即Data属性
 
 ### `SaveData`:
@@ -250,7 +255,8 @@ receive:CheckInventory(true, 'a', 'b')
 
 * 参数：``bool doDrop``
 * 无返回值
-  * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处），如果是容器内的卡，会同时自动把自己从容器里移除
+  * 删除所访问的卡，``doDrop``为``true``时会掉落容器内物品（还有其他用处）
+  * 如果是容器内的卡，会同时自动把自己从容器里移除
 
 ## 类型`DataNodeTableAccessBridge`:
 
@@ -329,6 +335,19 @@ receive:CheckInventory(true, 'a', 'b')
   * 返回id对应卡在location上的数量
 * `CountCardEquipped`：`string id`
   * 只统计装备的卡，返回id对应卡数量
+
+## LuaSystem
+全局变量`LuaSystem`:lua table类型(不需要用`：`调用)\
+主要用于生命周期回调（如某个MonoBehaviour被创建，在某个MonoBehaviour上附加update）
+
+* 函数
+  * `AddSystem`:输入`string type, string sys_type, string uid, LuaFunction function`
+
+* 接受的`string type, string sys_type, string uid, LuaFunction function`组合
+  * `"InGameCardBase","OnUpdate",CardModel.UniqueID,fun(card:CardAccessBridge):void`
+    * 卡牌存在时每帧调用一次
+  * `"InGameCardBase","PostInit",CardModel.UniqueID,fun(card:CardAccessBridge):void`
+    * 卡牌初始化完成时调用一次
 
 ## LuaTimer
 全局变量`LuaTimer`:lua table类型(不需要用`：`调用)

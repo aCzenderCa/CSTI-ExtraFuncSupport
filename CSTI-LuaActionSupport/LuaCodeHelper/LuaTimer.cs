@@ -15,7 +15,7 @@ public static class LuaTimer
     {
         return Random.value;
     }
-    
+
     private static bool OnWaitCA;
 
     public static Coroutine? Wait4CA()
@@ -56,6 +56,14 @@ public static class LuaTimer
     {
         public readonly float Time = time;
         public float CurTime = curTime;
+
+        public bool Step()
+        {
+            CurTime += UnityEngine.Time.deltaTime;
+            if (CurTime < Time) return false;
+            CurTime -= Time;
+            return true;
+        }
     }
 
     public static readonly List<LuaFunction> FrameFunctions = [];

@@ -14,7 +14,7 @@ namespace CSTI_LuaActionSupport;
 [BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", ModVersion)]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
-    public const string ModVersion = "1.0.3.2";
+    public const string ModVersion = "1.0.3.5";
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
     public static readonly string ModInfo = "ModInfo.json";
     public static readonly string LuaInit = "LuaInit";
@@ -32,6 +32,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
 
     static LuaSupportRuntime()
     {
+        HarmonyInstance.PatchAll(typeof(SafeAttrPatcher));
         HarmonyInstance.PatchAll(typeof(CardActionPatcher));
         HarmonyInstance.PatchAll(typeof(OnGameLoad));
         HarmonyInstance.PatchAll(typeof(SavePatcher));
@@ -39,7 +40,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
         HarmonyInstance.PatchAll(typeof(LuaRegister));
         HarmonyInstance.PatchAll(typeof(LuaTimer));
         HarmonyInstance.PatchAll(typeof(LuaGraphics));
-        HarmonyInstance.PatchAll(typeof(SafeAttrPatcher));
+        HarmonyInstance.PatchAll(typeof(LuaSystem));
     }
 
     private static void LoadLuaSave()
@@ -79,8 +80,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
         remove.Clear();
         foreach (var (function, timer) in LuaTimer.EveryTimeFunctions)
         {
-            timer.CurTime += Time.deltaTime;
-            if (!(timer.CurTime >= timer.Time)) continue;
+            if (!timer.Step()) continue;
             var objects = function.Call();
             if (objects.Length > 0 && objects[0] is false)
             {

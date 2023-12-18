@@ -180,4 +180,65 @@ public static class TableHelper
     {
         return dictionary.TryGetValue(key, out var value) ? value : null;
     }
+
+    public static void SafeDAdd<TKey1, TKey2, TVal>(this Dictionary<TKey1, Dictionary<TKey2, List<TVal>>> dictionary,
+        TKey1 key1, TKey2 key2, TVal val)
+    {
+        if (dictionary.TryGetValue(key1, out var dictionary2))
+        {
+            if (dictionary2.TryGetValue(key2, out var list))
+            {
+                list.Add(val);
+            }
+            else
+            {
+                dictionary2[key2] = [val];
+            }
+        }
+        else
+        {
+            dictionary[key1] = new Dictionary<TKey2, List<TVal>> {{key2, [val]}};
+        }
+    }
+
+    public static void SafeDAdd<TKey1, TKey2, TKey3, TVal>(
+        this Dictionary<TKey1, Dictionary<TKey2, Dictionary<TKey3, List<TVal>>>> dictionary,
+        TKey1 key1, TKey2 key2, TKey3 key3, TVal val)
+    {
+        if (dictionary.TryGetValue(key1, out var dictionary2))
+        {
+            if (dictionary2.TryGetValue(key2, out var dictionary3))
+            {
+                if (dictionary3.TryGetValue(key3,out var list))
+                {
+                    list.Add(val);
+                }
+                else
+                {
+                    dictionary3[key3] = [val];
+                }
+            }
+            else
+            {
+                dictionary2[key2] = new Dictionary<TKey3, List<TVal>> {{key3, [val]}};
+            }
+        }
+        else
+        {
+            dictionary[key1] = new Dictionary<TKey2, Dictionary<TKey3, List<TVal>>>
+                {{key2, new Dictionary<TKey3, List<TVal>> {{key3, [val]}}}};
+        }
+    }
+
+    public static TVal? SafeDGet<TKey1, TKey2, TKey3, TVal>(this Dictionary<TKey1, Dictionary<TKey2, Dictionary<TKey3, TVal>>> dictionary,
+        TKey1 key1, TKey2 key2, TKey3 key3)
+    {
+        if (dictionary.TryGetValue(key1, out var dictionary2) && dictionary2.TryGetValue(key2, out var dictionary3)
+            && dictionary3.TryGetValue(key3,out var val))
+        {
+            return val;
+        }
+
+        return default;
+    }
 }

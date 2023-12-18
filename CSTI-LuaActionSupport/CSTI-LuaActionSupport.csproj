@@ -210,6 +210,7 @@
         <Compile Include="AllPatcher\CardActionPatcher.cs" />
         <Compile Include="AllPatcher\LuaGraphics.cs" />
         <Compile Include="AllPatcher\LuaRegister.cs" />
+        <Compile Include="AllPatcher\LuaSystem.cs" />
         <Compile Include="AllPatcher\ObjModifyPatcher.cs" />
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
@@ -217,6 +218,7 @@
         <Compile Include="GlobalUsings.cs" />
         <Compile Include="Helper\CoroutineHelper.cs" />
         <Compile Include="Helper\TryModifyPack.cs" />
+        <Compile Include="LuaCodeHelper\CardAccessBridge.cs" />
         <Compile Include="LuaCodeHelper\DataAccessTool.cs" />
         <Compile Include="LuaCodeHelper\DataChangeHelper.cs" />
         <Compile Include="LuaCodeHelper\DeconstructHelper.cs" />
@@ -229,6 +231,7 @@
         <Compile Include="LuaCodeHelper\SimpleAccessTool.cs" />
         <Compile Include="LuaSupportRuntime.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="UIStruct\AnimCard.cs" />
         <Compile Include="UIStruct\CustomUIManager.cs" />
     </ItemGroup>
     <ItemGroup>
