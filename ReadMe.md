@@ -149,6 +149,15 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 ### `AddAnim(table<string>? animList, table<number>? animTimeList)`
 添加一组动画，animList是各图片的name，animTimeList是各图片的持续时间（单位秒）\
 如果输入的animList与animTimeList为null，则效果变为每间隔0.02秒更新一次卡图（50fps）
+```lua
+local anim = {}
+local animTime = {}
+for i = 1, 300 do
+  anim[i] = "output_" .. i .. "_testonly"
+  animTime[i] = 0.04
+end
+receive:AddAnim(anim,animTime);
+```
 
 ### `RemoveAnim`
 移除卡牌上的动画

@@ -44,6 +44,12 @@ LuaInput = {}
 ---@field Rand fun():number
 LuaTimer = {}
 
+---@alias sys_type "OnUpdate"|"PostInit"
+---@alias sys_this_type "InGameCardBase"
+---@class LuaSystem
+---@field AddSystem fun(type:sys_this_type,sys_type:sys_type,uid:string,function:fun(this:any):void):void
+LuaSystem = {}
+
 ---@class CardTypes
 ---@class DataNodeType
 
@@ -123,9 +129,10 @@ debug = {}
 ---@alias DAB_Setup fun(__instance:DismantleActionButton,_Action:DismantleCardAction,_Card:CardAccessBridge,_Action_ActionName_LocalizationKey:string):(boolean,boolean)
 
 ---@alias RegFunc COCA_CardATagAreCorrectF|CA_CardATagAreCorrectF|IGS_CValueF|IGCB_F_ALL|GM_F_ALL|DAB_Setup
----@alias RegClass "DismantleActionButton"|"GameManager"|"InGameCardBase"|"InGameStat"|"CardOnCardAction"|"CardAction"
+---@alias RegClass "DismantleActionButton"|"GameManager"|"InGameCardBase"|"InGameStat"|"CardOnCardAction"|"CardAction"|"InspectionPopup"
 ---@alias IGCB_RegMethod "CanReceiveInInventory"|"CanReceiveInInventoryInstance"|"InventoryWeight"|"CardName"|"CardDescription"
----@alias RegMethod "CardsAndTagsAreCorrect"|"CurrentValue"|IGCB_RegMethod|"ChangeStatValue"|"ChangeStatRate"|"Setup"
+---@alias RegMethod_Pack1 "ChangeStatValue"|"ChangeStatRate"|"Setup"|"CurrentImage_Getter"
+---@alias RegMethod "CardsAndTagsAreCorrect"|"CurrentValue"|IGCB_RegMethod|RegMethod_Pack1
 ---@class Register 
 ---@field Reg fun(this:Register, klass:RegClass, method:RegMethod, uid:string, function:RegFunc)
 Register = {}
