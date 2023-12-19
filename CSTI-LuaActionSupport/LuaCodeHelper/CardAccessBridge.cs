@@ -14,9 +14,9 @@ using Object = UnityEngine.Object;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
-public class CardAccessBridge(InGameCardBase? cardBase)
+public class CardAccessBridge(InGameCardBase? CardBase)
 {
-    public readonly InGameCardBase? CardBase = cardBase;
+    public readonly InGameCardBase? CardBase = CardBase;
 
     public static readonly Regex KVDataCheck = new(@"zender\.luaSupportData\.\{(?<key>.+?)\}:\{(?<val>.+?)\}");
 
@@ -27,6 +27,96 @@ public class CardAccessBridge(InGameCardBase? cardBase)
     public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
     public bool IsInBackground => CardBase != null && CardBase.InBackground;
+
+    public CardAccessBridge? CurrentContainer => CardBase != null && CardBase.CurrentContainer != null
+        ? new CardAccessBridge(CardBase.CurrentContainer)
+        : null;
+
+    public bool MoveToSlot(string slotType)
+    {
+        if (CardBase == null || GraphicsManager.Instance == null) return false;
+        switch (slotType)
+        {
+            case nameof(SlotsTypes.Equipment):
+                GraphicsManager.Instance.MoveCardToSlot(CardBase, new SlotInfo(SlotsTypes.Equipment, -2), true, false);
+                break;
+            case nameof(SlotsTypes.Base):
+                GraphicsManager.Instance.MoveCardToSlot(CardBase, new SlotInfo(SlotsTypes.Base, -2), true, false);
+                break;
+            case nameof(SlotsTypes.Hand):
+                GraphicsManager.Instance.MoveCardToSlot(CardBase, new SlotInfo(SlotsTypes.Hand, -2), true, false);
+                break;
+            case nameof(SlotsTypes.Location):
+                GraphicsManager.Instance.MoveCardToSlot(CardBase, new SlotInfo(SlotsTypes.Location, -2), true, false);
+                break;
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    public bool MoveTo(CardAccessBridge cardAccessBridge)
+    {
+        if (CardBase == null || CardBase.CardModel == null) return false;
+        if (cardAccessBridge.CardBase == null || cardAccessBridge.CardBase.CardModel == null) return false;
+        if (cardAccessBridge.CardBase.IsInventoryCard)
+        {
+            if (CardBase == cardAccessBridge.CardBase) return false;
+            var indexForInventory = cardAccessBridge.CardBase.GetIndexForInventory(0, CardBase.CardModel,
+                CardBase.ContainedLiquidModel,
+                CardBase.CurrentWeight);
+            if (indexForInventory == -1) return false;
+            if (CardBase.CurrentSlot) CardBase.CurrentSlot.RemoveSpecificCard(CardBase, true);
+            if (CardBase.CurrentContainer) CardBase.CurrentContainer.RemoveCardFromInventory(CardBase);
+            CardBase.CurrentContainer = cardAccessBridge.CardBase;
+            CardBase.SetSlot(null, true);
+            CardBase.CurrentSlotInfo = new SlotInfo(SlotsTypes.Inventory, indexForInventory);
+
+            cardAccessBridge.CardBase.AddCardToInventory(CardBase, indexForInventory);
+            if (CardBase.CardVisuals) CardBase.BlocksRaycasts = !CardBase.CardVisuals.DontBlockRaycasts;
+            else CardBase.BlocksRaycasts = true;
+
+            SoundManager.Instance.PerformCardAppearanceSound(CardBase.CardModel.WhenCreatedSounds);
+            return true;
+        }
+
+        if (cardAccessBridge.CardBase.IsLiquidContainer && CardBase.IsLiquid)
+        {
+            if (!cardAccessBridge.CardBase.CanReceiveLiquid(CardBase)) return false;
+            if (CardBase.CurrentContainer) CardBase.CurrentContainer.SetContainedLiquid(null, false, false);
+            if (cardAccessBridge.CardBase.LiquidEmpty)
+            {
+                cardAccessBridge.CardBase.SetContainedLiquid(CardBase, false, false);
+                CardBase.CurrentContainer = cardAccessBridge.CardBase;
+                CardBase.SetSlot(null, true);
+                CardBase.SetParent(cardAccessBridge.CardBase.CurrentParentObject, true);
+                CardBase.CurrentSlotInfo = cardAccessBridge.CardBase.CurrentSlotInfo;
+            }
+            else
+            {
+                cardAccessBridge.CardBase.ContainedLiquid.CurrentLiquidQuantity += CardBase.CurrentLiquidQuantity;
+                Remove(false);
+            }
+
+            return true;
+        }
+
+        if (cardAccessBridge.CardBase.CurrentSlot.CanReceiveCard(CardBase, false))
+        {
+            cardAccessBridge.CardBase.CurrentSlot.AssignCard(CardBase, true);
+            return true;
+        }
+
+        if (GraphicsManager.Instance)
+        {
+            GraphicsManager.Instance.MoveCardToSlot(CardBase,
+                new SlotInfo(cardAccessBridge.CardBase.CurrentSlotInfo.SlotType, -2), true, false);
+            return true;
+        }
+
+        return false;
+    }
 
     public void AddAnim(LuaTable? animList, LuaTable? animTimeList)
     {

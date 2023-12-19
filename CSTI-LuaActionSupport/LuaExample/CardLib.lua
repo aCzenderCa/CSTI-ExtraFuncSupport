@@ -6,6 +6,7 @@
 ---@field IsInBase boolean @readonly
 ---@field IsInLocation boolean @readonly
 ---@field IsInBackground boolean @readonly
+---@field CurrentContainer CardAccessBridge|nil @readonly
 ---@field CheckInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
 ---@field CheckTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
 ---@field CheckRegexTagInventory fun(this:CardAccessBridge,useAll:boolean, ...:string):boolean
@@ -32,10 +33,13 @@
 ---@field Special3 number
 ---@field Special4 number
 ---@field LiquidQuantity number
+---@field MoveToSlot fun(this:CardAccessBridge, slotType:"Equipment"|"Base"|"Hand"|"Location"):boolean
+---@field MoveTo fun(this:CardAccessBridge, cardAccessBridge:CardAccessBridge):boolean
 ---@field AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
 ---@field Remove fun(this:CardAccessBridge, doDrop:boolean):void
 ---@field AddAnim fun(this:CardAccessBridge, animList:table<string>|nil, animTimeList:table<number>|nil):void
 ---@field RemoveAnim fun(this:CardAccessBridge):boolean
+---
 ---@class InGameCardBase
 
 ---@alias DataNodeData_lua number|string|boolean|table<string,DataNodeData_lua>|nil|Vector2

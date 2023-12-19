@@ -125,7 +125,8 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 * IsInBase 是否在地面栏位（从上到下第二行）
 * IsInLocation 是否在地点栏位（从上到下第一行）
 * IsInBackground 是否是来自其他场景的卡（通过AlwaysUpdate=true）
-* `CardModel`:`SimpleUniqueAccess`类型
+* `CardModel`:`SimpleUniqueAccess`类型，当前卡的CardData数据
+* `CurrentContainer`:`CardAccessBridge?`类型，当前卡所在的容器
 
 ```
 Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
@@ -145,6 +146,18 @@ Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
 
   * 设置的值直接为整数时，直接以``key``保存整数值
   * 其他情况下以``DroppedCollections[key]``为``$"zender.luaSupportData.{key}:{value}"``值为（1，1）保存
+
+### `MoveToSlot(string slotType):bool`将卡牌移动到指定槽位类型，返回是否移动成功
+接受的slotType目标：`"Equipment","Base","Hand","Location"`
+
+### `MoveTo(CardAccessBridge cardAccessBridge):bool`返回是否移动成功
+如果输入的cardAccessBridge是容器，则尝试将自身移动到该容器中
+
+如果输入的cardAccessBridge是流体容器，且自身是流体，则尝试将自身移动到该容器（空）|流体量合并（非空）
+
+如果输入的cardAccessBridge的当前槽位可以放入自身，则将自身合并进cardAccessBridge的槽位
+
+否则将自身移动到cardAccessBridge相同栏位（如Equipment，Base）(这种情况下无法确认是否成功)
 
 ### `AddAnim(table<string>? animList, table<number>? animTimeList)`
 添加一组动画，animList是各图片的name，animTimeList是各图片的持续时间（单位秒）\
