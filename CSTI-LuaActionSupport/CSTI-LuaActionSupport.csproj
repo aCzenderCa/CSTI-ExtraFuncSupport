@@ -208,6 +208,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="AllPatcher\CardActionPatcher.cs" />
+        <Compile Include="AllPatcher\DataNode.cs" />
         <Compile Include="AllPatcher\LuaGraphics.cs" />
         <Compile Include="AllPatcher\LuaRegister.cs" />
         <Compile Include="AllPatcher\LuaSystem.cs" />

@@ -268,14 +268,9 @@ public class DebugBridge
     }
 }
 
-public class GameStatAccessBridge
+public class GameStatAccessBridge(InGameStat gameStat)
 {
-    public readonly InGameStat GameStat;
-
-    public GameStatAccessBridge(InGameStat gameStat)
-    {
-        GameStat = gameStat;
-    }
+    public readonly InGameStat GameStat = gameStat;
 
     public float Value
     {

@@ -35,6 +35,7 @@ public class CardAccessBridge(InGameCardBase? CardBase)
     public bool MoveToSlot(string slotType)
     {
         if (CardBase == null || GraphicsManager.Instance == null) return false;
+        if (SlotType == slotType) return true;
         switch (slotType)
         {
             case nameof(SlotsTypes.Equipment):

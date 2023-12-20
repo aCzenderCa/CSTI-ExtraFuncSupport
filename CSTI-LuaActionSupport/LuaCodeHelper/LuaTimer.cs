@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BepInEx;
 using CSTI_LuaActionSupport.Helper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
@@ -169,5 +171,26 @@ public static class LuaInput
     public static bool GetKeyUp(string key)
     {
         return UnityInput.Current.GetKeyUp(key);
+    }
+
+    [LuaFunc]
+    public static bool GetCodedKey(string key)
+    {
+        if (!Enum.TryParse<KeyCode>(key, true, out var kc)) return false;
+        return UnityInput.Current.GetKey(kc);
+    }
+
+    [LuaFunc]
+    public static bool GetCodedKeyDown(string key)
+    {
+        if (!Enum.TryParse<KeyCode>(key, true, out var kc)) return false;
+        return UnityInput.Current.GetKeyDown(kc);
+    }
+
+    [LuaFunc]
+    public static bool GetCodedKeyUp(string key)
+    {
+        if (!Enum.TryParse<KeyCode>(key, true, out var kc)) return false;
+        return UnityInput.Current.GetKeyUp(kc);
     }
 }

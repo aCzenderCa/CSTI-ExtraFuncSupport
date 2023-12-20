@@ -392,9 +392,12 @@ receive:CheckInventory(true, 'a', 'b')
 
 * 函数
   * `GetScroll`:无参数，返回两帧之间滚轮的旋转量
-  * `GetKey`：输入按键的名字（如F，L，F1），返回对应按键是否正被按下
-  * `GetKeyDown`：输入按键的名字（如F，L，F1），返回对应按键是否刚被按下
-  * `GetKeyUp`：输入按键的名字（如F，L，F1），返回对应按键是否刚刚弹起
+  * `GetKey`：输入按键的名字（如f，l，f1），返回对应按键是否正被按下
+  * `GetKeyDown`：输入按键的名字（如f，l，f1），返回对应按键是否刚被按下
+  * `GetKeyUp`：输入按键的名字（如f，k，f1），返回对应按键是否刚刚弹起
+  * `GetCodedKey`：输入KeyCode的名字（如F，L，F1），返回对应按键是否正被按下
+  * `GetCodedKeyDown`：输入KeyCode的名字（如F，L，F1），返回对应按键是否刚被按下
+  * `GetCodedKeyUp`：输入KeyCode的名字（如F，L，F1），返回对应按键是否刚刚弹起
   * [按键名称表](https://docs.unity.cn/cn/2020.3/ScriptReference/KeyCode.html)
 
 ## LuaGraphics

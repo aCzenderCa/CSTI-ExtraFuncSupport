@@ -31,13 +31,17 @@ weather = nil
 ---@field GetKey fun(key:string):boolean
 ---@field GetKeyDown fun(key:string):boolean
 ---@field GetKeyUp fun(key:string):boolean
+---@field GetCodedKey fun(key:string):boolean
+---@field GetCodedKeyDown fun(key:string):boolean
+---@field GetCodedKeyUp fun(key:string):boolean
 LuaInput = {}
 
+---@alias f_Func ((fun():boolean)|(fun():void))
 ---@class LuaTimer
 ---@field ProcessCacheEnum fun():void
----@field Frame fun(function:fun():(boolean|void)):void
----@field FixFrame fun(function:fun():(boolean|void)):void
----@field EveryTime fun(function:(fun():(boolean|void)),time:number)
+---@field Frame fun(function:f_Func):void
+---@field FixFrame fun(function:f_Func):void
+---@field EveryTime fun(function:f_Func,time:number)
 ---@field FrameTime fun():number
 ---@field FixFrameTime fun():number
 ---@field StartCoroutine fun(function:fun():(number|void)):void
