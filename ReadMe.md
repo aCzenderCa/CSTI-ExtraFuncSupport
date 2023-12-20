@@ -87,9 +87,9 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 
 ## ``Debug``（调试）
 
-全局变量``debug``
+全局变量``debug``,`DebugBridge`
 ``info``，``debug``，``warn``，``error``
-``debug``全局变量的这几个属性赋值会自动用``UnityEngine.Debug``类输出赋值的值
+``debug``,`DebugBridge`全局变量的这几个属性赋值会自动用``UnityEngine.Debug``类输出赋值的值\
 读取这几个字段会导致报错
 
 ## ``CardAccessBridge``（卡牌访问桥）

@@ -99,6 +99,9 @@ std__debug = debug
 ---@field error any @write only
 debug = {}
 
+---@type DebugBridge
+DebugBridge = nil
+
 ---@class IEnumerable<TItem>
 ---@field GetEnumerator fun(this:IEnumerable<TItem>):IEnumerator<TItem>
 
