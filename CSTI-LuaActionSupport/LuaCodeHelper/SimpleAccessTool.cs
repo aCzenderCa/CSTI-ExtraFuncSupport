@@ -182,6 +182,7 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
     public readonly UniqueIDScriptable UniqueIDScriptable = uniqueIDScriptable;
     private static readonly Action<UniqueIDScriptable>? GenEncounter;
     public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
+    public bool IsInstanceEnv => uniqueIDScriptable is CardData {InstancedEnvironment: true};
 
     public override object? this[string key]
     {

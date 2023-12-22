@@ -79,7 +79,8 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 ## SimpleObjAccess
 
 索引器：同``SimpleUniqueAccess``
-属性``AccessObj``，获取正在访问的对象
+* 属性``AccessObj``，获取正在访问的对象
+* 属性 IsInstanceEnv 正在访问的对象是否是实例化场景（如石屋）
 
 ## 注意
 
@@ -127,6 +128,8 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 * IsInBackground 是否是来自其他场景的卡（通过AlwaysUpdate=true）
 * `CardModel`:`SimpleUniqueAccess`类型，当前卡的CardData数据
 * `CurrentContainer`:`CardAccessBridge?`类型，当前卡所在的容器
+* IsInstanceEnv 卡牌的model是否是实例化场景（如石屋）
+* TravelIndex 实例化场景索引id，错误情况下返回（-10086）
 
 ```
 Spoilage，Usage，Fuel，Progress，Special1，Special2，Special3，Special4
@@ -361,10 +364,13 @@ receive:CheckInventory(true, 'a', 'b')
 
 ## LuaSystem
 全局变量`LuaSystem`:lua table类型(不需要用`：`调用)\
-主要用于生命周期回调（如某个MonoBehaviour被创建，在某个MonoBehaviour上附加update）
+主要用于生命周期回调（如某个MonoBehaviour被创建，在某个MonoBehaviour上附加update）\
+以及一些杂项
 
 * 函数
   * `AddSystem`:输入`string type, string sys_type, string uid, LuaFunction function`
+  * `GetCurTravelIndex`:无参返回int，获取当前场景的id
+  * `GoToEnv`:输入`string|SimpleUniqueAccess cardData, int TravelIndex`，修改NextTravelIndex并生成cardData
 
 * 接受的`string type, string sys_type, string uid, LuaFunction function`组合
   * `"InGameCardBase","OnUpdate",CardModel.UniqueID,fun(card:CardAccessBridge):void`
