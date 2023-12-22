@@ -68,19 +68,16 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 
 获取值时返回``SimpleObjAccess``或``SimpleUniqueAccess``（如果获取的是UniqueIDScriptable），访问``AccessObj``可得到实际值
 
-#### 属性``CardDescription`` 可读写字符串属性，修改卡牌描述
-
-#### 属性``StatValue``和``StatRate``: 若对应``UniqueIDScriptable``为gamestat，获取或修改状态的值
-
-##### 子属性~Min，~Max，浮点数，修改对应的上下限
-
-#### 属性AccessObj，获取正在访问的对象
+* 属性``CardDescription`` 可读写字符串属性，修改卡牌描述
+* 属性``StatValue``和``StatRate``: 若对应``UniqueIDScriptable``为gamestat，获取或修改状态的值
+* 子属性~Min，~Max，浮点数，修改对应的上下限
+* 属性AccessObj，获取正在访问的对象
+* 属性 IsInstanceEnv 正在访问的对象是否是实例化场景（如石屋）
 
 ## SimpleObjAccess
 
 索引器：同``SimpleUniqueAccess``
 * 属性``AccessObj``，获取正在访问的对象
-* 属性 IsInstanceEnv 正在访问的对象是否是实例化场景（如石屋）
 
 ## 注意
 
