@@ -177,9 +177,9 @@ public class SimpleObjAccess : CommonSimpleAccess
     }
 }
 
-public class SimpleUniqueAccess : CommonSimpleAccess
+public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonSimpleAccess
 {
-    public readonly UniqueIDScriptable UniqueIDScriptable;
+    public readonly UniqueIDScriptable UniqueIDScriptable = uniqueIDScriptable;
     private static readonly Action<UniqueIDScriptable>? GenEncounter;
     public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
 
@@ -224,11 +224,6 @@ public class SimpleUniqueAccess : CommonSimpleAccess
         {
             GenEncounter = FuncFor1_0_5.GenEncounter;
         }
-    }
-
-    public SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable)
-    {
-        UniqueIDScriptable = uniqueIDScriptable;
     }
 
     public string? CardDescription
@@ -280,7 +275,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
             }
         }
     }
-    
+
     // language=Lua
     [TestCode("""
               local uid = "cee786e0869369d4597877e838f2586f"
@@ -289,6 +284,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
               """)]
     public void Gen(int count = 1, LuaTable? ext = null)
     {
+        if (count <= 0) return;
         if (UniqueIDScriptable is CardData cardData)
         {
             var tDur = new TransferedDurabilities

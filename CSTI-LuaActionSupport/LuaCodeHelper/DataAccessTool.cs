@@ -210,23 +210,27 @@ public static class DataAccessTool
 
 public class DebugBridge
 {
-    public object info
+    public object? info
     {
+        get => null;
         set => Debug.LogFormat("[Info] {0}", value is LuaTable table ? TableToString(table) : value);
     }
 
-    public object debug
+    public object? debug
     {
+        get => null;
         set => Debug.LogFormat("[Debug] {0}", value is LuaTable table ? TableToString(table) : value);
     }
 
-    public object warn
+    public object? warn
     {
+        get => null;
         set => Debug.LogWarningFormat("[Warn] {0}", value is LuaTable table ? TableToString(table) : value);
     }
 
-    public object error
+    public object? error
     {
+        get => null;
         set => Debug.LogErrorFormat("[Error] {0}", value is LuaTable table ? TableToString(table) : value);
     }
 

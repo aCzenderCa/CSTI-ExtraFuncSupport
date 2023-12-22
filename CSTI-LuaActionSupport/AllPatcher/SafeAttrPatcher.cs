@@ -32,15 +32,16 @@ public static class SafeAttrPatcher
             var info = traverse.Field("info");
             var t = info.Field<Type>("declaringType").Value;
             var m = info.Field<string>("methodName").Value;
+            var methodType = info.Field<MethodType>("methodType").Value;
+            var name = $"{methodType}:{t}";
             if (t == null)
             {
-                Debug.LogWarning($"[Error] 严重错误，某个应该存在的类型不存在，其应该包含函数/属性:{m}");
+                Debug.LogWarning($"[Error] 严重错误，某个应该存在的类型不存在，其应该包含函数/属性:{name}");
                 needRemove.Add(index - needRemove.Count);
                 continue;
             }
 
             var args = info.Field<Type[]>("argumentTypes").Value;
-            var methodType = info.Field<MethodType>("methodType").Value;
             MethodBase? declaredMethod = null;
             try
             {

@@ -27,6 +27,8 @@ public class CardAccessBridge(InGameCardBase? CardBase)
     public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
     public bool IsInBackground => CardBase != null && CardBase.InBackground;
+    public bool IsInstanceEnv => CardBase != null && CardBase.CardModel && CardBase.CardModel.InstancedEnvironment;
+    public int TravelIndex => CardBase != null ? CardBase.TravelCardIndex : -10086;
 
     public CardAccessBridge? CurrentContainer => CardBase != null && CardBase.CurrentContainer != null
         ? new CardAccessBridge(CardBase.CurrentContainer)
@@ -567,6 +569,7 @@ public class CardAccessBridge(InGameCardBase? CardBase)
 
     public void AddCard(string id, int count = 1, LuaTable? ext = null)
     {
+        if (count <= 0) return;
         var cardData = UniqueIDScriptable.GetFromID<CardData>(id);
         if (cardData == null)
         {

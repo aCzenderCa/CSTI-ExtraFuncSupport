@@ -11,6 +11,36 @@ namespace CSTI_LuaActionSupport.AllPatcher;
 [HarmonyPatch]
 public static class LuaSystem
 {
+    [LuaFunc]
+    public static int GetCurTravelIndex()
+    {
+        if (!GameManager.Instance) return -10086;
+        return GameManager.Instance.CurrentTravelIndex;
+    }
+
+    [LuaFunc]
+    public static void GoToEnv(object cardData, int TravelIndex)
+    {
+        if (!GameManager.Instance) return;
+        switch (cardData)
+        {
+            case string uid when UniqueIDScriptable.GetFromID<CardData>(uid) is { } cd:
+                GameManager.Instance.NextEnvironment = cd;
+                break;
+            case SimpleUniqueAccess {UniqueIDScriptable: CardData cd}:
+                GameManager.Instance.NextEnvironment = cd;
+                break;
+            default:
+                return;
+        }
+
+        if (TravelIndex != -10086 && GameManager.Instance.NextEnvironment.InstancedEnvironment)
+            GameManager.Instance.NextTravelIndex = TravelIndex;
+        Enumerators.Add(GameManager.Instance.AddCard(GameManager.Instance.NextEnvironment, null,
+            true, null, true, SpawningLiquid.Empty, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
+            false));
+    }
+
     public static readonly Dictionary<string, Dictionary<string, Dictionary<string, List<LuaFunction>>>>
         AllSystems = [];
 
