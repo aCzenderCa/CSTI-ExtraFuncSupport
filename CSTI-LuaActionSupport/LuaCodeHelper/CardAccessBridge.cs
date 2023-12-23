@@ -391,55 +391,55 @@ public class CardAccessBridge(InGameCardBase? CardBase)
     public float Spoilage
     {
         get => CardBase != null ? CardBase.CurrentSpoilage : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Spoilage));
+        set => ModifyDurability(value, DurabilitiesTypes.Spoilage).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Usage
     {
         get => CardBase != null ? CardBase.CurrentUsageDurability : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Usage));
+        set => ModifyDurability(value, DurabilitiesTypes.Usage).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Fuel
     {
         get => CardBase != null ? CardBase.CurrentFuel : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Fuel));
+        set => ModifyDurability(value, DurabilitiesTypes.Fuel).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Progress
     {
         get => CardBase != null ? CardBase.CurrentProgress : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Progress));
+        set => ModifyDurability(value, DurabilitiesTypes.Progress).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Special1
     {
         get => CardBase != null ? CardBase.CurrentSpecial1 : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special1));
+        set => ModifyDurability(value, DurabilitiesTypes.Special1).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Special2
     {
         get => CardBase != null ? CardBase.CurrentSpecial2 : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special2));
+        set => ModifyDurability(value, DurabilitiesTypes.Special2).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Special3
     {
         get => CardBase != null ? CardBase.CurrentSpecial3 : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special3));
+        set => ModifyDurability(value, DurabilitiesTypes.Special3).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float Special4
     {
         get => CardBase != null ? CardBase.CurrentSpecial4 : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Special4));
+        set => ModifyDurability(value, DurabilitiesTypes.Special4).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public float LiquidQuantity
     {
         get => CardBase != null && CardBase.IsLiquid ? CardBase.CurrentLiquidQuantity : 0;
-        set => Enumerators.Add(ModifyDurability(value, DurabilitiesTypes.Liquid));
+        set => ModifyDurability(value, DurabilitiesTypes.Liquid).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     private IEnumerator ModifyDurability(float val, DurabilitiesTypes types)
@@ -622,14 +622,14 @@ public class CardAccessBridge(InGameCardBase? CardBase)
         {
             i += 1;
 
-            Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, true,
+            GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, true,
                 sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), SimpleUniqueAccess.SetInitData,
-                initData));
+                initData).Add2AllEnumerators(PriorityEnumerators.Normal);
         } while (i < count && cardData.CardType != CardTypes.Liquid);
     }
 
     public void Remove(bool doDrop)
     {
-        Enumerators.Add(GameManager.Instance.RemoveCard(CardBase, true, doDrop));
+        GameManager.Instance.RemoveCard(CardBase, true, doDrop).Add2AllEnumerators(PriorityEnumerators.Low);
     }
 }

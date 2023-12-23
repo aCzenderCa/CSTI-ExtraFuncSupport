@@ -261,7 +261,8 @@ public static class CardActionPatcher
     [HarmonyPostfix, HarmonyPatch(typeof(CardAction), nameof(CardAction.WillHaveAnEffect))]
     private static void LuaActionWillHaveAnEffect(CardAction __instance, ref bool __result)
     {
-        if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true)
+        if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true ||
+            __instance.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true)
         {
             __result = true;
         }
@@ -288,7 +289,41 @@ public static class CardActionPatcher
         }
     }
 
-    public static readonly List<IEnumerator> Enumerators = new();
+    public class PriorityEnumerators(List<IEnumerator> _Enumerators, int _Priority)
+    {
+        public const int SuperHigh = 200;
+        public const int High = 100;
+        public const int Normal = 0;
+        public const int Low = -100;
+        public const int SuperLow = -200;
+        public const int EnvChange = -1000;
+        public const int AfterEnvChange = -2000;
+        public readonly List<IEnumerator> ThisEnumerators = _Enumerators;
+        public readonly int Priority = _Priority;
+    }
+
+    public static void Add2AllEnumerators(this IEnumerator enumerator, int _Priority)
+    {
+        if (AllEnumerators.TryGetValue(_Priority, out var priorityEnumerators))
+        {
+            priorityEnumerators.ThisEnumerators.Add(enumerator);
+        }
+        else
+        {
+            AllEnumerators[_Priority] = new PriorityEnumerators([enumerator], _Priority);
+        }
+    }
+
+    public static readonly Dictionary<int, PriorityEnumerators> AllEnumerators = new()
+    {
+        {PriorityEnumerators.SuperHigh, new PriorityEnumerators([], PriorityEnumerators.SuperHigh)},
+        {PriorityEnumerators.High, new PriorityEnumerators([], PriorityEnumerators.High)},
+        {PriorityEnumerators.Normal, new PriorityEnumerators([], PriorityEnumerators.Normal)},
+        {PriorityEnumerators.Low, new PriorityEnumerators([], PriorityEnumerators.Low)},
+        {PriorityEnumerators.SuperLow, new PriorityEnumerators([], PriorityEnumerators.SuperLow)},
+        {PriorityEnumerators.EnvChange, new PriorityEnumerators([], PriorityEnumerators.EnvChange)},
+        {PriorityEnumerators.AfterEnvChange, new PriorityEnumerators([], PriorityEnumerators.AfterEnvChange)},
+    };
 
     public static Lua InitRuntime(GameManager __instance)
     {
@@ -335,11 +370,12 @@ public static class CardActionPatcher
             Debug.LogError(e);
         }
 
-        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime);
+        var queue = __instance.ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime).ProcessCache();
 
         while (queue.Count > 0)
         {
             var coroutineController = queue.Dequeue();
+            if (coroutineController == null) yield break;
             while (coroutineController.state == CoroutineState.Running)
             {
                 yield return null;
@@ -384,7 +420,7 @@ public static class CardActionPatcher
             Debug.LogError(e);
         }
 
-        var queue = __instance.ProcessCache().ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime);
+        var queue = __instance.ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime).ProcessCache();
 
         while (queue.Count > 0)
         {
@@ -396,7 +432,7 @@ public static class CardActionPatcher
         }
     }
 
-    public static Queue<CoroutineController> ProcessTime(this Queue<CoroutineController> queue,
+    public static GameManager ProcessTime(this GameManager manager,
         InGameCardBase _ReceivingCard,
         int waitTime, int miniWaitTime, int tickWaitTime)
     {
@@ -424,9 +460,9 @@ public static class CardActionPatcher
 
         if (waitTime > 0)
         {
-            queue.Enqueue(__instance.SpendDaytimePoints(waitTime, _ReceivingCard).Start(__instance));
+            __instance.SpendDaytimePoints(waitTime, _ReceivingCard).Add2AllEnumerators(PriorityEnumerators.SuperHigh);
         }
 
-        return queue;
+        return manager;
     }
 }

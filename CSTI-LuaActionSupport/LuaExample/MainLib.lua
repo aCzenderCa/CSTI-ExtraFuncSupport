@@ -52,6 +52,12 @@ LuaTimer = {}
 ---@alias sys_this_type "InGameCardBase"
 ---@class LuaSystem
 ---@field AddSystem fun(type:sys_this_type,sys_type:sys_type,uid:string,function:fun(this:any):void):void
+---@field SuperGoToEnv fun(targetUid:string,targetEnvId:string):void
+---@field GoToEnv fun(cardData:string,TravelIndex:number):void
+---@field SetCurEnvId fun(envId:string):void
+---@field GetCurEnvId fun():string
+---@field GetCurTravelIndex fun():number
+---@field AddCard2EnvSave fun(envUid:string , envSaveId:string , cardId:string , count:number):void
 LuaSystem = {}
 
 ---@class CardTypes

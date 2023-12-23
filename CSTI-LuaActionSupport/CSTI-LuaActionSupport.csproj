@@ -216,7 +216,9 @@
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
+        <Compile Include="Const\GameManagerConst.cs" />
         <Compile Include="GlobalUsings.cs" />
+        <Compile Include="Helper\AnotherAddCard.cs" />
         <Compile Include="Helper\CoroutineHelper.cs" />
         <Compile Include="Helper\TryModifyPack.cs" />
         <Compile Include="LuaCodeHelper\CardAccessBridge.cs" />

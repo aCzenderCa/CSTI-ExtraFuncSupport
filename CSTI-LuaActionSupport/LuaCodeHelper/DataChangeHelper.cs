@@ -38,7 +38,7 @@ public static class DataChangeHelper
                 inGameStat.StatModel.MinMaxValue.x, inGameStat.StatModel.MinMaxValue.y);
         }
 
-        Enumerators.Add(gameManager.UpdateStatStatuses(inGameStat, preVal, null));
+        gameManager.UpdateStatStatuses(inGameStat, preVal, null).Add2AllEnumerators(PriorityEnumerators.High);
     }
 
     public static void ChangeStatRateTo(this GameManager gameManager, InGameStat inGameStat, float _Rate)

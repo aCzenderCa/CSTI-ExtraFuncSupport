@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using NLua;
@@ -11,11 +13,91 @@ namespace CSTI_LuaActionSupport.AllPatcher;
 [HarmonyPatch]
 public static class LuaSystem
 {
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.CurrentEnvData))]
+    public static bool CurrentEnvData(GameManager __instance, out EnvironmentSaveData? __result, bool _CreateIfNull)
+    {
+        __instance.EnvironmentsData.TryGetValue(GetCurEnvId() ?? "", out __result);
+        if (__result == null && _CreateIfNull)
+        {
+            __result = __instance.SuperGetEnvSaveData(__instance.CurrentEnvironment, GetCurEnvId() ?? "");
+        }
+
+        return false;
+    }
+
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ChangeEnvironment))]
+    public static bool GameManager_ChangeEnvironment(GameManager __instance, out IEnumerator __result)
+    {
+        __result = __instance.CommonChangeEnvironment();
+        return false;
+    }
+
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.InitializeDefaultCards))]
+    public static void GameManager_OnInitializeDefaultCards()
+    {
+        var realEnv = GameManager.CurrentPlayerCharacter.Environment;
+        foreach (var perk in GameManager.CurrentPlayerCharacter.CharacterPerks)
+        {
+            if (perk.OverrideEnvironment != null)
+            {
+                realEnv = perk.OverrideEnvironment;
+            }
+
+            if (perk.AddedCards?.FirstOrDefault(data => data.CardType == CardTypes.Environment) is { } envCard)
+            {
+                realEnv = envCard;
+            }
+        }
+
+        SaveCurrentSlot("CurEnvId",
+            realEnv.EnvironmentDictionaryKey(realEnv, 0));
+    }
+
     [LuaFunc]
     public static int GetCurTravelIndex()
     {
         if (!GameManager.Instance) return -10086;
         return GameManager.Instance.CurrentTravelIndex;
+    }
+
+    [LuaFunc]
+    public static string? GetCurEnvId()
+    {
+        if (!GameManager.Instance) return null;
+        return LoadCurrentSlot("CurEnvId") as string;
+    }
+
+    internal static void SetCurEnvId(string envId)
+    {
+        if (!GameManager.Instance) return;
+        SaveCurrentSlot("CurEnvId", envId);
+    }
+
+    [LuaFunc]
+    public static void AddCard2EnvSave(string envUid, string envSaveId, string cardId, int count)
+    {
+        if (!GameManager.Instance || UniqueIDScriptable.GetFromID<CardData>(envUid) is not { } envCard ||
+            UniqueIDScriptable.GetFromID<CardData>(cardId) is not { } card) return;
+        GameManager.Instance.SuperGetEnvSaveData(envCard, envSaveId);
+        for (var i = 0; i < count; i++)
+        {
+            GameManager.Instance.CreateCardAsSaveData(card, envCard, envSaveId, null,
+                null, true);
+        }
+    }
+
+    // lang=lua
+    [TestCode("""
+              DebugBridge.debug = LuaSystem.GetCurEnvId()
+              LuaSystem.SuperGoToEnv("67ff7f8557bae4c43a25f3bbfe56e063","__67ff7f8557bae4c43a25f3bbfe56e063")
+              SimpleAccessTool["acefe4809985cf44db1fa3c9c3f518ac"]:Gen(2,{GenAfterEnvChange=true})
+              """)]
+    [LuaFunc]
+    public static void SuperGoToEnv(string targetUid, string targetEnvId)
+    {
+        var gameManager = GameManager.Instance;
+        if (gameManager == null || UniqueIDScriptable.GetFromID<CardData>(targetUid) is not { } cd) return;
+        gameManager.AddEnvCard(cd, null, targetEnvId).Add2AllEnumerators(PriorityEnumerators.EnvChange);
     }
 
     [LuaFunc]
@@ -36,9 +118,10 @@ public static class LuaSystem
 
         if (TravelIndex != -10086 && GameManager.Instance.NextEnvironment.InstancedEnvironment)
             GameManager.Instance.NextTravelIndex = TravelIndex;
-        Enumerators.Add(GameManager.Instance.AddCard(GameManager.Instance.NextEnvironment, null,
-            true, null, true, SpawningLiquid.Empty, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
-            false));
+        GameManager.Instance.AddCard(
+                GameManager.Instance.NextEnvironment, null, true, null, true, SpawningLiquid.Empty,
+                new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false)
+            .Add2AllEnumerators(PriorityEnumerators.EnvChange);
     }
 
     public static readonly Dictionary<string, Dictionary<string, Dictionary<string, List<LuaFunction>>>>

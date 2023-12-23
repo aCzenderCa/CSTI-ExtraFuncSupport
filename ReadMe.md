@@ -47,6 +47,8 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
   * ``UniqueIDScriptable``为``CardData``时生成count张对应卡
   * ``UniqueIDScriptable``为``Encounter``时生成一次Encounter
 * 额外参数：同``CardAccessBridge``的``AddCard``
+  * 特殊部分：
+  * `GenAfterEnvChange:boolen`为true时在场景变更完成后再生成卡牌
 
 ### 方法`void CacheRawValRange(float x, float y)`
 
@@ -365,9 +367,12 @@ receive:CheckInventory(true, 'a', 'b')
 以及一些杂项
 
 * 函数
-  * `AddSystem`:输入`string type, string sys_type, string uid, LuaFunction function`
-  * `GetCurTravelIndex`:无参返回int，获取当前场景的id
+  * `GetCurTravelIndex`:无参返回int，获取当前场景的实例化id
+  * `GetCurEnvId`:获取当前场景的数据id（`LoadCurrentSlot("CurEnvId")`）
+  * `AddCard2EnvSave`:输入`string envUid, string envSaveId, string cardId, int count`，envUid是目标场景Env卡的uid，envSaveId是目标场景数据id，cardId是要添加的卡牌的id，count是数量
+  * `SuperGoToEnv`:输入`string targetUid, string targetEnvId`,targetUid为要前往的场景Env卡的uid，targetEnvId指定场景数据保存id（id不同的场景数据不同，与是否是实例化场景无关）
   * `GoToEnv`:输入`string|SimpleUniqueAccess cardData, int TravelIndex`，修改NextTravelIndex并生成cardData
+  * `AddSystem`:输入`string type, string sys_type, string uid, LuaFunction function`
 
 * 接受的`string type, string sys_type, string uid, LuaFunction function`组合
   * `"InGameCardBase","OnUpdate",CardModel.UniqueID,fun(card:CardAccessBridge):void`

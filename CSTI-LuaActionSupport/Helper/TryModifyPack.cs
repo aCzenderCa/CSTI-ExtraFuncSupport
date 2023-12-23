@@ -13,7 +13,7 @@ public static class TryModifyPack
     private static MulticastDelegate GenTryNum(Type self, Type tIn)
     {
         var dynamicMethod = new DynamicMethod($"TryModifyPack_TryNum_{self.Name}_{tIn.Name}", self,
-            new[] {typeof(object)}, typeof(TryModifyPack));
+            [typeof(object)], typeof(TryModifyPack));
         var ilGenerator = dynamicMethod.GetILGenerator();
         ilGenerator.Emit(OpCodes.Ldarg_0);
         ilGenerator.Emit(OpCodes.Unbox_Any, tIn);
@@ -49,6 +49,14 @@ public static class TryModifyPack
         {typeof(ulong), OpCodes.Conv_U8}, {typeof(int), OpCodes.Conv_I4}, {typeof(uint), OpCodes.Conv_U4},
         {typeof(nint), OpCodes.Conv_I}, {typeof(nuint), OpCodes.Conv_U}
     };
+
+    public static void TryModBy(this ref bool self, object? o)
+    {
+        if (o is bool b)
+        {
+            self = b;
+        }
+    }
 
     public static void TryModBy(this ref float self, object? o)
     {

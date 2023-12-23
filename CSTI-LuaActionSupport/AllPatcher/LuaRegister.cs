@@ -58,7 +58,7 @@ public class LuaRegister
 
         if (!AllReg[klass][method].ContainsKey(uid))
         {
-            AllReg[klass][method][uid] = new List<LuaFunction>();
+            AllReg[klass][method][uid] = [];
         }
 
         AllReg[klass][method][uid].Add(function);

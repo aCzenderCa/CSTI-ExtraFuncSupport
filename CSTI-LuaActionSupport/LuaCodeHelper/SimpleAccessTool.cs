@@ -48,7 +48,8 @@ public class SimpleAccessTool
                      gameManagerCurrentEnvironmentCard.CardModel.DefaultEnvCards.All(data =>
                          data != card.CardModel)))
         {
-            Enumerators.Add(gameManager.RemoveCard(card, true, false, GameManager.RemoveOption.RemoveAll));
+            gameManager.RemoveCard(card, true, false, GameManager.RemoveOption.RemoveAll)
+                .Add2AllEnumerators(PriorityEnumerators.Low);
         }
     }
 
@@ -77,7 +78,7 @@ public static class FuncFor1_0_5
         if (uniqueIDScriptable is not Encounter encounter) return;
         GameManager.Instance.GameGraphics.EncounterPopupWindow.StartEncounter(encounter,
             GameManager.Instance.CurrentSaveData.HasEncounterData);
-        Enumerators.Add(WaitEncounter(encounter));
+        WaitEncounter(encounter).Add2AllEnumerators(PriorityEnumerators.Normal);
     }
 
     private static IEnumerator WaitEncounter(Encounter encounter)
@@ -288,6 +289,7 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
         if (count <= 0) return;
         if (UniqueIDScriptable is CardData cardData)
         {
+            var GenAfterEnvChange = false;
             var tDur = new TransferedDurabilities
             {
                 Usage = cardData.UsageDurability.Copy(),
@@ -318,6 +320,8 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
                 tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
                 tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
                 tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
+                
+                GenAfterEnvChange.TryModBy(ext[nameof(GenAfterEnvChange)]);
 
                 var card =
                     (ext[nameof(SpawningLiquid.LiquidCard)] as SimpleUniqueAccess)?.UniqueIDScriptable as CardData;
@@ -330,13 +334,23 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
                     initData = dataNodeTable;
             }
 
+            var GenPriority = GenAfterEnvChange?PriorityEnumerators.AfterEnvChange:PriorityEnumerators.Normal;
             if (cardData.CardType != CardTypes.Liquid)
             {
                 for (var i = 0; i < count; i++)
                 {
-                    Enumerators.Add(GameManager.Instance.MoniAddCard(cardData, null,
-                        tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
-                        SetInitData, initData));
+                    if (initData != null)
+                    {
+                        GameManager.Instance.MoniAddCard(cardData, null,
+                            tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
+                            SetInitData, initData).Add2AllEnumerators(GenPriority);
+                    }
+                    else
+                    {
+                        GameManager.Instance.AddCard(cardData, null, true,
+                                tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false)
+                            .Add2AllEnumerators(GenPriority);
+                    }
                 }
             }
 

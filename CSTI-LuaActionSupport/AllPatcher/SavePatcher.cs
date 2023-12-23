@@ -200,7 +200,7 @@ public static class SavePatcher
             return;
         }
 
-        saveData.AllEndgameLogs ??= new List<LogSaveData>();
+        saveData.AllEndgameLogs ??= [];
         if (saveData.AllEndgameLogs.Count > 0 && saveData.AllEndgameLogs[0].CategoryID == LuaLongTimeSaveId)
         {
             var saveDataAllEndgameLog = saveData.AllEndgameLogs[0];

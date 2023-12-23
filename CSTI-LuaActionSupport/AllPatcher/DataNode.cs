@@ -213,7 +213,7 @@ public struct DataNode
             case DataNodeType.IntTable:
                 var l_count = binaryReader.ReadInt32();
                 var nodes = new Dictionary<int, DataNode>(l_count);
-                for (int i = 0; i < l_count; i++)
+                for (var i = 0; i < l_count; i++)
                 {
                     var key = binaryReader.ReadInt32();
                     nodes[key] = Load(binaryReader);

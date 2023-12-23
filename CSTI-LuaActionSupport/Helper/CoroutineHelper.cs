@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CSTI_LuaActionSupport.AllPatcher;
 using UnityEngine;
 
@@ -7,20 +8,60 @@ namespace CSTI_LuaActionSupport.Helper;
 
 public static class CoroutineHelper
 {
-    public static Queue<CoroutineController> ProcessCache(this GameManager manager)
+    public class CoroutineQueue(Queue<List<IEnumerator>> allCoroutines)
     {
-        var queue = new Queue<CoroutineController>();
-        foreach (var enumerator in Enumerators)
-        {
-            manager.StartCoroutineEx(enumerator, out var controller);
-            queue.Enqueue(controller);
-        }
+        public readonly Queue<List<IEnumerator>> AllCoroutines = allCoroutines;
+        public Queue<CoroutineController>? CurCoroutineControllers;
 
-        Enumerators.Clear();
+        public int Count => AllCoroutines.Sum(list => list.Count) +
+                            (CurCoroutineControllers?.Count ?? 0);
+
+        public CoroutineController? Dequeue()
+        {
+            if (!GameManager.Instance)
+            {
+                AllCoroutines.Clear();
+                CurCoroutineControllers = null;
+                return null;
+            }
+
+            if (Count == 0) return null;
+
+            while (CurCoroutineControllers == null || CurCoroutineControllers.Count == 0)
+            {
+                CurCoroutineControllers = new Queue<CoroutineController>();
+                var enumerators = AllCoroutines.Dequeue();
+                foreach (var enumerator in enumerators)
+                {
+                    GameManager.Instance.StartCoroutineEx(enumerator, out var controller);
+                    CurCoroutineControllers.Enqueue(controller);
+                }
+            }
+
+            var coroutineController = CurCoroutineControllers.Dequeue();
+            if (CurCoroutineControllers.Count == 0)
+            {
+                CurCoroutineControllers = null;
+            }
+
+            return coroutineController;
+        }
+    }
+
+    public static CoroutineQueue ProcessCache(this GameManager manager)
+    {
+        var queue = new Queue<List<IEnumerator>>();
+        foreach (var enumerators in from pEnumerators in AllEnumerators
+                 orderby pEnumerators.Key descending
+                 select pEnumerators.Value)
+        {
+            queue.Enqueue(enumerators.ThisEnumerators.ToList());
+            enumerators.ThisEnumerators.Clear();
+        }
 
         LuaGraphics.UpdatePopup();
 
-        return queue;
+        return new CoroutineQueue(queue);
     }
 
     public static void ReCommonSetup(this InspectionPopup popup)
