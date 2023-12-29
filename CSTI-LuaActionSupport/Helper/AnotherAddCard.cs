@@ -336,6 +336,7 @@ public static class AnotherAddCard
 
     public static IEnumerator CommonChangeEnvironment(this GameManager instance)
     {
+        Debug.Log($"CommonChangeEnvironment from {LuaSystem.GetCurEnvId()}");
         instance.LeavingEnvironment = true;
         instance.EnvironmentTransition = true;
         instance.GameSounds.StopAllOtherAmbiences();
@@ -393,17 +394,15 @@ public static class AnotherAddCard
             }
         }
 
-        envKey = instance.CurrentEnvironmentCard != null
-            ? instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
-                instance.NextTravelIndex)
-            : LuaSystem.GetCurEnvId() ?? "";
-        if (instance.CurrentEnvironmentCard) LuaSystem.SetCurEnvId(envKey);
+        var newEnvKey = instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
+            instance.NextTravelIndex);
+        LuaSystem.SetCurEnvId(newEnvKey);
         var prevEnv = instance.CurrentEnvironment;
-        if (instance.EnvironmentsData.ContainsKey(envKey))
+        if (instance.EnvironmentsData.ContainsKey(newEnvKey))
         {
-            if (instance.EnvironmentsData[envKey].AllPinnedCards != null)
+            if (instance.EnvironmentsData[newEnvKey].AllPinnedCards != null)
             {
-                foreach (var pinData in instance.EnvironmentsData[envKey].AllPinnedCards.Where(pinData =>
+                foreach (var pinData in instance.EnvironmentsData[newEnvKey].AllPinnedCards.Where(pinData =>
                              UniqueIDScriptable.GetFromID<CardData>(pinData.CardID)))
                 {
                     instance.PinnedCards.Add(
@@ -411,9 +410,9 @@ public static class AnotherAddCard
                 }
             }
 
-            yield return instance.StartCoroutine(instance.LoadCardSet(instance.EnvironmentsData[envKey].AllRegularCards,
-                instance.EnvironmentsData[envKey].AllInventoryCards,
-                instance.EnvironmentsData[envKey].NestedInventoryCards, updatedBGCards, true));
+            yield return instance.StartCoroutine(instance.LoadCardSet(instance.EnvironmentsData[newEnvKey].AllRegularCards,
+                instance.EnvironmentsData[newEnvKey].AllInventoryCards,
+                instance.EnvironmentsData[newEnvKey].NestedInventoryCards, updatedBGCards, true));
             foreach (var card in instance.AllCards)
             {
                 card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment,
@@ -431,12 +430,12 @@ public static class AnotherAddCard
             }
 
             instance.IsCatchingUp = true;
-            instance.CatchingUpEnvData = instance.EnvironmentsData[envKey];
+            instance.CatchingUpEnvData = instance.EnvironmentsData[newEnvKey];
             for (var i = 0;
-                 i < instance.CurrentTickInfo.z - instance.EnvironmentsData[envKey].LastUpdatedTick;
+                 i < instance.CurrentTickInfo.z - instance.EnvironmentsData[newEnvKey].LastUpdatedTick;
                  i++)
             {
-                instance.StartCoroutineEx(instance.ApplyRates(1, instance.EnvironmentsData[envKey].LastUpdatedTick + i),
+                instance.StartCoroutineEx(instance.ApplyRates(1, instance.EnvironmentsData[newEnvKey].LastUpdatedTick + i),
                     out controller);
                 while (controller.state != CoroutineState.Finished)
                 {

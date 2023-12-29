@@ -27,10 +27,7 @@ public static class LuaTimer
 
         IEnumerator waitAll()
         {
-            while (GameManager.PerformingAction)
-            {
-                yield return null;
-            }
+            while (GameManager.PerformingAction) yield return null;
 
             var controllers = GameManager.Instance.ProcessCache();
 
@@ -38,17 +35,16 @@ public static class LuaTimer
             while (controllers.Count > 0)
             {
                 var coroutineController = controllers.Dequeue();
-                while (coroutineController.state != CoroutineState.Finished)
-                {
-                    yield return null;
-                }
+                if (coroutineController == null) break;
+                while (coroutineController.state != CoroutineState.Finished) yield return null;
             }
 
             OnWaitCA = false;
         }
     }
 
-    [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.PerformingAction), MethodType.Getter)]
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.PerformingAction), MethodType.Getter)]
     public static void SetOnWaitCA(ref bool __result)
     {
         __result |= OnWaitCA;
@@ -73,9 +69,9 @@ public static class LuaTimer
     public static readonly Dictionary<LuaFunction, SimpleTimer> EveryTimeFunctions = [];
 
     [LuaFunc]
-    public static void ProcessCacheEnum()
+    public static CoroutineHelper.CoroutineQueue ProcessCacheEnum()
     {
-        GameManager.Instance.ProcessCache();
+        return GameManager.Instance.ProcessCache();
     }
 
     [LuaFunc]
@@ -122,21 +118,13 @@ public static class LuaTimer
                 if (objects.Length > 0 && objects[0].TryNum<float>() is { } d)
                 {
                     if (d is > -3 and <= -2)
-                    {
                         yield return Wait4CA();
-                    }
                     else if (d is > -2 and <= -1)
-                    {
                         yield return new WaitForFixedUpdate();
-                    }
                     else if (d is > -1 and <= 0)
-                    {
                         yield return null;
-                    }
                     else
-                    {
                         yield return new WaitForSeconds(d);
-                    }
                 }
                 else
                 {

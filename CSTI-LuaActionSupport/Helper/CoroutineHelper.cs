@@ -10,11 +10,44 @@ public static class CoroutineHelper
 {
     public class CoroutineQueue(Queue<List<IEnumerator>> allCoroutines)
     {
-        public readonly Queue<List<IEnumerator>> AllCoroutines = allCoroutines;
+        public Queue<List<IEnumerator>> AllCoroutines = allCoroutines;
         public Queue<CoroutineController>? CurCoroutineControllers;
 
         public int Count => AllCoroutines.Sum(list => list.Count) +
                             (CurCoroutineControllers?.Count ?? 0);
+
+        public void ProcessAll()
+        {
+            if (!GameManager.Instance)
+            {
+                AllCoroutines.Clear();
+                CurCoroutineControllers = null;
+                return;
+            }
+
+            if (Count == 0) return;
+            var cache = new CoroutineQueue(AllCoroutines)
+            {
+                CurCoroutineControllers = CurCoroutineControllers
+            };
+            CurCoroutineControllers = null;
+            AllCoroutines = new Queue<List<IEnumerator>>();
+            Runtime.StartCoroutine(process(cache));
+            return;
+
+            IEnumerator process(CoroutineQueue coroutineQueue)
+            {
+                while (coroutineQueue.Count > 0)
+                {
+                    var coroutineController = cache.Dequeue();
+                    if (coroutineController == null) break;
+                    while (coroutineController.state == CoroutineState.Running)
+                    {
+                        yield return null;
+                    }
+                }
+            }
+        }
 
         public CoroutineController? Dequeue()
         {
@@ -69,6 +102,7 @@ public static class CoroutineHelper
         if (popup.isActiveAndEnabled && popup.CurrentCard)
         {
             popup.CommonSetup(popup.CurrentCard.CardName(), popup.CurrentCard.CardDescription());
+            popup.SetupActions(popup.CurrentCard.DismantleActions, true);
         }
     }
 

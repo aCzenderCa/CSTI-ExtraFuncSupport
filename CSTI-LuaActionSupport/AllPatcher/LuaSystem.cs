@@ -2,17 +2,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx.Configuration;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
 
 [HarmonyPatch]
 public static class LuaSystem
 {
+    public static void SetupPatch(Harmony harmony)
+    {
+        harmony.PatchAll(typeof(LuaSystem));
+    }
+
     [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.CurrentEnvData))]
     public static bool CurrentEnvData(GameManager __instance, out EnvironmentSaveData? __result, bool _CreateIfNull)
     {
@@ -49,8 +56,7 @@ public static class LuaSystem
             }
         }
 
-        SaveCurrentSlot("CurEnvId",
-            realEnv.EnvironmentDictionaryKey(realEnv, 0));
+        SetCurEnvId(realEnv.EnvironmentDictionaryKey(realEnv, 0));
     }
 
     [LuaFunc]

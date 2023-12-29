@@ -14,7 +14,7 @@ namespace CSTI_LuaActionSupport;
 [BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", ModVersion)]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
-    public const string ModVersion = "1.0.3.10";
+    public const string ModVersion = "1.0.3.12";
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
     public static readonly string ModInfo = "ModInfo.json";
     public static readonly string LuaInit = "LuaInit";
@@ -40,7 +40,7 @@ public class LuaSupportRuntime : BaseUnityPlugin
         HarmonyInstance.PatchAll(typeof(LuaRegister));
         HarmonyInstance.PatchAll(typeof(LuaTimer));
         HarmonyInstance.PatchAll(typeof(LuaGraphics));
-        HarmonyInstance.PatchAll(typeof(LuaSystem));
+        LuaSystem.SetupPatch(HarmonyInstance);
     }
 
     private static void LoadLuaSave()

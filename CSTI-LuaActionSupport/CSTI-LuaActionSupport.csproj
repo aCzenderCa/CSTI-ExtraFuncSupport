@@ -12,7 +12,7 @@
         <AssemblyName>CSTI_LuaActionSupport</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>default</LangVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -212,6 +212,7 @@
         <Compile Include="AllPatcher\LuaGraphics.cs" />
         <Compile Include="AllPatcher\LuaRegister.cs" />
         <Compile Include="AllPatcher\LuaSystem.cs" />
+        <Compile Include="AllPatcher\MISCompatible.cs" />
         <Compile Include="AllPatcher\ObjModifyPatcher.cs" />
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
