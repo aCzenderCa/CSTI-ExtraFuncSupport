@@ -19,6 +19,7 @@ public struct DataNode
 
         [FieldOffset(0)] public string? str;
         [FieldOffset(0)] public Dictionary<string, DataNode>? table;
+        [FieldOffset(0)] public LuaSystem.ReturnStack? Stack;
 
         public DataNodeDataUnion(Dictionary<int, DataNode> intTable)
         {
@@ -49,6 +50,11 @@ public struct DataNode
         {
             this.table = table;
         }
+
+        public DataNodeDataUnion(LuaSystem.ReturnStack returnStack)
+        {
+            Stack = returnStack;
+        }
     }
 
     public enum DataNodeType
@@ -59,7 +65,8 @@ public struct DataNode
         Table,
         Nil,
         Vector2,
-        IntTable
+        IntTable,
+        ReturnStack
     }
 
     public DataNodeType NodeType;
@@ -71,6 +78,7 @@ public struct DataNode
     public Vector2 vector2 => NodeData.vector2;
     public Dictionary<string, DataNode>? table => NodeData.table;
     public Dictionary<string, DataNode>? INTTable => NodeData.table;
+    public LuaSystem.ReturnStack? ReturnStack => NodeData.Stack;
 
     public static DataNode EmptyTable => new(new Dictionary<string, DataNode>());
 
@@ -118,6 +126,12 @@ public struct DataNode
     {
         NodeType = DataNodeType.IntTable;
         NodeData = new DataNodeDataUnion(dataNodes);
+    }
+
+    public DataNode(LuaSystem.ReturnStack stack)
+    {
+        NodeType = DataNodeType.ReturnStack;
+        NodeData = new DataNodeDataUnion(stack);
     }
 
     public void Save(BinaryWriter binaryWriter)
@@ -171,6 +185,10 @@ public struct DataNode
                 }
 
                 break;
+            case DataNodeType.ReturnStack:
+                if (ReturnStack == null) binaryWriter.Write(0);
+                else ReturnStack.Save(binaryWriter);
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -220,6 +238,11 @@ public struct DataNode
                 }
 
                 node.NodeData = new DataNodeDataUnion(nodes);
+                break;
+            case DataNodeType.ReturnStack:
+                var returnStack = new LuaSystem.ReturnStack();
+                returnStack.Load(binaryReader);
+                node.NodeData = new DataNodeDataUnion(returnStack);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

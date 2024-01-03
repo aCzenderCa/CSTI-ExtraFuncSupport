@@ -99,11 +99,13 @@ public static class CoroutineHelper
 
     public static void ReCommonSetup(this InspectionPopup popup)
     {
-        if (popup.isActiveAndEnabled && popup.CurrentCard)
-        {
-            popup.CommonSetup(popup.CurrentCard.CardName(), popup.CurrentCard.CardDescription());
-            popup.SetupActions(popup.CurrentCard.DismantleActions, true);
-        }
+        if (popup == null) return;
+        if (!popup.isActiveAndEnabled) return;
+        if (popup.CurrentCard == null) return;
+        popup.CommonSetup(popup.CurrentCard.CardName(), popup.CurrentCard.CardDescription());
+        if (popup.CurrentCard == null) return;
+        if (popup.CurrentCard.DismantleActions == null) return;
+        popup.SetupActions(popup.CurrentCard.DismantleActions, true);
     }
 
     public static IEnumerator SpendDaytimePoints(this GameManager manager, int tp, InGameCardBase _ReceivingCard)

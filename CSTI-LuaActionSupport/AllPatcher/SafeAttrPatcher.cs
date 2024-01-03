@@ -30,6 +30,15 @@ public static class SafeAttrPatcher
             var o = __result[index];
             var traverse = Traverse.Create(o);
             var info = traverse.Field("info");
+            var methodInfo = info.Field<MethodInfo>("method").Value;
+            var declaringTypeAssembly = methodInfo.DeclaringType?.Assembly;
+            if (declaringTypeAssembly == null || (declaringTypeAssembly != typeof(LuaSupportRuntime).Assembly &&
+                                                  declaringTypeAssembly.GetName().Name != "ModLoader" &&
+                                                  declaringTypeAssembly.GetName().Name != "CSTI-ChatTreeLoader"))
+            {
+                continue;
+            }
+
             var t = info.Field<Type>("declaringType").Value;
             var m = info.Field<string>("methodName").Value;
             var methodType = info.Field<MethodType>("methodType").Value;

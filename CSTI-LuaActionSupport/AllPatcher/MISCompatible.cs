@@ -10,7 +10,9 @@ public class MISCompatible : BaseUnityPlugin
     static MISCompatible()
     {
         var methodInfo = AccessTools.Method(typeof(GameManager), nameof(GameManager.RemoveCard));
+        if (methodInfo == null) return;
         var patchInfo = Harmony.GetPatchInfo(methodInfo);
+        if (patchInfo == null) return;
         foreach (var prefix in patchInfo.Prefixes)
         {
             if (prefix.PatchMethod?.DeclaringType == null) continue;

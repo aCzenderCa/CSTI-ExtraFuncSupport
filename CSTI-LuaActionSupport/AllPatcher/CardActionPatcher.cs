@@ -114,6 +114,8 @@ public static class CardActionPatcher
                 return node.vector2;
             case DataNode.DataNodeType.IntTable:
                 return new DataNodeTableAccessBridge(node.table);
+            case DataNode.DataNodeType.ReturnStack:
+                return node.ReturnStack;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -189,6 +191,11 @@ public static class CardActionPatcher
 
                 var dataNode = new DataNode(nodes);
                 dataNodes[key] = dataNode;
+                break;
+            }
+            case LuaSystem.ReturnStack returnStack:
+            {
+                dataNodes[key] = new DataNode(returnStack);
                 break;
             }
         }

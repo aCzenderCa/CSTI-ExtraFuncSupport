@@ -1,16 +1,27 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using CSTI_LuaActionSupport.AllPatcher;
+using gfoidl.Base64;
+using gfoidl.Base64.Internal;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
 
 public static class AnotherAddCard
 {
-    public static IEnumerator SuperChangeEnvironment(this GameManager instance, CardData newEnvCardData, string newEnv)
+    public static IEnumerator SuperChangeEnvironment(this GameManager instance, CardData newEnvCardData, string newEnv,
+        bool modRetStack)
     {
+        if (modRetStack)
+        {
+            var curReturnStack = LuaSystem.CurReturnStack();
+            curReturnStack.Push(newEnvCardData.UniqueID, LuaSystem.GetCurEnvId() ?? "");
+        }
+
         instance.LeavingEnvironment = true;
         instance.EnvironmentTransition = true;
         instance.GameSounds.StopAllOtherAmbiences();
@@ -40,7 +51,7 @@ public static class AnotherAddCard
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);
 
         SaveCurPins(instance, envKey);
-        SaveCurContainers(instance, array2, waitFor);
+        SaveRemoveAllCards(instance, array2, waitFor);
 
         foreach (var c in waitFor)
         {
@@ -49,6 +60,7 @@ public static class AnotherAddCard
                 yield return null;
             }
         }
+        waitFor.Clear();
 
         instance.TravelCardCopies.Clear();
         instance.AllCards.Clear();
@@ -130,7 +142,7 @@ public static class AnotherAddCard
         instance.EnvironmentTransition = false;
     }
 
-    private static void SaveCurContainers(GameManager instance, InGameCardBase[] array2,
+    private static void SaveRemoveAllCards(GameManager instance, InGameCardBase[] array2,
         List<CoroutineController> waitFor)
     {
         foreach (var card in array2)
@@ -180,7 +192,7 @@ public static class AnotherAddCard
     }
 
     public static IEnumerator RemoveEnvCard(this GameManager instance, CardData newEnvCardData, InGameCardBase _Card,
-        string newEnv)
+        string newEnv, bool modRetStack)
     {
         if (!_Card || _Card.Destroyed || _Card.CardModel.CardType != CardTypes.Environment) yield break;
 
@@ -215,7 +227,7 @@ public static class AnotherAddCard
 
         if (instance.CardsWithCounters.Contains(_Card)) instance.CardsWithCounters.Remove(_Card);
 
-        yield return instance.StartCoroutine(instance.SuperChangeEnvironment(newEnvCardData, newEnv));
+        yield return instance.StartCoroutine(instance.SuperChangeEnvironment(newEnvCardData, newEnv, modRetStack));
         instance.PrevEnvironment = _Card.CardModel;
         instance.CurrentEnvironmentCard = null;
         instance.CurrentTravelIndex = instance.NextTravelIndex;
@@ -230,12 +242,13 @@ public static class AnotherAddCard
     }
 
     public static IEnumerator AddEnvCard(this GameManager instance, CardData _Data,
-        TransferedDurabilities? _TransferedDurabilites, string newEnv)
+        TransferedDurabilities? _TransferedDurabilites, string newEnv, bool modRetStack)
     {
         if (!_Data || _Data.CardType != CardTypes.Environment) yield break;
 
         instance.NextEnvironment = _Data;
-        yield return instance.StartCoroutine(instance.RemoveEnvCard(_Data, instance.CurrentEnvironmentCard, newEnv));
+        yield return instance.StartCoroutine(instance.RemoveEnvCard(_Data, instance.CurrentEnvironmentCard, newEnv,
+            modRetStack));
         instance.CurrentEnvironmentCard = CardPooling.NextCard(instance.GameGraphics.CardsMovingParent,
             Vector3.zero, _Data, false);
 
@@ -336,7 +349,10 @@ public static class AnotherAddCard
 
     public static IEnumerator CommonChangeEnvironment(this GameManager instance)
     {
-        Debug.Log($"CommonChangeEnvironment from {LuaSystem.GetCurEnvId()}");
+        var curEnvId = LuaSystem.GetCurEnvId();
+        Debug.Log($"CommonChangeEnvironment from {curEnvId}");
+        var curReturnStack = LuaSystem.CurReturnStack();
+        curReturnStack.Push(instance.CurrentEnvironment.UniqueID, curEnvId ?? "");
         instance.LeavingEnvironment = true;
         instance.EnvironmentTransition = true;
         instance.GameSounds.StopAllOtherAmbiences();
@@ -353,7 +369,7 @@ public static class AnotherAddCard
         var num = instance.GameGraphics.SetLoading(true);
         yield return new WaitForSeconds(num);
         instance.GameGraphics.ClearFilterTags();
-        var envKey = LuaSystem.GetCurEnvId() ?? "";
+        var envKey = curEnvId ?? "";
         CreateCurEnv(instance, envKey);
 
         instance.CalculateEnvironmentWeight(true);
@@ -366,7 +382,7 @@ public static class AnotherAddCard
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);
 
         SaveCurPins(instance, envKey);
-        SaveCurContainers(instance, array2, waitFor);
+        SaveRemoveAllCards(instance, array2, waitFor);
 
         foreach (var c in waitFor)
         {
@@ -375,6 +391,7 @@ public static class AnotherAddCard
                 yield return null;
             }
         }
+        waitFor.Clear();
 
         instance.TravelCardCopies.Clear();
         instance.AllCards.Clear();
@@ -394,65 +411,87 @@ public static class AnotherAddCard
             }
         }
 
-        var newEnvKey = instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
-            instance.NextTravelIndex);
-        LuaSystem.SetCurEnvId(newEnvKey);
-        var prevEnv = instance.CurrentEnvironment;
-        if (instance.EnvironmentsData.ContainsKey(newEnvKey))
+        var newEnvKey = "";
+        if (instance.CurrentEnvironment.InstancedEnvironment && instance.NextEnvironment.InstancedEnvironment)
         {
-            if (instance.EnvironmentsData[newEnvKey].AllPinnedCards != null)
+            newEnvKey = LuaSystem.GetCurEnvId() ?? "";
+            var sha256 = SHA256.Create();
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+            binaryWriter.Write(newEnvKey);
+            binaryWriter.Write(newEnvKey + "_From");
+            binaryWriter.Write(newEnvKey + "_Super");
+            var encode = Base64.Default.Encode(sha256.ComputeHash(memoryStream.ToArray()));
+            newEnvKey = encode + "_" + instance.NextEnvironment.UniqueID;
+            if (instance.NextTravelIndex != 0)
             {
-                foreach (var pinData in instance.EnvironmentsData[newEnvKey].AllPinnedCards.Where(pinData =>
-                             UniqueIDScriptable.GetFromID<CardData>(pinData.CardID)))
-                {
-                    instance.PinnedCards.Add(
-                        new InGamePinData(pinData));
-                }
+                newEnvKey += "=" + instance.NextTravelIndex;
             }
 
-            yield return instance.StartCoroutine(instance.LoadCardSet(instance.EnvironmentsData[newEnvKey].AllRegularCards,
-                instance.EnvironmentsData[newEnvKey].AllInventoryCards,
-                instance.EnvironmentsData[newEnvKey].NestedInventoryCards, updatedBGCards, true));
-            foreach (var card in instance.AllCards)
-            {
-                card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment,
-                    instance.NextTravelIndex);
-            }
+            LuaSystem.SetCurEnvId(newEnvKey);
+        }
+        else
+        {
+            newEnvKey = instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
+                instance.NextTravelIndex);
+            LuaSystem.SetCurEnvId(newEnvKey);
+        }
 
-            instance.CurrentEnvironmentCard = null;
-            instance.LeavingEnvironment = false;
-            instance.GameGraphics.RefreshSlots(false);
+        var superGetEnvSaveData = instance.SuperGetEnvSaveData(instance.NextEnvironment, newEnvKey)!;
+
+        var prevEnv = instance.CurrentEnvironment;
+        if (superGetEnvSaveData.AllPinnedCards != null)
+        {
+            foreach (var pinData in superGetEnvSaveData.AllPinnedCards.Where(pinData =>
+                         UniqueIDScriptable.GetFromID<CardData>(pinData.CardID)))
+            {
+                instance.PinnedCards.Add(
+                    new InGamePinData(pinData));
+            }
+        }
+
+        yield return instance.StartCoroutine(instance.LoadCardSet(
+            superGetEnvSaveData.AllRegularCards,
+            superGetEnvSaveData.AllInventoryCards,
+            superGetEnvSaveData.NestedInventoryCards, updatedBGCards, true));
+        foreach (var card in instance.AllCards)
+        {
+            card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment,
+                instance.NextTravelIndex);
+        }
+
+        instance.CurrentEnvironmentCard = null;
+        instance.LeavingEnvironment = false;
+        instance.GameGraphics.RefreshSlots(false);
+        yield return null;
+        instance.StartCoroutineEx(instance.UpdatePassiveEffects(), out var controller);
+        while (controller.state != CoroutineState.Finished)
+        {
             yield return null;
-            instance.StartCoroutineEx(instance.UpdatePassiveEffects(), out var controller);
+        }
+
+        instance.IsCatchingUp = true;
+        instance.CatchingUpEnvData = superGetEnvSaveData;
+        for (var i = 0;
+             i < instance.CurrentTickInfo.z - superGetEnvSaveData.LastUpdatedTick;
+             i++)
+        {
+            instance.StartCoroutineEx(instance.ApplyRates(1, superGetEnvSaveData.LastUpdatedTick + i),
+                out controller);
             while (controller.state != CoroutineState.Finished)
             {
                 yield return null;
             }
-
-            instance.IsCatchingUp = true;
-            instance.CatchingUpEnvData = instance.EnvironmentsData[newEnvKey];
-            for (var i = 0;
-                 i < instance.CurrentTickInfo.z - instance.EnvironmentsData[newEnvKey].LastUpdatedTick;
-                 i++)
-            {
-                instance.StartCoroutineEx(instance.ApplyRates(1, instance.EnvironmentsData[newEnvKey].LastUpdatedTick + i),
-                    out controller);
-                while (controller.state != CoroutineState.Finished)
-                {
-                    yield return null;
-                }
-            }
-
-            instance.IsCatchingUp = false;
-            instance.CatchingUpEnvData = null;
-            foreach (var card in instance.AllCards)
-            {
-                card.UpdateEnvironment(instance.NextEnvironment, prevEnv, instance.NextTravelIndex);
-            }
         }
 
-        instance.GameGraphics.LoadBookmarks(instance.GetEnvSaveData(instance.NextEnvironment, prevEnv,
-            instance.NextTravelIndex, false));
+        instance.IsCatchingUp = false;
+        instance.CatchingUpEnvData = null;
+        foreach (var card in instance.AllCards)
+        {
+            card.UpdateEnvironment(instance.NextEnvironment, prevEnv, instance.NextTravelIndex);
+        }
+
+        instance.GameGraphics.LoadBookmarks(superGetEnvSaveData);
         instance.GameGraphics.SetLoading(false);
         instance.GameGraphics.ExplorationDeckPopup.SelectTab(0);
         instance.EnvironmentTransition = false;

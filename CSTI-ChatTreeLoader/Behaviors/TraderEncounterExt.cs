@@ -176,7 +176,7 @@ namespace ChatTreeLoader.Behaviors
                             _buySet.BuyResult.FillDropList(false, 10);
                             _buySet.BuyResult.FillStatModsList();
                             GameManager.Instance.StartCoroutine(traderEncounter.CoinSet.CostCoin(
-                                    _buySet.CalCost(traderEncounter))
+                                    _buySet.CalCost(traderEncounter) * 10)
                                 .OnEnd(GameManager.Instance.ProduceCards(_buySet.BuyResult, null,
                                     false, false, false)).OnEnd(() =>
                                 {
@@ -189,7 +189,7 @@ namespace ChatTreeLoader.Behaviors
                                 }));
                             __instance.AddLogSeparator();
                             __instance.AddToLog(new EncounterLogMessage(string.Format("你购买了{0}, 花费{1}元钱".Local(),
-                                _buySet.GetShowName(), _buySet.CalCost(traderEncounter) * 10)));
+                                _buySet.GetShowName() + "*10", _buySet.CalCost(traderEncounter) * 10)));
                             break;
                     }
 
