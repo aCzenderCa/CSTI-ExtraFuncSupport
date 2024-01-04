@@ -446,32 +446,32 @@ public class CardAccessBridge(InGameCardBase? CardBase)
     {
         if (CardBase == null) yield break;
         var cardBaseCardModel = CardBase.CardModel;
-        IEnumerator? enumerator;
+        Coroutine? coroutine;
         switch (types)
         {
             case DurabilitiesTypes.Spoilage:
                 if (inner_modify(cardBaseCardModel.SpoilageTime, CardBase.CurrentSpoilage, CardBase,
                         ref CardBase.CurrentSpoilage, ref CardBase.SpoilEmpty, ref CardBase.SpoilFull,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Usage:
                 if (inner_modify(cardBaseCardModel.UsageDurability, CardBase.CurrentUsageDurability, CardBase,
                         ref CardBase.CurrentUsageDurability, ref CardBase.UsageEmpty, ref CardBase.UsageFull,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Fuel:
                 if (inner_modify(cardBaseCardModel.FuelCapacity, CardBase.CurrentFuel, CardBase,
                         ref CardBase.CurrentFuel, ref CardBase.FuelEmpty, ref CardBase.FuelFull,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Progress:
                 if (inner_modify(cardBaseCardModel.Progress, CardBase.CurrentProgress, CardBase,
                         ref CardBase.CurrentProgress, ref CardBase.ProgressEmpty, ref CardBase.ProgressFull,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Liquid:
                 if (!CardBase.IsLiquid)
@@ -494,37 +494,45 @@ public class CardAccessBridge(InGameCardBase? CardBase)
             case DurabilitiesTypes.Special1:
                 if (inner_modify(cardBaseCardModel.SpecialDurability1, CardBase.CurrentSpecial1, CardBase,
                         ref CardBase.CurrentSpecial1, ref CardBase.Special1Empty, ref CardBase.Special1Full,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Special2:
                 if (inner_modify(cardBaseCardModel.SpecialDurability2, CardBase.CurrentSpecial2, CardBase,
                         ref CardBase.CurrentSpecial2, ref CardBase.Special2Empty, ref CardBase.Special2Full,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Special3:
                 if (inner_modify(cardBaseCardModel.SpecialDurability3, CardBase.CurrentSpecial3, CardBase,
                         ref CardBase.CurrentSpecial3, ref CardBase.Special3Empty, ref CardBase.Special3Full,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             case DurabilitiesTypes.Special4:
                 if (inner_modify(cardBaseCardModel.SpecialDurability4, CardBase.CurrentSpecial4, CardBase,
                         ref CardBase.CurrentSpecial4, ref CardBase.Special4Empty, ref CardBase.Special4Full,
-                        out enumerator))
-                    yield return enumerator;
+                        out coroutine))
+                    yield return coroutine;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(types), types, null);
         }
 
-        CardBase.CardVisuals.RefreshDurabilities();
+        if (CardBase && CardBase.CardVisuals)
+        {
+            CardBase.CardVisuals.RefreshDurabilities();
+        }
+        else if (CardBase && CardBase.CurrentContainer && CardBase.CurrentContainer.CardVisuals)
+        {
+            CardBase.CurrentContainer.CardVisuals.RefreshDurabilities();
+        }
+
         yield break;
 
         bool inner_modify(DurabilityStat durabilityStat, float rawCurrentSpoilage, InGameCardBase card,
             ref float durabilityStat_ref, ref bool durabilityStat_ref_empty, ref bool durabilityStat_ref_full,
-            out IEnumerator? _enumerator)
+            out Coroutine? _enumerator)
         {
             _enumerator = null;
             if (!durabilityStat)
@@ -539,7 +547,7 @@ public class CardAccessBridge(InGameCardBase? CardBase)
                 if (rawCurrentSpoilage < durabilityStat.Max)
                 {
                     durabilityStat_ref_full = true;
-                    _enumerator = card.PerformDurabilitiesActions(true);
+                    _enumerator = Runtime.StartCoroutine(card.PerformDurabilitiesActions(true));
                     return true;
                 }
 
@@ -553,7 +561,7 @@ public class CardAccessBridge(InGameCardBase? CardBase)
                 if (rawCurrentSpoilage > 0)
                 {
                     durabilityStat_ref_empty = true;
-                    _enumerator = card.PerformDurabilitiesActions(true);
+                    _enumerator = Runtime.StartCoroutine(card.PerformDurabilitiesActions(true));
                     return true;
                 }
 

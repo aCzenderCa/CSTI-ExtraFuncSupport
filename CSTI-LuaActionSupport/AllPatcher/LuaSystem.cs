@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using gfoidl.Base64;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -14,57 +16,78 @@ namespace CSTI_LuaActionSupport.AllPatcher;
 [HarmonyPatch]
 public static class LuaSystem
 {
-    // [HarmonyPostfix, HarmonyPatch(typeof(DynamicViewLayoutGroup), nameof(DynamicViewLayoutGroup.GetElementPosition))]
-    // public static void GetElementPosition(DynamicViewLayoutGroup __instance, int _Index, ref Vector3 __result)
-    // {
-    //     if (__instance != GraphicsManager.Instance.BlueprintSlotsLine) return;
-    //     float num = 0f;
-    //     for (int i = 0; i < __instance.ExtraSpaces.Count; i++)
-    //     {
-    //         if (__instance.ExtraSpaces[i].AtIndex <= _Index)
-    //         {
-    //             num += __instance.ExtraSpaces[i].Space;
-    //         }
-    //     }
-    //
-    //     __result = __instance.LayoutOriginPos +
-    //                __instance.LayoutDirection * (__instance.Spacing * (float) (_Index / 2) + num) +
-    //                new Vector2(0, _Index % 2 == 1 ? 20 : 0);
-    // }
-    // public static readonly Dictionary<GameObject, int> ChildDictionary = new();
-    //
-    // [HarmonyPrefix, HarmonyPatch(typeof(HorizontalLayoutGroup), nameof(HorizontalLayoutGroup.SetLayoutVertical))]
-    // public static void SetLayoutVertical(HorizontalLayoutGroup __instance)
-    // {
-    //     ChildDictionary.Clear();
-    //     __instance.SetLayoutHorizontal();
-    // }
-    //
-    // [HarmonyPrefix,
-    //  HarmonyPatch(typeof(LayoutGroup), "SetChildAlongAxisWithScale", typeof(RectTransform)
-    //      , typeof(int), typeof(float), typeof(float))]
-    // public static void SetChildAlongAxisWithScale(LayoutGroup __instance, RectTransform rect,
-    //     int axis, ref float pos, float scaleFactor)
-    // {
-    //     if (GraphicsManager.Instance == null) return;
-    //     if (GraphicsManager.Instance.BlueprintModelsPopup == null) return;
-    //     if (GraphicsManager.Instance.BlueprintModelsPopup.LockedBlueprintsParent == null) return;
-    //     if (__instance != GraphicsManager.Instance.BlueprintModelsPopup.LockedBlueprintsParent.gameObject
-    //             .GetComponent<HorizontalLayoutGroup>()) return;
-    //     if (axis == 0)
-    //     {
-    //         var horizontalLayoutGroup = (HorizontalLayoutGroup) __instance;
-    //         var size = rect.sizeDelta[axis] * scaleFactor + horizontalLayoutGroup.spacing;
-    //         var _index = (int) (pos / size);
-    //         ChildDictionary[rect.gameObject] = _index;
-    //         pos = (_index / 2) * size;
-    //     }
-    //     else
-    //     {
-    //         var i = ChildDictionary.SafeGet(rect.gameObject) ?? 0;
-    //         pos += i % 2 == 1 ? 20 : 0;
-    //     }
-    // }
+    [HarmonyPostfix, HarmonyPatch(typeof(CardData), nameof(CardData.EnvironmentDictionaryKey))]
+    private static void SuEnvironmentDictionaryKey(CardData __instance, CardData _FromEnvironment, int _ID,
+        ref string __result)
+    {
+        if (!__instance.InstancedEnvironment) return;
+        if (!_FromEnvironment.InstancedEnvironment) return;
+        if (_FromEnvironment.UniqueID != GameManager.Instance.CurrentEnvironment.UniqueID) return;
+        var newEnvKey = GetCurEnvId() ?? "";
+        var sha256 = SHA256.Create();
+        var memoryStream = new MemoryStream();
+        var binaryWriter = new BinaryWriter(memoryStream);
+        binaryWriter.Write(newEnvKey);
+        binaryWriter.Write(newEnvKey + "_From");
+        binaryWriter.Write(newEnvKey + "_Super");
+        var encode = Base64.Default.Encode(sha256.ComputeHash(memoryStream.ToArray()));
+        newEnvKey = encode + "_" + __instance.UniqueID;
+        if (_ID != 0)
+        {
+            newEnvKey += "=" + GameManager.Instance.NextTravelIndex;
+        }
+
+        __result = newEnvKey;
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(CardData), nameof(CardData.GenerateMoveToLocationAction))]
+    private static void SuGenerateMoveToLocationAction(CardData __instance, InGameCardBase _ReceivingCard,
+        InGameCardBase _GivenCard, string _AddedTooltip, CardOnCardAction __result)
+    {
+        bool? isSendBack = null;
+        if (__instance.CardInteractions is {Length: > 0})
+        {
+            foreach (var action in __instance.CardInteractions)
+            {
+                if (action.TravelToPreviousEnv)
+                {
+                    isSendBack = true;
+                    break;
+                }
+
+                var travelDestination = action.TravelDestination;
+                if (!travelDestination) continue;
+                isSendBack = false;
+                break;
+            }
+        }
+
+        if (isSendBack == null && __instance.DismantleActions is {Count: > 0})
+        {
+            foreach (var action in __instance.DismantleActions)
+            {
+                if (action.TravelToPreviousEnv)
+                {
+                    isSendBack = true;
+                    break;
+                }
+
+                var travelDestination = action.TravelDestination;
+                if (!travelDestination) continue;
+                isSendBack = false;
+                break;
+            }
+        }
+
+        if (isSendBack != true) return;
+        __result.ExtraDurabilityModifications[0].SendToEnvironment = Array.Empty<EnvironmentCardDataRef>();
+        __result.ActionName.LocalizationKey = "LuaCardOnCardAction_" + nameof(SuGenerateMoveToLocationAction);
+        //lang=lua
+        __result.ActionName.ParentObjectID = """
+                                             LuaSystem.SendCard2BackEnvSave(receive, given)
+                                             given:Remove(false)
+                                             """;
+    }
 
     [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ProduceCards))]
     private static void SuProcessRetPre(ref bool _TravelToPrevEnv, out bool __state)
@@ -229,6 +252,60 @@ public static class LuaSystem
         for (var i = 0; i < count; i++)
             GameManager.Instance.CreateCardAsSaveData(card, envCard, envSaveId, null,
                 null, true);
+    }
+
+    [LuaFunc]
+    public static void SendCard2EnvSave(string envUid, string envSaveId, CardAccessBridge? card)
+    {
+        if (!GameManager.Instance || UniqueIDScriptable.GetFromID<CardData>(envUid) is not { } envCard ||
+            card == null || card.CardBase == null) return;
+        var envSaveData = GameManager.Instance.SuperGetEnvSaveData(envCard, envSaveId)!;
+        card.CardBase.Environment = envCard;
+        if (card.CardBase.IndependentFromEnv)
+        {
+            card.CardBase.PrevEnvironment = GameManager.Instance.PrevEnvironment;
+            card.CardBase.PrevEnvTravelIndex = 0;
+        }
+        else
+        {
+            card.CardBase.PrevEnvironment = null;
+        }
+
+        var slotInfo = new SlotInfo(GraphicsManager.Instance.CardToSlotType(card.CardBase.CardModel.CardType),
+            envSaveData.AllRegularCards.Count + 1);
+        card.CardBase.CreatedInSaveDataTick = GameManager.Instance.CurrentTickInfo.z;
+        card.CardBase.IgnoreBaseRow = true;
+        if (card.CardBase.IsInventoryCard || card.CardBase.IsLiquidContainer)
+        {
+            envSaveData.AllInventoryCards.Add(card.CardBase.SaveInventory(envSaveData.NestedInventoryCards, true));
+            envSaveData.AllInventoryCards[envSaveData.AllInventoryCards.Count - 1].SlotInformation = slotInfo;
+        }
+        else
+        {
+            envSaveData.AllRegularCards.Add(card.CardBase.Save());
+            envSaveData.AllRegularCards[envSaveData.AllRegularCards.Count - 1].SlotInformation = slotInfo;
+        }
+
+        if (envSaveData.CurrentMaxWeight > 0f)
+        {
+            envSaveData.CurrentWeight += card.CardBase.CurrentWeight;
+        }
+    }
+
+    [LuaFunc]
+    public static void SendCard2BackEnvSave(CardAccessBridge? by, CardAccessBridge? card)
+    {
+        var curReturnStack = CurReturnStack();
+        if (curReturnStack.Peek() is var (uid, eid))
+        {
+            SendCard2EnvSave(uid, eid, card);
+        }
+        else
+        {
+            SendCard2EnvSave(GameManager.Instance.PrevEnvironment.UniqueID,
+                GameManager.Instance.PrevEnvironment.EnvironmentDictionaryKey(GameManager.Instance.CurrentEnvironment,
+                    by?.TravelIndex ?? 0), card);
+        }
     }
 
     // lang=lua

@@ -298,6 +298,8 @@ public static class CardActionPatcher
 
     public class PriorityEnumerators(List<IEnumerator> _Enumerators, int _Priority)
     {
+        public const int BeforeAll = 1000;
+        public const int BeforeTimeChange = 300;
         public const int SuperHigh = 200;
         public const int High = 100;
         public const int Normal = 0;
@@ -323,6 +325,8 @@ public static class CardActionPatcher
 
     public static readonly Dictionary<int, PriorityEnumerators> AllEnumerators = new()
     {
+        {PriorityEnumerators.BeforeAll, new PriorityEnumerators([], PriorityEnumerators.BeforeAll)},
+        {PriorityEnumerators.BeforeTimeChange, new PriorityEnumerators([], PriorityEnumerators.BeforeTimeChange)},
         {PriorityEnumerators.SuperHigh, new PriorityEnumerators([], PriorityEnumerators.SuperHigh)},
         {PriorityEnumerators.High, new PriorityEnumerators([], PriorityEnumerators.High)},
         {PriorityEnumerators.Normal, new PriorityEnumerators([], PriorityEnumerators.Normal)},
@@ -382,7 +386,7 @@ public static class CardActionPatcher
         while (queue.Count > 0)
         {
             var coroutineController = queue.Dequeue();
-            if (coroutineController == null) yield break;
+            if (coroutineController == null) break;
             while (coroutineController.state == CoroutineState.Running)
             {
                 yield return null;
@@ -432,6 +436,7 @@ public static class CardActionPatcher
         while (queue.Count > 0)
         {
             var coroutineController = queue.Dequeue();
+            if (coroutineController == null) break;
             while (coroutineController.state == CoroutineState.Running)
             {
                 yield return null;
@@ -462,12 +467,16 @@ public static class CardActionPatcher
             GameManager.Instance.CurrentMiniTicks += miniWaitTime;
             waitTime += GameManager.Instance.CurrentMiniTicks / 5;
             GameManager.Instance.CurrentMiniTicks %= 5;
-            GraphicsManager.Instance.UpdateTimeInfo(false);
         }
 
         if (waitTime > 0)
         {
             __instance.SpendDaytimePoints(waitTime, _ReceivingCard).Add2AllEnumerators(PriorityEnumerators.SuperHigh);
+        }
+        else
+        {
+            Runtime.Trans2Enum(GraphicsManager.Instance.UpdateTimeInfo, false)
+                .Add2AllEnumerators(PriorityEnumerators.SuperHigh);
         }
 
         return manager;

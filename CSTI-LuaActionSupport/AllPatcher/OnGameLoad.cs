@@ -17,7 +17,7 @@ public static class OnGameLoad
     {
         return Base64.Default.Decode(data.AsSpan());
     }
-        
+
     [HarmonyPrefix, HarmonyPatch(typeof(GameSaveData), nameof(GameSaveData.CreateDicts))]
     public static void LoadLuaLongTimeData(GameSaveData __instance)
     {
@@ -52,11 +52,35 @@ public static class OnGameLoad
     public static void DoOnGameLoad(GameManager __instance)
     {
         var initRuntime = InitRuntime(__instance);
-        LuaFilesOnGameLoad.Do(pat => { initRuntime.DoString(File.ReadAllText(pat)); });
-                
+        LuaFilesOnGameLoad.Do(pat =>
+        {
+            try
+            {
+                initRuntime.DoString(File.ReadAllText(pat), pat);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        });
+        if (AllLuaFiles.TryGetValue(LuaOnGameLoad, out var luaFiles))
+        {
+            foreach (var (filePat, lua) in luaFiles)
+            {
+                try
+                {
+                    initRuntime.DoString(lua, filePat);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
+                }
+            }
+        }
+
         if (CurrentGSlotSaveData().TryGetValue(StatCache, out var statCache))
         {
-            foreach (var (key,value) in statCache.table!)
+            foreach (var (key, value) in statCache.table!)
             {
                 if (UniqueIDScriptable.GetFromID<GameStat>(key) is not { } stat) continue;
                 foreach (var (field, fVal) in value.table!)
@@ -78,7 +102,31 @@ public static class OnGameLoad
     [HarmonyPrefix, HarmonyPatch(typeof(GameLoad), nameof(GameLoad.SaveGame))]
     public static void DoOnGameSave()
     {
-        LuaFilesOnGameSave.Do(pat => { LuaRuntime.DoString(File.ReadAllText(pat)); });
+        LuaFilesOnGameSave.Do(pat =>
+        {
+            try
+            {
+                LuaRuntime.DoString(File.ReadAllText(pat));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+        });
+        if (AllLuaFiles.TryGetValue(LuaOnGameSave, out var luaFiles))
+        {
+            foreach (var (filePat, lua) in luaFiles)
+            {
+                try
+                {
+                    LuaRuntime.DoString(lua, filePat);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
+                }
+            }
+        }
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(UniqueIDScriptable), nameof(UniqueIDScriptable.ClearDict))]
@@ -93,7 +141,7 @@ public static class OnGameLoad
                 {
                     try
                     {
-                        LuaRuntime.DoString(File.ReadAllText(luaInitFile));
+                        LuaRuntime.DoString(File.ReadAllText(luaInitFile), luaInitFile);
                     }
                     catch (Exception e)
                     {
@@ -112,6 +160,21 @@ public static class OnGameLoad
             {
                 LuaFilesOnGameSave.AddRange(Directory.EnumerateFiles(Path.Combine(directory, LuaOnGameSave),
                     "*.lua"));
+            }
+        }
+
+        if (AllLuaFiles.TryGetValue(LuaInit, out var luaFiles))
+        {
+            foreach (var (filePat, lua) in luaFiles)
+            {
+                try
+                {
+                    LuaRuntime.DoString(lua, filePat);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
+                }
             }
         }
     }

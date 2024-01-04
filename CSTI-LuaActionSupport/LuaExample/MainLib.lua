@@ -58,6 +58,8 @@ LuaTimer = {}
 ---@field GetCurEnvId fun():string
 ---@field GetCurTravelIndex fun():number
 ---@field AddCard2EnvSave fun(envUid:string , envSaveId:string , cardId:string , count:number):void
+---@field SendCard2EnvSave fun(envUid:string , envSaveId:string , card:CardAccessBridge):void
+---@field SendCard2BackEnvSave fun(by:CardAccessBridge, card:CardAccessBridge):void
 LuaSystem = {}
 
 ---@class CardTypes

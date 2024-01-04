@@ -7,6 +7,17 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class EnumHelper
 {
+    public static IEnumerator Trans2Enum<TArg>(this LuaSupportRuntime runtime, Action<TArg> action, TArg arg)
+    {
+        return func();
+
+        IEnumerator func()
+        {
+            action(arg);
+            yield break;
+        }
+    }
+
     public static List<TVal>? ToList<TVal>(this LuaTable? table, Func<object, TVal>? func = null)
     {
         if (table == null) return null;
