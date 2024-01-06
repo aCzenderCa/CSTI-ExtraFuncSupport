@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
-public class CardAccessBridge(InGameCardBase? CardBase)
+public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
 {
     public readonly InGameCardBase? CardBase = CardBase;
 
@@ -636,8 +636,31 @@ public class CardAccessBridge(InGameCardBase? CardBase)
         } while (i < count && cardData.CardType != CardTypes.Liquid);
     }
 
-    public void Remove(bool doDrop)
+    public void Remove(bool doDrop, bool dontInstant = false)
     {
+        if (dontInstant)
+        {
+            Runtime.StartCoroutine(Runtime.Trans2EnumSU(
+                card =>
+                {
+                    if (GameManager.PerformingAction)
+                    {
+                        return true;
+                    }
+
+                    if (InGameCardBase.DroppedCard==card)
+                    {
+                        return true;
+                    }
+
+                    Runtime.StartCoroutine(GameManager.Instance.RemoveCard(card, false, doDrop));
+                    return false;
+                }, CardBase));
+            return;
+        }
+
         GameManager.Instance.RemoveCard(CardBase, true, doDrop).Add2AllEnumerators(PriorityEnumerators.Low);
     }
+
+    public Transform? Transform => CardBase != null ? CardBase.transform : null;
 }

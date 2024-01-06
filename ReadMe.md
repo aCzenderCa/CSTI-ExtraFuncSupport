@@ -92,7 +92,7 @@ statX:CacheRawRateRange(statX.StatRateMin,statX.StatRateMax)--需要修改状态
 ``debug``,`DebugBridge`全局变量的这几个属性赋值会自动用``UnityEngine.Debug``类输出赋值的值\
 读取这几个字段会导致报错
 
-## ``CardAccessBridge``（卡牌访问桥）
+## ``CardAccessBridge``（卡牌访问桥）:ITransProvider
 
 全局变量``env``
 当前Environment卡（与左上角区分，该卡游戏中不可见）
@@ -360,6 +360,15 @@ receive:CheckInventory(true, 'a', 'b')
   * 返回id对应卡在location上的数量
 * `CountCardEquipped`：`string id`
   * 只统计装备的卡，返回id对应卡数量
+
+## LuaAnim
+全局变量`LuaAnim`:lua table类型(不需要用`：`调用)
+* 函数
+  * `CurMouse`:无参数，返回一个位置与当前鼠标相同的ITransProvider（用于在鼠标处播放动画）
+  * `GenCFXR(ITransProvider transProvider, string fxName, bool moveWithProvider = false, float? time = null, LuaTable? ext = null)`:transProvider用于提供播放动画的位置，如卡牌位置，鼠标位置；fxName指定要生成的动画（内置动画表见LuaExample/AnimLib.lua）；moveWithProvider表示动画是否跟随transProvider移动（使用鼠标transProvider时无效）；time表示动画要播放多长时间，单位秒，不填默认每30帧清理一次
+    * 额外参数ext：
+      * "FollowMouse"=bool，为true且moveWithProvider为false时动画跟随鼠标
+      * "animatedLights"=lua数组，每项为一个CFXR_Effect.AnimatedLight，各字段效果自行翻译+测试
 
 ## LuaSystem
 全局变量`LuaSystem`:lua table类型(不需要用`：`调用)\

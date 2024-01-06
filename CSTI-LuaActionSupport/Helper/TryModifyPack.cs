@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using NLua;
+using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
 
@@ -55,6 +57,55 @@ public static class TryModifyPack
         if (o is bool b)
         {
             self = b;
+        }
+    }
+
+    public static void TryModBy(this Gradient self, object? o)
+    {
+        if (o is LuaTable table)
+        {
+            bool GradientMode = UnityEngine.GradientMode.Blend == 0;
+            GradientMode.TryModBy(table[nameof(GradientMode)]);
+            self.mode = GradientMode ? UnityEngine.GradientMode.Blend : UnityEngine.GradientMode.Fixed;
+            var alphaKeys = new List<GradientAlphaKey>();
+            var colorKeys = new List<GradientColorKey>();
+            if (table[nameof(self.alphaKeys)] is LuaTable table_alphaKeys)
+            {
+                for (int i = 1;; i++)
+                {
+                    if (table_alphaKeys[i] is not LuaTable table_alphaKey) continue;
+                    var alphaKey = new GradientAlphaKey();
+                    alphaKey.alpha.TryModBy(table_alphaKey[nameof(alphaKey.alpha)]);
+                    alphaKey.time.TryModBy(table_alphaKey[nameof(alphaKey.time)]);
+                    alphaKeys.Add(alphaKey);
+                }
+            }
+
+            if (table[nameof(self.colorKeys)] is LuaTable table_colorKeys)
+            {
+                for (int i = 1;; i++)
+                {
+                    if (table_colorKeys[i] is not LuaTable table_colorKey) continue;
+                    var colorKey = new GradientColorKey();
+                    colorKey.time.TryModBy(table_colorKey[nameof(colorKey.time)]);
+                    if (table_colorKey[nameof(colorKey.color)] is LuaTable table_colorKey_color)
+                    {
+                        var color = new Color();
+                        color.r.TryModBy(table_colorKey_color[nameof(color.r)]);
+                        color.g.TryModBy(table_colorKey_color[nameof(color.g)]);
+                        color.b.TryModBy(table_colorKey_color[nameof(color.b)]);
+                        colorKey.color = color;
+                    }
+                    else
+                    {
+                        colorKey.color = Color.white;
+                    }
+
+                    colorKeys.Add(colorKey);
+                }
+            }
+
+            self.SetKeys(colorKeys.ToArray(), alphaKeys.ToArray());
         }
     }
 

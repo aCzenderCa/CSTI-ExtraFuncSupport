@@ -18,6 +18,19 @@ public static class EnumHelper
         }
     }
 
+    public static IEnumerator Trans2EnumSU<TArg>(this LuaSupportRuntime runtime, Func<TArg, bool> action, TArg arg)
+    {
+        return func();
+
+        IEnumerator func()
+        {
+            while (action(arg))
+            {
+                yield return null;
+            }
+        }
+    }
+
     public static List<TVal>? ToList<TVal>(this LuaTable? table, Func<object, TVal>? func = null)
     {
         if (table == null) return null;

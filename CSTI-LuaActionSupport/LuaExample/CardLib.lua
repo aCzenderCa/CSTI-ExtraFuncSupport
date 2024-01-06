@@ -1,4 +1,4 @@
----@class CardAccessBridge
+---@class CardAccessBridge:ITransProvider
 ---@field CardBase InGameCardBase
 ---@field CardModel SimpleUniqueAccess @readonly
 ---@field IsEquipped boolean @readonly
@@ -36,11 +36,13 @@
 ---@field MoveToSlot fun(this:CardAccessBridge, slotType:"Equipment"|"Base"|"Hand"|"Location"):boolean
 ---@field MoveTo fun(this:CardAccessBridge, cardAccessBridge:CardAccessBridge):boolean
 ---@field AddCard fun(this:CardAccessBridge, id:string, count?:number, ext?:table<string,number|SimpleUniqueAccess|DataNodeTableAccessBridge>|Gen_ext):void
----@field Remove fun(this:CardAccessBridge, doDrop:boolean):void
+---@field Remove fun(this:CardAccessBridge, doDrop:boolean, dontInstant?:boolean):void
 ---@field AddAnim fun(this:CardAccessBridge, animList:table<string>|nil, animTimeList:table<number>|nil):void
 ---@field RemoveAnim fun(this:CardAccessBridge):boolean
 ---
 ---@class InGameCardBase
+
+---@class ITransProvider
 
 ---@alias DataNodeData_lua number|string|boolean|table<string,DataNodeData_lua>|nil|Vector2
 ---@class DataNodeTableAccessBridge
@@ -97,7 +99,7 @@
 
 ---@class GameStat
 
----@class ICollection<TItem>:IEnumerable<TItem>
+---@class ICollection<TItem1>:IEnumerable<TItem1>
 ---@field Count number
 
 ---@class IList<TItem1>:ICollection<TItem1>

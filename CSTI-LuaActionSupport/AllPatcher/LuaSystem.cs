@@ -41,14 +41,18 @@ public static class LuaSystem
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(CardData), nameof(CardData.GenerateMoveToLocationAction))]
-    private static void SuGenerateMoveToLocationAction(CardData __instance, InGameCardBase _ReceivingCard,
-        InGameCardBase _GivenCard, string _AddedTooltip, CardOnCardAction __result)
+    private static void SuGenerateMoveToLocationAction(InGameCardBase _ReceivingCard,
+        InGameCardBase _GivenCard, CardOnCardAction __result)
     {
         bool? isSendBack = null;
-        if (__instance.CardInteractions is {Length: > 0})
+        if(!_ReceivingCard)return;
+        if(!_GivenCard)return;
+        if (_ReceivingCard.CardModel.CardInteractions is {Length: > 0})
         {
-            foreach (var action in __instance.CardInteractions)
+            foreach (var action in _ReceivingCard.CardModel.CardInteractions)
             {
+                if (action == null) continue;
+                if (!action.CardsAndTagsAreCorrect(_ReceivingCard, _GivenCard)) continue;
                 if (action.TravelToPreviousEnv)
                 {
                     isSendBack = true;
@@ -62,10 +66,11 @@ public static class LuaSystem
             }
         }
 
-        if (isSendBack == null && __instance.DismantleActions is {Count: > 0})
+        if (isSendBack == null && _ReceivingCard.CardModel.DismantleActions is {Count: > 0})
         {
-            foreach (var action in __instance.DismantleActions)
+            foreach (var action in _ReceivingCard.CardModel.DismantleActions)
             {
+                if (action == null) continue;
                 if (action.TravelToPreviousEnv)
                 {
                     isSendBack = true;
@@ -85,7 +90,7 @@ public static class LuaSystem
         //lang=lua
         __result.ActionName.ParentObjectID = """
                                              LuaSystem.SendCard2BackEnvSave(receive, given)
-                                             given:Remove(false)
+                                             given:Remove(false, true)
                                              """;
     }
 
