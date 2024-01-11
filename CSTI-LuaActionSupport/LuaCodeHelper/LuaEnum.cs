@@ -192,12 +192,12 @@ public static class TableHelper
             }
             else
             {
-                dictionary2[key2] = [val];
+                dictionary2[key2] = new List<TVal> {val};
             }
         }
         else
         {
-            dictionary[key1] = new Dictionary<TKey2, List<TVal>> {{key2, [val]}};
+            dictionary[key1] = new Dictionary<TKey2, List<TVal>> {{key2, new() {val}}};
         }
     }
 
@@ -215,18 +215,18 @@ public static class TableHelper
                 }
                 else
                 {
-                    dictionary3[key3] = [val];
+                    dictionary3[key3] = new List<TVal> {val};
                 }
             }
             else
             {
-                dictionary2[key2] = new Dictionary<TKey3, List<TVal>> {{key3, [val]}};
+                dictionary2[key2] = new Dictionary<TKey3, List<TVal>> {{key3, new() {val}}};
             }
         }
         else
         {
             dictionary[key1] = new Dictionary<TKey2, Dictionary<TKey3, List<TVal>>>
-                {{key2, new Dictionary<TKey3, List<TVal>> {{key3, [val]}}}};
+                {{key2, new Dictionary<TKey3, List<TVal>> {{key3, new() {val}}}}};
         }
     }
 

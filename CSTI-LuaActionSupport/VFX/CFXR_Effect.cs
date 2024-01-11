@@ -58,7 +58,7 @@ namespace CartoonFX
 
 			public bool animateIntensity;
 			public float intensityStart = 8f;
-			public float intensityEnd = 0f;
+			public float intensityEnd;
 			public float intensityDuration = 0.5f;
 			public AnimationCurve intensityCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
 			public bool perlinIntensity;
@@ -70,7 +70,7 @@ namespace CartoonFX
 
 			public bool animateRange;
 			public float rangeStart = 8f;
-			public float rangeEnd = 0f;
+			public float rangeEnd;
 			public float rangeDuration = 0.5f;
 			public AnimationCurve rangeCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
 			public bool perlinRange;
@@ -524,7 +524,7 @@ namespace CartoonFX
 
 #if !DISABLE_LIGHTS || !DISABLE_CAMERA_SHAKE || !DISABLE_CLEAR_BEHAVIOR
 		const int CHECK_EVERY_N_FRAME = 30;
-		static int GlobalStartFrameOffset = 0;
+		static int GlobalStartFrameOffset;
 		int startFrameOffset;
 		void Update()
 		{
@@ -868,4 +868,3 @@ namespace CartoonFX
 	}
 #endif
 }
-;

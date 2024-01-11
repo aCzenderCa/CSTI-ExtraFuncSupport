@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using BepInEx;
 using ChatTreeLoader.LocalText;
 using ChatTreeLoader.ScriptObjects;
 using ChatTreeLoader.Util;
 using UnityEngine;
+using static CSTI_LuaActionSupport.AllPatcher.CardActionPatcher;
 
 namespace ChatTreeLoader.Behaviors
 {
@@ -19,7 +21,7 @@ namespace ChatTreeLoader.Behaviors
             var instanceCurrentEnvironmentCard = GameManager.Instance.CurrentEnvironmentCard;
             var stage = TraderStage.empty;
             var stageInfo = 0;
-            string lastRecord = null;
+            string lastRecord = "";
             foreach (var (key, val) in instanceCurrentEnvironmentCard.DroppedCollections)
             {
                 if (val != Vector2Int.zero || ActionRecordRegex.Match(key) is not {Success: true} match) continue;
@@ -27,6 +29,17 @@ namespace ChatTreeLoader.Behaviors
                 int.TryParse(match.Groups["stageInfo"].Value, out stageInfo);
                 lastRecord = key;
                 break;
+            }
+
+            if (stage == TraderStage.empty)
+            {
+                var _stage = LoadCurrentSlot("TraderEncounterExt_stage") as string;
+                var _stageInfo = LoadCurrentSlot("TraderEncounterExt_stageInfo");
+                if (_stage != null && _stageInfo is double d)
+                {
+                    Enum.TryParse(_stage, true, out stage);
+                    stageInfo = (int) d;
+                }
             }
 
             switch (stage)
@@ -84,10 +97,9 @@ namespace ChatTreeLoader.Behaviors
             if (stage == TraderStage.empty)
             {
                 stage = TraderStage.ShowItem;
-                instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(lastRecord);
-                instanceCurrentEnvironmentCard.DroppedCollections[
-                        $"__{{{traderEncounter.ThisId}}}TraderEncounter.Infos__{{Stage:{stage},StageInfo:{stageInfo}}}"] =
-                    Vector2Int.zero;
+                instanceCurrentEnvironmentCard.DroppedCollections.Remove(lastRecord);
+                SaveCurrentSlot("TraderEncounterExt_stage", stage.ToString());
+                SaveCurrentSlot("TraderEncounterExt_stageInfo", stageInfo);
             }
         }
 
@@ -99,7 +111,7 @@ namespace ChatTreeLoader.Behaviors
 
             var stage = TraderStage.empty;
             var stageInfo = 0;
-            string lastRecord = null;
+            string lastRecord = "";
             foreach (var (key, val) in instanceCurrentEnvironmentCard.DroppedCollections)
             {
                 if (val != Vector2Int.zero || ActionRecordRegex.Match(key) is not {Success: true} match) continue;
@@ -107,6 +119,17 @@ namespace ChatTreeLoader.Behaviors
                 int.TryParse(match.Groups["stageInfo"].Value, out stageInfo);
                 lastRecord = key;
                 break;
+            }
+
+            if (stage == TraderStage.empty)
+            {
+                var _stage = LoadCurrentSlot("TraderEncounterExt_stage") as string;
+                var _stageInfo = LoadCurrentSlot("TraderEncounterExt_stageInfo");
+                if (_stage != null && _stageInfo is double d)
+                {
+                    Enum.TryParse(_stage, true, out stage);
+                    stageInfo = (int) d;
+                }
             }
 
             switch (stage)
@@ -205,10 +228,9 @@ namespace ChatTreeLoader.Behaviors
                     throw new ArgumentOutOfRangeException();
             }
 
-            instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(lastRecord);
-            instanceCurrentEnvironmentCard.DroppedCollections[
-                    $"__{{{traderEncounter.ThisId}}}TraderEncounter.Infos__{{Stage:{stage},StageInfo:{stageInfo}}}"] =
-                Vector2Int.zero;
+            instanceCurrentEnvironmentCard.DroppedCollections.Remove(lastRecord);
+            SaveCurrentSlot("TraderEncounterExt_stage", stage.ToString());
+            SaveCurrentSlot("TraderEncounterExt_stageInfo", stageInfo);
             __instance.DisplayPlayerActions();
         }
 
@@ -240,7 +262,7 @@ namespace ChatTreeLoader.Behaviors
             var instanceCurrentEnvironmentCard = GameManager.Instance.CurrentEnvironmentCard;
             var stage = TraderStage.empty;
             var stageInfo = 0;
-            string lastRecord = null;
+            string lastRecord = "";
             var toChange = false;
             foreach (var (key, val) in instanceCurrentEnvironmentCard.DroppedCollections)
             {
@@ -253,7 +275,18 @@ namespace ChatTreeLoader.Behaviors
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (stage == TraderStage.empty)
+            {
+                var _stage = LoadCurrentSlot("TraderEncounterExt_stage") as string;
+                var _stageInfo = LoadCurrentSlot("TraderEncounterExt_stageInfo");
+                if (_stage != null && _stageInfo is double d)
+                {
+                    Enum.TryParse(_stage, true, out stage);
+                    stageInfo = (int) d;
+                }
+            }
+
+            if (UnityInput.Current.GetKeyDown(KeyCode.LeftArrow))
             {
                 if (stage == TraderStage.ShowItem && stageInfo > 0)
                 {
@@ -261,7 +294,7 @@ namespace ChatTreeLoader.Behaviors
                     stageInfo -= 1;
                 }
             }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
+            else if (UnityInput.Current.GetKeyDown(KeyCode.RightArrow))
             {
                 if (stage == TraderStage.ShowItem &&
                     (stageInfo + 1) * 4 < traderEncounter.BuySets.Count)
@@ -270,17 +303,16 @@ namespace ChatTreeLoader.Behaviors
                     stageInfo += 1;
                 }
             }
-            else if (Input.GetKeyDown(KeyCode.UpArrow))
+            else if (UnityInput.Current.GetKeyDown(KeyCode.UpArrow))
             {
                 __instance.AddLogSeparator();
                 __instance.AddToLog(new EncounterLogMessage(traderEncounter.CoinSet.Show()));
             }
 
             if (!toChange) return;
-            instanceCurrentEnvironmentCard.DroppedCollections.SafeRemove(lastRecord);
-            instanceCurrentEnvironmentCard.DroppedCollections[
-                    $"__{{{traderEncounter.ThisId}}}TraderEncounter.Infos__{{Stage:({stage}),StageInfo:({stageInfo})}}"] =
-                Vector2Int.zero;
+            instanceCurrentEnvironmentCard.DroppedCollections.Remove(lastRecord);
+            SaveCurrentSlot("TraderEncounterExt_stage", stage.ToString());
+            SaveCurrentSlot("TraderEncounterExt_stageInfo", stageInfo);
             __instance.DisplayPlayerActions();
         }
 

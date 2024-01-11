@@ -6,7 +6,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using CSTI_LuaActionSupport.AllPatcher;
 using gfoidl.Base64;
-using gfoidl.Base64.Internal;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
@@ -46,8 +45,8 @@ public static class AnotherAddCard
         instance.EnvironmentsData[envKey].CurrentMaxWeight = instance.MaxEnvWeight;
         var waitFor = new List<CoroutineController>();
         InGameCardBase[] array2 = instance.AllCards.ToArray();
-        List<InGameRefCardSaveData> updatedBGCards = [];
-        List<InGameCardBase> cardsRemainingInBG = [];
+        List<InGameRefCardSaveData> updatedBGCards = new();
+        List<InGameCardBase> cardsRemainingInBG = new();
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);
 
         SaveCurPins(instance, envKey);
@@ -60,6 +59,7 @@ public static class AnotherAddCard
                 yield return null;
             }
         }
+
         waitFor.Clear();
 
         instance.TravelCardCopies.Clear();
@@ -160,7 +160,7 @@ public static class AnotherAddCard
     {
         foreach (var pinData in instance.PinnedCards)
         {
-            instance.EnvironmentsData[envKey].AllPinnedCards ??= [];
+            instance.EnvironmentsData[envKey].AllPinnedCards ??= new List<PinSaveData>();
 
             if (instance.EnvironmentsData[envKey].HasPinData(pinData.PinnedCard)) continue;
             instance.EnvironmentsData[envKey].AllPinnedCards.Add(new PinSaveData());
@@ -356,11 +356,14 @@ public static class AnotherAddCard
         instance.LeavingEnvironment = true;
         instance.EnvironmentTransition = true;
         instance.GameSounds.StopAllOtherAmbiences();
+        List<InGameCardBase> inGameCardBases;
         if (instance.CurrentEnvironment == null)
         {
-            foreach (var card in instance.AllCards)
+            inGameCardBases = instance.AllCards.ToList();
+            foreach (var card in inGameCardBases.OfType<InGameCardBase>())
             {
-                card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment, instance.NextTravelIndex);
+                card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment,
+                    instance.NextTravelIndex);
             }
 
             yield break;
@@ -377,8 +380,8 @@ public static class AnotherAddCard
         instance.EnvironmentsData[envKey].CurrentMaxWeight = instance.MaxEnvWeight;
         var waitFor = new List<CoroutineController>();
         InGameCardBase[] array2 = instance.AllCards.ToArray();
-        List<InGameRefCardSaveData> updatedBGCards = [];
-        List<InGameCardBase> cardsRemainingInBG = [];
+        List<InGameRefCardSaveData> updatedBGCards = new();
+        List<InGameCardBase> cardsRemainingInBG = new();
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);
 
         SaveCurPins(instance, envKey);
@@ -391,6 +394,7 @@ public static class AnotherAddCard
                 yield return null;
             }
         }
+
         waitFor.Clear();
 
         instance.TravelCardCopies.Clear();
@@ -454,7 +458,8 @@ public static class AnotherAddCard
             superGetEnvSaveData.AllRegularCards,
             superGetEnvSaveData.AllInventoryCards,
             superGetEnvSaveData.NestedInventoryCards, updatedBGCards, true));
-        foreach (var card in instance.AllCards)
+        inGameCardBases = instance.AllCards.ToList();
+        foreach (var card in inGameCardBases.OfType<InGameCardBase>())
         {
             card.UpdateEnvironment(instance.NextEnvironment, instance.CurrentEnvironment,
                 instance.NextTravelIndex);
@@ -486,7 +491,8 @@ public static class AnotherAddCard
 
         instance.IsCatchingUp = false;
         instance.CatchingUpEnvData = null;
-        foreach (var card in instance.AllCards)
+        inGameCardBases = instance.AllCards.ToList();
+        foreach (var card in inGameCardBases.OfType<InGameCardBase>())
         {
             card.UpdateEnvironment(instance.NextEnvironment, prevEnv, instance.NextTravelIndex);
         }
@@ -525,7 +531,7 @@ public static class AnotherAddCard
             else if (card.IsInventoryCard || card.IsLiquidContainer)
             {
                 instance.EnvironmentsData[envKey].AllInventoryCards
-                    .Add(card.SaveInventory(instance.EnvironmentsData[envKey].NestedInventoryCards, false));
+                    .Add(card.SaveInventory(instance.EnvironmentsData[envKey].NestedInventoryCards));
             }
             else
             {

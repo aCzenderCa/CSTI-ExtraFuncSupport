@@ -6,34 +6,28 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public static class MoniEnum
 {
-    public static Func<IEnumerator, IEnumerator> MoniFunc = null!;
-
-    private static Coroutine StartCoroutine_(this GameManager gameManager, IEnumerator enumerator)
-    {
-        return gameManager.StartCoroutine(MoniFunc(enumerator));
-    }
-
     public static IEnumerator MoniAddCard<TArg>(this GameManager manager, CardData _Data,
-        InGameCardBase? _FromCard, TransferedDurabilities _TransferedDurabilites,
+        InGameCardBase? _FromCard, TransferedDurabilities _TransferedDurabilites, SlotInfo forceSlotInfo,
+        BlueprintSaveData forceBpData,
         bool _UseDefaultInventory, SpawningLiquid _WithLiquid, Vector2Int _Tick,
-        Action<InGameCardBase, TArg> action, TArg arg)
+        Action<InGameCardBase, TArg>? action, TArg arg)
     {
         var addCard = AddCard();
         var b = true;
         while (b)
         {
-            MoniFunc = _MoniFunc;
             b = addCard.MoveNext();
             yield return addCard.Current;
         }
 
         yield break;
 
-        IEnumerator FastAddCard(SlotInfo slotInfo, InGameCardBase container)
+        IEnumerator FastAddCard(SlotInfo slotInfo, InGameCardBase? container)
         {
             return manager.AddCard(_Data, slotInfo,
                 _FromCard != null ? _FromCard.Environment : manager.CurrentEnvironment, container, true,
-                _TransferedDurabilites, null, null, null, null,
+                _TransferedDurabilites, null, null, null,
+                forceBpData.CurrentStage != -10086 ? forceBpData : null,
                 _FromCard != null
                     ? _FromCard.ValidPosition
                     : manager.IsInitializing
@@ -51,18 +45,21 @@ public static class MoniEnum
                 switch (_Data.CardType)
                 {
                     case CardTypes.Liquid when _FromCard.IsLiquidContainer:
-                        yield return manager.StartCoroutine_(FastAddCard(_FromCard.CurrentSlotInfo, _FromCard));
+                        yield return _MoniFunc(FastAddCard(_FromCard.CurrentSlotInfo, _FromCard));
                         break;
                     case CardTypes.Liquid when _FromCard.IsLiquid:
-                        yield return manager.StartCoroutine_(FastAddCard(_FromCard.CurrentSlotInfo,
+                        yield return _MoniFunc(FastAddCard(_FromCard.CurrentSlotInfo,
                             _FromCard.CurrentContainer));
                         break;
+                    case CardTypes.Blueprint when forceSlotInfo.SlotIndex != -10086:
+                        yield return _MoniFunc(FastAddCard(forceSlotInfo, _FromCard.CurrentContainer));
+                        break;
                     case CardTypes.Blueprint when _FromCard.CurrentSlotInfo.SlotType != SlotsTypes.Blueprint:
-                        yield return manager.StartCoroutine_(FastAddCard(new SlotInfo(SlotsTypes.Blueprint, -2),
+                        yield return _MoniFunc(FastAddCard(new SlotInfo(SlotsTypes.Blueprint, -2),
                             _FromCard.CurrentContainer));
                         break;
                     case CardTypes.Blueprint:
-                        yield return manager.StartCoroutine_(FastAddCard(new SlotInfo(
+                        yield return _MoniFunc(FastAddCard(new SlotInfo(
                                 manager.GameGraphics.BlueprintInstanceGoToLocations
                                     ? SlotsTypes.Location
                                     : SlotsTypes.Base, -2),
@@ -71,12 +68,16 @@ public static class MoniEnum
                     default:
                         if (_FromCard.CardModel == null || _FromCard.Destroyed || !_FromCard.IsInventoryCard)
                         {
-                            yield return manager.StartCoroutine_(FastAddCard(_FromCard.CurrentSlotInfo,
+                            yield return _MoniFunc(FastAddCard(_FromCard.CurrentSlotInfo,
                                 _FromCard.CurrentContainer));
+                        }
+                        else if (forceSlotInfo.SlotIndex != -10086)
+                        {
+                            yield return _MoniFunc(FastAddCard(forceSlotInfo, _FromCard));
                         }
                         else
                         {
-                            yield return manager.StartCoroutine_(FastAddCard(new SlotInfo(SlotsTypes.Inventory, -2),
+                            yield return _MoniFunc(FastAddCard(new SlotInfo(SlotsTypes.Inventory, -2),
                                 _FromCard));
                         }
 
@@ -85,11 +86,7 @@ public static class MoniEnum
             }
             else
             {
-                yield return manager.StartCoroutine_(manager.AddCard(_Data, null, manager.CurrentEnvironment, null,
-                    true,
-                    _TransferedDurabilites, null, null, null, null,
-                    manager.IsInitializing ? Vector3.zero : manager.GameGraphics.FadeToBlack.TimeSpentPos,
-                    _UseDefaultInventory, _WithLiquid, false, false, _Tick, null, 0));
+                yield return _MoniFunc(FastAddCard(forceSlotInfo, null));
             }
         }
 
@@ -103,7 +100,8 @@ public static class MoniEnum
                 if (manager.LatestCreatedCards[manager.LatestCreatedCards.Count - 1] is var card &&
                     managerLatestCreatedCard != card && card.CardModel == _Data)
                 {
-                    action(card, arg);
+                    action?.Invoke(card, arg);
+
                     yield return enumerator.Current;
                     break;
                 }

@@ -3,8 +3,7 @@
 // (c) 2012-2020 Jean Moreno
 //--------------------------------------------------------------------------------------------------------------------------------
 
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -26,24 +25,24 @@ namespace CartoonFX
 		public Sprite[] CharSprites;
 		public Kerning[] CharKerningOffsets;
 
-		[System.Serializable]
+		[Serializable]
 		public class Kerning
 		{
 			public string name = "A";
-			public float pre = 0f;
-			public float post = 0f;
+			public float pre;
+			public float post;
 		}
 
 		void OnValidate()
 		{
-			this.hideFlags = HideFlags.None;
+			hideFlags = HideFlags.None;
 
 			if (CharKerningOffsets == null || CharKerningOffsets.Length != CharSequence.Length)
 			{
 				CharKerningOffsets = new Kerning[CharSequence.Length];
 				for (int i = 0; i < CharKerningOffsets.Length; i++)
 				{
-					CharKerningOffsets[i] = new Kerning() { name = CharSequence[i].ToString() };
+					CharKerningOffsets[i] = new Kerning { name = CharSequence[i].ToString() };
 				}
 			}
 		}
@@ -54,7 +53,7 @@ namespace CartoonFX
 
 			if (!valid)
 			{
-				Debug.LogError(string.Format("Invalid ParticleTextFontAsset: '{0}'\n", this.name), this);
+				Debug.LogError(string.Format("Invalid ParticleTextFontAsset: '{0}'\n", name), this);
 			}
 
 			return valid;

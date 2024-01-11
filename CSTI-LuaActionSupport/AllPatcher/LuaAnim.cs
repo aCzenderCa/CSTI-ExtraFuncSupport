@@ -29,18 +29,21 @@ public static class LuaAnim
         }
     }
 
-    public static readonly Dictionary<string, Action<Object, LuaTable>> AnimFunc = new()
-    {
-    };
+    public static readonly Dictionary<string, Action<Object, LuaTable>> AnimFunc = new();
 
     public interface ITransProvider
     {
         public Transform? Transform { get; }
     }
 
-    public class TransProvider(Transform? transform) : ITransProvider
+    public class TransProvider : ITransProvider
     {
-        public Transform? Transform { get; } = transform;
+        public TransProvider(Transform? transform)
+        {
+            Transform = transform;
+        }
+
+        public Transform? Transform { get; }
     }
 
     public static Transform? _CurMouse;
@@ -64,7 +67,7 @@ public static class LuaAnim
     }
 
     [TestCode("""
-              LuaAnim.GenCFXR(receive, "CFXR Explosion 1", true, nil, {
+              LuaAnim.GenCFXR(receive, "CFXR3 Fire Explosion B", true, nil, {
                   animatedLights = {
                       {
                           animateIntensity = true,

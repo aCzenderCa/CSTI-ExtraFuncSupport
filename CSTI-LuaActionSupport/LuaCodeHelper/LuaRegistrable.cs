@@ -58,4 +58,9 @@ public class LuaFuncAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Method)]
-public class TestCodeAttribute(/* language=Lua */string code) : Attribute;
+public class TestCodeAttribute : Attribute
+{
+    public TestCodeAttribute(string code)
+    {
+    }
+}

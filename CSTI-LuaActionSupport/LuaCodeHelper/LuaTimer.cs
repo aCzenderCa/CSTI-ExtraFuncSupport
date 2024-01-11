@@ -50,10 +50,16 @@ public static class LuaTimer
         __result |= OnWaitCA;
     }
 
-    public class SimpleTimer(float time, float curTime)
+    public class SimpleTimer
     {
-        public readonly float Time = time;
-        public float CurTime = curTime;
+        public readonly float Time;
+        public float CurTime;
+
+        public SimpleTimer(float time, float curTime)
+        {
+            Time = time;
+            CurTime = curTime;
+        }
 
         public bool Step()
         {
@@ -64,9 +70,9 @@ public static class LuaTimer
         }
     }
 
-    public static readonly List<LuaFunction> FrameFunctions = [];
-    public static readonly List<LuaFunction> FixFrameFunctions = [];
-    public static readonly Dictionary<LuaFunction, SimpleTimer> EveryTimeFunctions = [];
+    public static readonly List<LuaFunction> FrameFunctions = new();
+    public static readonly List<LuaFunction> FixFrameFunctions = new();
+    public static readonly Dictionary<LuaFunction, SimpleTimer> EveryTimeFunctions = new();
 
     [LuaFunc]
     public static CoroutineHelper.CoroutineQueue ProcessCacheEnum()

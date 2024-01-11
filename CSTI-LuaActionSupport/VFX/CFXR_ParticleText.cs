@@ -3,9 +3,8 @@
 // (c) 2012-2022 Jean Moreno
 //--------------------------------------------------------------------------------------------------------------------------------
 
-using System.Collections.Generic;
+using System;
 using UnityEngine;
-using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -31,8 +30,8 @@ namespace CartoonFX
 
         [Header("Delay")]
         [SerializeField] float delay = 0.05f;
-        [SerializeField] bool cumulativeDelay = false;
-        [Range(0f, 2f)] [SerializeField] float compensateLifetime = 0;
+        [SerializeField] bool cumulativeDelay;
+        [Range(0f, 2f)] [SerializeField] float compensateLifetime;
 
         [Header("Misc")]
         [SerializeField] float lifetimeMultiplier = 1f;
@@ -106,12 +105,12 @@ namespace CartoonFX
 
         void InitializeFirstParticle()
         {
-            if (isDynamic && this.transform.childCount == 0)
+            if (isDynamic && transform.childCount == 0)
             {
-                throw new System.Exception("[CFXR_ParticleText] A disabled GameObject with a ParticleSystem component is required as the first child when 'isDyanmic' is enabled, so that its settings can be used as a base for the generated characters.");
+                throw new Exception("[CFXR_ParticleText] A disabled GameObject with a ParticleSystem component is required as the first child when 'isDyanmic' is enabled, so that its settings can be used as a base for the generated characters.");
             }
 
-            var ps = isDynamic ? this.transform.GetChild(0).GetComponent<ParticleSystem>() : this.GetComponent<ParticleSystem>();
+            var ps = isDynamic ? transform.GetChild(0).GetComponent<ParticleSystem>() : GetComponent<ParticleSystem>();
             var main = ps.main;
             baseLifetime = main.startLifetime.constant;
             baseScaleX = main.startSizeXMultiplier;
@@ -155,7 +154,7 @@ namespace CartoonFX
 
             if (Application.isPlaying && !isDynamic)
             {
-                throw new System.Exception("[CFXR_ParticleText] You cannot update the text at runtime if it's not marked as dynamic.");
+                throw new Exception("[CFXR_ParticleText] You cannot update the text at runtime if it's not marked as dynamic.");
             }
 
             if (newText != null)
@@ -176,27 +175,27 @@ namespace CartoonFX
                     if (char.IsWhiteSpace(c)) continue;
                     if (font.CharSequence.IndexOf(c) < 0)
                     {
-                        throw new System.Exception("[CFXR_ParticleText] Invalid character supplied for the dynamic text: '" + c + "'\nThe allowed characters from the selected font are: " + font.CharSequence);
+                        throw new Exception("[CFXR_ParticleText] Invalid character supplied for the dynamic text: '" + c + "'\nThe allowed characters from the selected font are: " + font.CharSequence);
                     }
                 }
 
-                this.text = newText;
+                text = newText;
             }
 
-            if (newSize != null) this.size = newSize.Value;
-            if (newColor1 != null) this.color1 = newColor1.Value;
-            if (newColor2 != null) this.color2 = newColor2.Value;
-            if (newBackgroundColor != null) this.backgroundColor = newBackgroundColor.Value;
-            if (newLifetimeMultiplier != null) this.lifetimeMultiplier = newLifetimeMultiplier.Value;
+            if (newSize != null) size = newSize.Value;
+            if (newColor1 != null) color1 = newColor1.Value;
+            if (newColor2 != null) color2 = newColor2.Value;
+            if (newBackgroundColor != null) backgroundColor = newBackgroundColor.Value;
+            if (newLifetimeMultiplier != null) lifetimeMultiplier = newLifetimeMultiplier.Value;
 
             if (text == null || font == null || !font.IsValid())
             {
                 return;
             }
 
-            if (this.transform.childCount == 0)
+            if (transform.childCount == 0)
             {
-                throw new System.Exception("[CFXR_ParticleText] A disabled GameObject with a ParticleSystem component is required as the first child when 'isDyanmic' is enabled, so that its settings can be used as a base for the generated characters.");
+                throw new Exception("[CFXR_ParticleText] A disabled GameObject with a ParticleSystem component is required as the first child when 'isDyanmic' is enabled, so that its settings can be used as a base for the generated characters.");
             }
 
             // process text and calculate total width offset
@@ -248,17 +247,17 @@ namespace CartoonFX
             if (charCount > 0)
             {
                 // calculate needed instances
-                int childCount = this.transform.childCount - (isDynamic ? 1 : 0); // first one is the particle source and always deactivated
+                int childCount = transform.childCount - (isDynamic ? 1 : 0); // first one is the particle source and always deactivated
                 if (childCount < charCount)
                 {
                     // instantiate new letter GameObjects if needed
-                    GameObject model = isDynamic ? this.transform.GetChild(0).gameObject : null;
+                    GameObject model = isDynamic ? transform.GetChild(0).gameObject : null;
                     for (int i = childCount; i < charCount; i++)
                     {
-                        var newLetter = isDynamic ? Instantiate(model, this.transform) : new GameObject();
+                        var newLetter = isDynamic ? Instantiate(model, transform) : new GameObject();
                         if (!isDynamic)
                         {
-                            newLetter.transform.SetParent(this.transform);
+                            newLetter.transform.SetParent(transform);
                             newLetter.AddComponent<ParticleSystem>();
                         }
 
@@ -273,8 +272,8 @@ namespace CartoonFX
                 int currentChild = isDynamic ? 0 : -1;
 
                 // when not dynamic, we use CopySerialized to propagate the settings to the instances
-                var sourceParticle = isDynamic ? null : this.GetComponent<ParticleSystem>();
-                var sourceParticleRenderer = this.GetComponent<ParticleSystemRenderer>();
+                var sourceParticle = isDynamic ? null : GetComponent<ParticleSystem>();
+                var sourceParticleRenderer = GetComponent<ParticleSystemRenderer>();
 
                 for (int i = 0; i < text.Length; i++)
                 {
@@ -299,7 +298,7 @@ namespace CartoonFX
                         totalWidth += (charWidth * 0.01f + letterSpacing) * size;
 
                         // update particle system for this letter
-                        var letterObj = this.transform.GetChild(currentChild).gameObject;
+                        var letterObj = transform.GetChild(currentChild).gameObject;
                         letterObj.name = letter.ToString();
                         var ps = letterObj.GetComponent<ParticleSystem>();
 #if UNITY_EDITOR
@@ -354,9 +353,9 @@ namespace CartoonFX
             }
 
             // set active state for needed letters only
-            for (int i = 1, l = this.transform.childCount; i < l; i++)
+            for (int i = 1, l = transform.childCount; i < l; i++)
             {
-                this.transform.GetChild(i).gameObject.SetActive(i <= charCount);
+                transform.GetChild(i).gameObject.SetActive(i <= charCount);
             }
 
 #if UNITY_EDITOR

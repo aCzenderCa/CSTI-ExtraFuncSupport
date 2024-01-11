@@ -34,7 +34,7 @@ public static class EnumHelper
     public static List<TVal>? ToList<TVal>(this LuaTable? table, Func<object, TVal>? func = null)
     {
         if (table == null) return null;
-        List<TVal> list = [];
+        List<TVal> list = new();
         for (var i = 1;; i++)
         {
             var o = table[i];

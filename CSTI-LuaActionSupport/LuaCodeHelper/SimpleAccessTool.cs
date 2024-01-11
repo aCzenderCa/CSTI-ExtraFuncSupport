@@ -178,12 +178,13 @@ public class SimpleObjAccess : CommonSimpleAccess
     }
 }
 
-public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonSimpleAccess
+public class SimpleUniqueAccess : CommonSimpleAccess
 {
-    public readonly UniqueIDScriptable UniqueIDScriptable = uniqueIDScriptable;
+    public readonly UniqueIDScriptable UniqueIDScriptable;
     private static readonly Action<UniqueIDScriptable>? GenEncounter;
+    private readonly UniqueIDScriptable _uniqueIDScriptable;
     public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
-    public bool IsInstanceEnv => uniqueIDScriptable is CardData {InstancedEnvironment: true};
+    public bool IsInstanceEnv => _uniqueIDScriptable is CardData {InstancedEnvironment: true};
 
     public override object? this[string key]
     {
@@ -226,6 +227,12 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
         {
             GenEncounter = FuncFor1_0_5.GenEncounter;
         }
+    }
+
+    public SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable)
+    {
+        _uniqueIDScriptable = uniqueIDScriptable;
+        UniqueIDScriptable = uniqueIDScriptable;
     }
 
     public string? CardDescription
@@ -278,11 +285,64 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
         }
     }
 
+    public void CompleteResearch()
+    {
+        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
+            state = BlueprintModelState.Hidden;
+
+        if (state == BlueprintModelState.Available) return;
+        GameManager.Instance.BlueprintModelStates[cardData] = BlueprintModelState.Available;
+        if (GameManager.Instance.PurchasableBlueprintCards.Contains(cardData))
+            GameManager.Instance.PurchasableBlueprintCards.Remove(cardData);
+        if (GameManager.Instance.BlueprintResearchTimes.ContainsKey(cardData))
+            GameManager.Instance.BlueprintResearchTimes.Remove(cardData);
+        if (GraphicsManager.Instance.BlueprintModelsPopup.CurrentResearch == cardData)
+            GraphicsManager.Instance.BlueprintModelsPopup.CurrentResearch = null;
+        GameManager.Instance.FinishedBlueprintResearch = cardData;
+        GraphicsManager.Instance.BlueprintModelsPopup.UpdateResearchIcon();
+    }
+
+    public void UnlockBlueprint()
+    {
+        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
+            state = BlueprintModelState.Hidden;
+        if (state is BlueprintModelState.Available or BlueprintModelState.Purchasable) return;
+        GameManager.Instance.BlueprintModelStates[cardData] = BlueprintModelState.Purchasable;
+        if (!GameManager.Instance.PurchasableBlueprintCards.Contains(cardData))
+            GameManager.Instance.PurchasableBlueprintCards.Add(cardData);
+        GraphicsManager.Instance.BlueprintModelsPopup.UpdateResearchIcon();
+    }
+
+    public void ProcessBlueprint(int time)
+    {
+        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
+            state = BlueprintModelState.Hidden;
+        if (state is BlueprintModelState.Available) return;
+        UnlockBlueprint();
+        if (GameManager.Instance.BlueprintResearchTimes.ContainsKey(cardData))
+        {
+            GameManager.Instance.BlueprintResearchTimes[cardData] += time;
+        }
+        else
+        {
+            GameManager.Instance.BlueprintResearchTimes[cardData] = time;
+        }
+
+        if (GameManager.Instance.BlueprintResearchTimes[cardData] >=
+            GameManager.DaysToTicks(cardData.BuildingDaytimeCost))
+            CompleteResearch();
+    }
+
     // language=Lua
     [TestCode("""
-              local uid = "cee786e0869369d4597877e838f2586f"
-              local ext = { Usage = 5 }
-              SimpleAccessTool[uid]:Gen(1,ext)
+              local uid = "cee786e0869369d4597877e838f2586f" ---铜长矛
+              local uid_1 = "3d2a3fb85bfa7d042b0388308b2b1fd5" ---箭矢蓝图
+              local ext = { Usage = 5,SlotType="Location",CurrentBpStage=0 }
+              SimpleAccessTool[uid_1]:CompleteResearch()
+              SimpleAccessTool[uid_1]:Gen(1,ext)
               """)]
     public void Gen(int count = 1, LuaTable? ext = null)
     {
@@ -309,6 +369,8 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
                 StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
             };
             DataNodeTableAccessBridge? initData = null;
+            var forceSlotInfo = new SlotInfo(SlotsTypes.Base, -10086);
+            var forceBpData = new BlueprintSaveData(null, null) {CurrentStage = -10086};
             if (ext != null)
             {
                 tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -320,7 +382,7 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
                 tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
                 tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
                 tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
-                
+
                 GenAfterEnvChange.TryModBy(ext[nameof(GenAfterEnvChange)]);
 
                 var card =
@@ -330,30 +392,32 @@ public class SimpleUniqueAccess(UniqueIDScriptable uniqueIDScriptable) : CommonS
 
                 count.TryModBy(ext[nameof(count)]);
 
+                if (ext[nameof(forceSlotInfo.SlotType)] is string slotType &&
+                    Enum.TryParse(slotType, out forceSlotInfo.SlotType))
+                {
+                    forceSlotInfo.SlotIndex = -2;
+                }
+
+                forceBpData.CurrentStage.TryModBy(ext["CurrentBpStage"]);
+
                 if (ext[nameof(initData)] is DataNodeTableAccessBridge dataNodeTable)
                     initData = dataNodeTable;
             }
 
-            var GenPriority = GenAfterEnvChange?PriorityEnumerators.AfterEnvChange:PriorityEnumerators.Normal;
+            var GenPriority = GenAfterEnvChange ? PriorityEnumerators.AfterEnvChange : PriorityEnumerators.Normal;
+            var enumerators = new List<IEnumerator>();
             if (cardData.CardType != CardTypes.Liquid)
             {
                 for (var i = 0; i < count; i++)
                 {
-                    if (initData != null)
-                    {
-                        GameManager.Instance.MoniAddCard(cardData, null,
-                            tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
-                            SetInitData, initData).Add2AllEnumerators(GenPriority);
-                    }
-                    else
-                    {
-                        GameManager.Instance.AddCard(cardData, null, true,
-                                tDur, true, sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), false)
-                            .Add2AllEnumerators(GenPriority);
-                    }
+                    GameManager.Instance.MoniAddCard(cardData, null,
+                        tDur, forceSlotInfo, forceBpData, true, sLiq,
+                        new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
+                        SetInitData, initData).Add2Li(enumerators);
                 }
             }
 
+            enumerators.Add2AllEnumerators(GenPriority);
             return;
         }
 

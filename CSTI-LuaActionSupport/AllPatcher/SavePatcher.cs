@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSTI_LuaActionSupport.LuaCodeHelper;
-using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.SaveEnv;
 using HarmonyLib;
 using UnityEngine;
+using static CSTI_LuaActionSupport.AllPatcher.SavePatcher.SaveEnv;
 using Base64 = gfoidl.Base64.Base64;
 
 namespace CSTI_LuaActionSupport.AllPatcher;
@@ -200,7 +200,7 @@ public static class SavePatcher
             return;
         }
 
-        saveData.AllEndgameLogs ??= [];
+        saveData.AllEndgameLogs ??= new List<LogSaveData>();
         if (saveData.AllEndgameLogs.Count > 0 && saveData.AllEndgameLogs[0].CategoryID == LuaLongTimeSaveId)
         {
             var saveDataAllEndgameLog = saveData.AllEndgameLogs[0];

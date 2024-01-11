@@ -143,7 +143,7 @@ public static class LuaSystem
     {
         public static int MaxLength = 256;
 
-        public readonly List<(string, string)> Stack = [];
+        public readonly List<(string, string)> Stack = new();
 
         public void Push(string uid, string eid)
         {
@@ -359,7 +359,7 @@ public static class LuaSystem
     }
 
     public static readonly Dictionary<string, Dictionary<string, Dictionary<string, List<LuaFunction>>>>
-        AllSystems = [];
+        AllSystems = new();
 
     [LuaFunc]
     public static void AddSystem(string type, string sys_type, string uid, LuaFunction function)

@@ -15,7 +15,7 @@ public static class TryModifyPack
     private static MulticastDelegate GenTryNum(Type self, Type tIn)
     {
         var dynamicMethod = new DynamicMethod($"TryModifyPack_TryNum_{self.Name}_{tIn.Name}", self,
-            [typeof(object)], typeof(TryModifyPack));
+            new[] {typeof(object)}, typeof(TryModifyPack));
         var ilGenerator = dynamicMethod.GetILGenerator();
         ilGenerator.Emit(OpCodes.Ldarg_0);
         ilGenerator.Emit(OpCodes.Unbox_Any, tIn);

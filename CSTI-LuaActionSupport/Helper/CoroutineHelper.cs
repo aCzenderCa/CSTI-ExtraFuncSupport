@@ -8,10 +8,15 @@ namespace CSTI_LuaActionSupport.Helper;
 
 public static class CoroutineHelper
 {
-    public class CoroutineQueue(Queue<List<IEnumerator>> allCoroutines)
+    public class CoroutineQueue
     {
-        public Queue<List<IEnumerator>> AllCoroutines = allCoroutines;
-        public Queue<CoroutineController>? CurCoroutineControllers;
+        public Queue<List<List<IEnumerator>>> AllCoroutines;
+        public Queue<CoroutineController> CurCoroutineControllers = new();
+
+        public CoroutineQueue(Queue<List<List<IEnumerator>>> allCoroutines)
+        {
+            AllCoroutines = allCoroutines;
+        }
 
         public int Count => AllCoroutines.Sum(list => list.Count) +
                             (CurCoroutineControllers?.Count ?? 0);
@@ -21,7 +26,7 @@ public static class CoroutineHelper
             if (!GameManager.Instance)
             {
                 AllCoroutines.Clear();
-                CurCoroutineControllers = null;
+                CurCoroutineControllers.Clear();
                 return;
             }
 
@@ -30,8 +35,8 @@ public static class CoroutineHelper
             {
                 CurCoroutineControllers = CurCoroutineControllers
             };
-            CurCoroutineControllers = null;
-            AllCoroutines = new Queue<List<IEnumerator>>();
+            CurCoroutineControllers.Clear();
+            AllCoroutines = new Queue<List<List<IEnumerator>>>();
             Runtime.StartCoroutine(process(cache));
             return;
 
@@ -54,36 +59,41 @@ public static class CoroutineHelper
             if (!GameManager.Instance)
             {
                 AllCoroutines.Clear();
-                CurCoroutineControllers = null;
+                CurCoroutineControllers.Clear();
                 return null;
             }
 
             if (Count == 0) return null;
 
-            while (CurCoroutineControllers == null || CurCoroutineControllers.Count == 0)
+            while (CurCoroutineControllers.Count == 0)
             {
-                CurCoroutineControllers = new Queue<CoroutineController>();
-                var enumerators = AllCoroutines.Dequeue();
-                foreach (var enumerator in enumerators)
+                CurCoroutineControllers.Clear();
+                var enumerators = AllCoroutines.Peek();
+                if (enumerators.Count > 0)
                 {
-                    GameManager.Instance.StartCoroutineEx(enumerator, out var controller);
-                    CurCoroutineControllers.Enqueue(controller);
+                    foreach (var enumerator in enumerators[0])
+                    {
+                        GameManager.Instance.StartCoroutineEx(enumerator, out var controller);
+                        CurCoroutineControllers.Enqueue(controller);
+                    }
+
+                    enumerators.RemoveAt(0);
+                    if (enumerators.Count == 0) AllCoroutines.Dequeue();
+                }
+                else
+                {
+                    AllCoroutines.Dequeue();
                 }
             }
 
             var coroutineController = CurCoroutineControllers.Dequeue();
-            if (CurCoroutineControllers.Count == 0)
-            {
-                CurCoroutineControllers = null;
-            }
-
             return coroutineController;
         }
     }
 
     public static CoroutineQueue ProcessCache(this GameManager manager)
     {
-        var queue = new Queue<List<IEnumerator>>();
+        var queue = new Queue<List<List<IEnumerator>>>();
         foreach (var enumerators in from pEnumerators in AllEnumerators
                  orderby pEnumerators.Key descending
                  select pEnumerators.Value)

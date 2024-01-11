@@ -37,7 +37,7 @@ public static class DataAccessTool
     public static IEnumerable<InGameCardBase> ProcessType(this IEnumerable<InGameCardBase> enumerable, string type,
         CardData? cardData)
     {
-        List<InGameCardBase> list = [];
+        List<InGameCardBase> list = new();
         return type switch
         {
             nameof(SlotsTypes.Equipment) => enumerable.Where(cardBase =>
@@ -53,9 +53,9 @@ public static class DataAccessTool
                 cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Location),
             nameof(SlotsTypes.Inventory) => enumerable.Where(cardBase =>
                 cardBase.CurrentSlotInfo.SlotType == SlotsTypes.Inventory),
-            nameof(SlotsTypes.Environment) => [GameManager.Instance.CurrentEnvironmentCard],
-            nameof(SlotsTypes.Weather) => [GameManager.Instance.CurrentWeatherCard],
-            nameof(SlotsTypes.Explorable) => [GameManager.Instance.CurrentExplorableCard],
+            nameof(SlotsTypes.Environment) => new []{GameManager.Instance.CurrentEnvironmentCard},
+            nameof(SlotsTypes.Weather) => new []{GameManager.Instance.CurrentWeatherCard},
+            nameof(SlotsTypes.Explorable) => new []{GameManager.Instance.CurrentExplorableCard},
             "OnlyBackGround" => enumerable.Where(cardBase => cardBase.InBackground),
             "NotBackGround" => enumerable.Where(cardBase => !cardBase.InBackground),
             _ => enumerable
@@ -248,7 +248,7 @@ public class DebugBridge
             if (key is LuaTable keyTable && cache?.Contains(keyTable) is not true)
             {
                 stringBuilder.Append(TableToString(keyTable,
-                    cache == null ? [table] : cache.Append(table).ToList()));
+                    cache == null ? new List<LuaTable> {table} : cache.Append(table).ToList()));
             }
             else
             {
@@ -259,7 +259,7 @@ public class DebugBridge
             if (val is LuaTable valTable && cache?.Contains(valTable) is not true)
             {
                 stringBuilder.Append(TableToString(valTable,
-                    cache == null ? [table] : cache.Append(table).ToList()));
+                    cache == null ? new List<LuaTable> {table} : cache.Append(table).ToList()));
             }
             else
             {
@@ -272,9 +272,14 @@ public class DebugBridge
     }
 }
 
-public class GameStatAccessBridge(InGameStat gameStat)
+public class GameStatAccessBridge
 {
-    public readonly InGameStat GameStat = gameStat;
+    public readonly InGameStat GameStat;
+
+    public GameStatAccessBridge(InGameStat gameStat)
+    {
+        GameStat = gameStat;
+    }
 
     public float Value
     {

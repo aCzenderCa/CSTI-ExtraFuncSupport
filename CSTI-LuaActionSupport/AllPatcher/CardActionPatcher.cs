@@ -150,6 +150,12 @@ public static class CardActionPatcher
                 dataNodes[key] = dataNode;
                 break;
             }
+            case int l:
+            {
+                var dataNode = new DataNode(l);
+                dataNodes[key] = dataNode;
+                break;
+            }
             case string s:
             {
                 var dataNode = new DataNode(s);
@@ -202,7 +208,7 @@ public static class CardActionPatcher
         }
     }
 
-    public class DataNodeTableAccessBridge(Dictionary<string, DataNode>? table)
+    public class DataNodeTableAccessBridge
     {
         public LuaTable? LuaTable
         {
@@ -261,7 +267,13 @@ public static class CardActionPatcher
             set => CommonSave(Table, key, value);
         }
 
-        public readonly Dictionary<string, DataNode>? Table = table;
+        public readonly Dictionary<string, DataNode>? Table;
+
+        public DataNodeTableAccessBridge(Dictionary<string, DataNode>? table)
+        {
+            Table = table;
+        }
+
         public Dictionary<string, DataNode>.KeyCollection? Keys => Table?.Keys;
         public int Count => Table?.Count ?? 0;
     }
@@ -297,7 +309,7 @@ public static class CardActionPatcher
         }
     }
 
-    public class PriorityEnumerators(List<IEnumerator> _Enumerators, int _Priority)
+    public class PriorityEnumerators
     {
         public const int BeforeAll = 1000;
         public const int BeforeTimeChange = 300;
@@ -308,33 +320,52 @@ public static class CardActionPatcher
         public const int SuperLow = -200;
         public const int EnvChange = -1000;
         public const int AfterEnvChange = -2000;
-        public readonly List<IEnumerator> ThisEnumerators = _Enumerators;
-        public readonly int Priority = _Priority;
+        public readonly List<List<IEnumerator>> ThisEnumerators;
+        public readonly int Priority;
+
+        public static PriorityEnumerators Get(int priority)
+        {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (AllEnumerators == null) return new PriorityEnumerators(new List<List<IEnumerator>>(), priority);
+            if (AllEnumerators.TryGetValue(priority, out var priorityEnumerators))
+                return priorityEnumerators;
+            AllEnumerators[priority] = new PriorityEnumerators(new List<List<IEnumerator>>(), priority);
+            return AllEnumerators[priority];
+        }
+
+        public PriorityEnumerators(List<List<IEnumerator>> _Enumerators, int _Priority)
+        {
+            ThisEnumerators = _Enumerators;
+            Priority = _Priority;
+        }
+    }
+
+    public static void Add2Li(this IEnumerator item, List<IEnumerator> list)
+    {
+        list.Add(item);
     }
 
     public static void Add2AllEnumerators(this IEnumerator enumerator, int _Priority)
     {
-        if (AllEnumerators.TryGetValue(_Priority, out var priorityEnumerators))
-        {
-            priorityEnumerators.ThisEnumerators.Add(enumerator);
-        }
-        else
-        {
-            AllEnumerators[_Priority] = new PriorityEnumerators([enumerator], _Priority);
-        }
+        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> {enumerator});
+    }
+
+    public static void Add2AllEnumerators(this List<IEnumerator> enumerators, int _Priority)
+    {
+        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(enumerators);
     }
 
     public static readonly Dictionary<int, PriorityEnumerators> AllEnumerators = new()
     {
-        {PriorityEnumerators.BeforeAll, new PriorityEnumerators([], PriorityEnumerators.BeforeAll)},
-        {PriorityEnumerators.BeforeTimeChange, new PriorityEnumerators([], PriorityEnumerators.BeforeTimeChange)},
-        {PriorityEnumerators.SuperHigh, new PriorityEnumerators([], PriorityEnumerators.SuperHigh)},
-        {PriorityEnumerators.High, new PriorityEnumerators([], PriorityEnumerators.High)},
-        {PriorityEnumerators.Normal, new PriorityEnumerators([], PriorityEnumerators.Normal)},
-        {PriorityEnumerators.Low, new PriorityEnumerators([], PriorityEnumerators.Low)},
-        {PriorityEnumerators.SuperLow, new PriorityEnumerators([], PriorityEnumerators.SuperLow)},
-        {PriorityEnumerators.EnvChange, new PriorityEnumerators([], PriorityEnumerators.EnvChange)},
-        {PriorityEnumerators.AfterEnvChange, new PriorityEnumerators([], PriorityEnumerators.AfterEnvChange)},
+        {PriorityEnumerators.BeforeAll, PriorityEnumerators.Get(PriorityEnumerators.BeforeAll)},
+        {PriorityEnumerators.BeforeTimeChange, PriorityEnumerators.Get(PriorityEnumerators.BeforeTimeChange)},
+        {PriorityEnumerators.SuperHigh, PriorityEnumerators.Get(PriorityEnumerators.SuperHigh)},
+        {PriorityEnumerators.High, PriorityEnumerators.Get(PriorityEnumerators.High)},
+        {PriorityEnumerators.Normal, PriorityEnumerators.Get(PriorityEnumerators.Normal)},
+        {PriorityEnumerators.Low, PriorityEnumerators.Get(PriorityEnumerators.Low)},
+        {PriorityEnumerators.SuperLow, PriorityEnumerators.Get(PriorityEnumerators.SuperLow)},
+        {PriorityEnumerators.EnvChange, PriorityEnumerators.Get(PriorityEnumerators.EnvChange)},
+        {PriorityEnumerators.AfterEnvChange, PriorityEnumerators.Get(PriorityEnumerators.AfterEnvChange)},
     };
 
     public static Lua InitRuntime(GameManager __instance)

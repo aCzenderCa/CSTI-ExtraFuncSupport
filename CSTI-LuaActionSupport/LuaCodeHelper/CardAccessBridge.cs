@@ -14,9 +14,9 @@ using Object = UnityEngine.Object;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
-public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
+public class CardAccessBridge : LuaAnim.ITransProvider
 {
-    public readonly InGameCardBase? CardBase = CardBase;
+    public readonly InGameCardBase? CardBase;
 
     public static readonly Regex KVDataCheck = new(@"zender\.luaSupportData\.\{(?<key>.+?)\}:\{(?<val>.+?)\}");
 
@@ -327,6 +327,11 @@ public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
     private DataNode? _dataNode;
     private static readonly Regex DataNodeReg = new(@"^LNbt\|\>(?<nbt>.+?)\<\|$");
 
+    public CardAccessBridge(InGameCardBase? CardBase)
+    {
+        this.CardBase = CardBase;
+    }
+
     // language=Lua
     [TestCode("""
               receive:InitData()
@@ -602,6 +607,8 @@ public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
             StayEmpty = !cardData.DefaultLiquidContained.LiquidCard
         };
         DataNodeTableAccessBridge? initData = null;
+        var forceSlotInfo = new SlotInfo(SlotsTypes.Base, -10086);
+        var forceBpData = new BlueprintSaveData(null, null) {CurrentStage = -10086};
         if (ext != null)
         {
             tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -620,20 +627,30 @@ public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
             sLiq.StayEmpty = !card;
 
             count.TryModBy(ext[nameof(count)]);
+            if (ext[nameof(forceSlotInfo.SlotType)] is string slotType &&
+                Enum.TryParse(slotType, out forceSlotInfo.SlotType))
+            {
+                forceSlotInfo.SlotIndex = -2;
+            }
+
+            forceBpData.CurrentStage.TryModBy(ext["CurrentBpStage"]);
 
             if (ext[nameof(initData)] is DataNodeTableAccessBridge dataNodeTable)
                 initData = dataNodeTable;
         }
 
         var i = 0;
+        var enumerators = new List<IEnumerator>();
         do
         {
             i += 1;
 
-            GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, true,
+            GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, forceSlotInfo, forceBpData, true,
                 sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), SimpleUniqueAccess.SetInitData,
-                initData).Add2AllEnumerators(PriorityEnumerators.Normal);
+                initData).Add2Li(enumerators);
         } while (i < count && cardData.CardType != CardTypes.Liquid);
+
+        enumerators.Add2AllEnumerators(PriorityEnumerators.Normal);
     }
 
     public void Remove(bool doDrop, bool dontInstant = false)
@@ -648,7 +665,7 @@ public class CardAccessBridge(InGameCardBase? CardBase):LuaAnim.ITransProvider
                         return true;
                     }
 
-                    if (InGameCardBase.DroppedCard==card)
+                    if (InGameCardBase.DroppedCard == card)
                     {
                         return true;
                     }

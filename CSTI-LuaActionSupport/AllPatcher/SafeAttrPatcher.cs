@@ -24,7 +24,7 @@ public static class SafeAttrPatcher
     [HarmonyPostfix]
     public static void SafePatchWithAttributes(IList __result)
     {
-        List<int> needRemove = [];
+        List<int> needRemove = new();
         for (var index = 0; index < __result.Count; index++)
         {
             var o = __result[index];

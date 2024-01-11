@@ -108,6 +108,12 @@
         <Compile Include="Util\EnumHelper.cs" />
         <Compile Include="Util\SafeRemoveUtil.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\CSTI-LuaActionSupport\CSTI-LuaActionSupport.csproj">
+        <Project>{54ac3242-0864-4c87-9d42-1fce87e33085}</Project>
+        <Name>CSTI-LuaActionSupport</Name>
+      </ProjectReference>
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

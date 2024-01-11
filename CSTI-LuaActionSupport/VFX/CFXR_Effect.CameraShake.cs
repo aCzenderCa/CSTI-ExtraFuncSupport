@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,7 +10,7 @@ namespace CartoonFX
 {
 	public partial class CFXR_Effect : MonoBehaviour
 	{
-		[System.Serializable]
+		[Serializable]
 		public class CameraShake
 		{
 			public enum ShakeSpace
@@ -22,20 +23,20 @@ namespace CartoonFX
 
 			//--------------------------------------------------------------------------------------------------------------------------------
 
-			public bool enabled = false;
+			public bool enabled;
 			[Space]
 			public bool useMainCamera = true;
 			public List<Camera> cameras = new List<Camera>();
 			[Space]
-			public float delay = 0.0f;
+			public float delay;
 			public float duration = 1.0f;
 			public ShakeSpace shakeSpace = ShakeSpace.Screen;
 			public Vector3 shakeStrength = new Vector3(0.1f, 0.1f, 0.1f);
 			public AnimationCurve shakeCurve = AnimationCurve.Linear(0, 1, 1, 0);
 			[Space]
-			[Range(0, 0.1f)] public float shakesDelay = 0;
+			[Range(0, 0.1f)] public float shakesDelay;
 
-			[System.NonSerialized] public bool isShaking;
+			[NonSerialized] public bool isShaking;
 			Dictionary<Camera, Vector3> camerasPreRenderPosition = new Dictionary<Camera, Vector3>();
 			Vector3 shakeVector;
 			float delaysTimer;
@@ -250,7 +251,7 @@ namespace CartoonFX
 
 					if (!isShaking)
 					{
-						this.StartShake();
+						StartShake();
 					}
 
 					// duration of the camera shake
@@ -264,12 +265,10 @@ namespace CartoonFX
 						{
 							return;
 						}
-						else
+
+						while (delaysTimer >= shakesDelay)
 						{
-							while (delaysTimer >= shakesDelay)
-							{
-								delaysTimer -= shakesDelay;
-							}
+							delaysTimer -= shakesDelay;
 						}
 					}
 

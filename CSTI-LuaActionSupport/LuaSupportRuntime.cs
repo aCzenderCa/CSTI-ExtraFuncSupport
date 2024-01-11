@@ -14,14 +14,14 @@ namespace CSTI_LuaActionSupport;
 [BepInPlugin("zender.LuaActionSupport.LuaSupportRuntime", "LuaActionSupport", ModVersion)]
 public class LuaSupportRuntime : BaseUnityPlugin
 {
-    public const string ModVersion = "1.0.3.25";
+    public const string ModVersion = "1.0.3.28";
     public static readonly Harmony HarmonyInstance = new("zender.LuaActionSupport.LuaSupportRuntime");
     public static readonly string ModInfo = "ModInfo.json";
     public static readonly string LuaInit = "LuaInit";
     public static readonly string LuaOnGameLoad = "LuaOnGameLoad";
     public static readonly string LuaOnGameSave = "LuaOnGameSave";
-    public static readonly List<string> LuaFilesOnGameLoad = [];
-    public static readonly List<string> LuaFilesOnGameSave = [];
+    public static readonly List<string> LuaFilesOnGameLoad = new();
+    public static readonly List<string> LuaFilesOnGameSave = new();
     public static LuaSupportRuntime Runtime = null!;
     public static Dictionary<string, Sprite> SpriteDict = null!;
     public static Dictionary<string, Dictionary<string, string>> AllLuaFiles = null!;

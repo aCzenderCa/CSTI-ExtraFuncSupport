@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -12,7 +11,7 @@ namespace CartoonFX
         public bool active = true;
         public float particlesPerUnit = 10;
         [Tooltip("This is to avoid slowdowns in the Editor if the value gets too high")] public float maxEmissionRate = 5000;
-        [HideInInspector] public float density = 0;
+        [HideInInspector] public float density;
 
         bool attachedToEditor;
         ParticleSystem ps;

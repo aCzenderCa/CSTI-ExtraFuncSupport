@@ -7,9 +7,7 @@ namespace ChatTreeLoader.LocalText
         public static readonly Dictionary<string, Dictionary<string, string>> LocalData = new()
         {
             {
-                "简体中文", new Dictionary<string, string>
-                {
-                }
+                "简体中文", new Dictionary<string, string>()
             },
             {
                 "English", new Dictionary<string, string>
