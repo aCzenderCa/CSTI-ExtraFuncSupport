@@ -40,6 +40,20 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 
 ## SimpleUniqueAccess——UniqueIDScriptable快速操作接口
 
+### 方法CompleteResearch：
+无参数，无返回值，如果卡牌是蓝图，直接完成该蓝图的研究
+
+### 方法UnlockBlueprint
+无参数，无返回值，如果卡牌是蓝图，解锁该蓝图
+
+### 方法ProcessBlueprint
+一个int参数time（单位tp=15分钟），无返回值，卡牌是蓝图时
+* 如果蓝图未解锁
+  * 解锁该蓝图并将研究进度初始化为time
+* 如果蓝图已解锁
+  * 为蓝图增加time研究进度
+* 进度加满时完成蓝图研究
+
 ### 方法Gen ：
 
 * 参数``count`` 生成次数
@@ -47,6 +61,9 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
   * ``UniqueIDScriptable``为``CardData``时生成count张对应卡
   * ``UniqueIDScriptable``为``Encounter``时生成一次Encounter
 * 额外参数：同``CardAccessBridge``的``AddCard``
+  * 通用：
+    * `SlotType:String`设置卡牌生成的槽位类型（设置为非Blueprint生成蓝图可以生成而非解锁），值与SlotsTypes枚举各项名称一致
+    * `CurrentBpStage:int`设置生成蓝图时其阶段，0=刚创建，1=建造过一次，以此类推
   * 特殊部分：
   * `GenAfterEnvChange:boolen`为true时在场景变更完成后再生成卡牌
 
@@ -381,6 +398,11 @@ receive:CheckInventory(true, 'a', 'b')
   * `AddCard2EnvSave`:输入`string envUid, string envSaveId, string cardId, int count`，envUid是目标场景Env卡的uid，envSaveId是目标场景数据id，cardId是要添加的卡牌的id，count是数量
   * `SuperGoToEnv`:输入`string targetUid, string targetEnvId`,targetUid为要前往的场景Env卡的uid，targetEnvId指定场景数据保存id（id不同的场景数据不同，与是否是实例化场景无关）
   * `GoToEnv`:输入`string|SimpleUniqueAccess cardData, int TravelIndex`，修改NextTravelIndex并生成cardData
+  * `EnvReturn`：从返回栈上返回上一个场景，如果返回链为空，返回false
+  * `CurReturnStack`：返回当前返回栈对象
+  * `AddCard2EnvSave`：输入`string envUid, string envSaveId, CardAccessBridge? card`，在envUid对应场景卡，envSaveId对应场景数据中添加count个cardId对应卡牌
+  * `SendCard2EnvSave`：输入`string envUid, string envSaveId, string cardId, int count`，将card卡发送到envUid对应场景卡，envSaveId对应场景数据中，card本身将被销毁
+  * `SendCard2BackEnvSave`：输入`CardAccessBridge? by, CardAccessBridge? card`，将card卡发送到返回栈上上一个场景，如果返回栈为空，则基于by卡牌调用原版api
   * `AddSystem`:输入`string type, string sys_type, string uid, LuaFunction function`
 
 * 接受的`string type, string sys_type, string uid, LuaFunction function`组合

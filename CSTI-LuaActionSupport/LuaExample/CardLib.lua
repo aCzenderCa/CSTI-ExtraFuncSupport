@@ -90,6 +90,10 @@
 ---@field public StatRateMax number
 ---@field public CacheRawValRange fun(this:SimpleUniqueAccess, x:number, y:number):void
 ---@field public CacheRawRateRange fun(this:SimpleUniqueAccess, x:number, y:number):void
+---@field CompleteResearch fun(this:SimpleUniqueAccess):void
+---@field UnlockBlueprint fun(this:SimpleUniqueAccess):void
+---@field ProcessBlueprint fun(this:SimpleUniqueAccess,time:number):void
+---
 
 ---@class GameStatAccessBridge
 ---@field public Value number
