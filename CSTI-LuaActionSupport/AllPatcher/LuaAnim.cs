@@ -161,6 +161,19 @@ public static class LuaAnim
                 cfxrEffect.animatedLights = animatedLights.ToArray();
             }
         }
+        else
+        {
+            cfxrEffect.animatedLights = new[]
+            {
+                new CFXR_Effect.AnimatedLight
+                {
+                    fadeIn = true,
+                    fadeInDuration = 0.2f,
+                    fadeOut = true,
+                    fadeOutDuration = 0.2f,
+                }
+            };
+        }
 
         return new TransProvider(fx.transform);
     }

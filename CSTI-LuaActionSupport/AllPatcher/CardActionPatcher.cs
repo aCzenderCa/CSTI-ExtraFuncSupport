@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using CSTI_LuaActionSupport.Helper;
+using CSTI_LuaActionSupport.LuaBuilder;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using CSTI_LuaActionSupport.UIStruct;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -19,8 +21,20 @@ public static class CardActionPatcher
     public static readonly Dictionary<string, DataNode> GSaveData = new();
     public static readonly Dictionary<int, Dictionary<string, DataNode>> GSlotSaveData = new();
     private const string _InnerFuncBase = "CSTI_LuaActionSupport__InnerFunc";
+    public static readonly SimpleAccessTool AccessTool = new();
     public static LuaTable InnerFuncBase => (LuaTable) LuaRuntime[_InnerFuncBase];
 
+    public static LuaTable GetModTable(string modId)
+    {
+        if (ModData[modId] is LuaTable table)
+        {
+            return table;
+        }
+
+        var modDataName = nameof(ModData) + "." + modId;
+        LuaRuntime.NewTable(modDataName);
+        return LuaRuntime.GetTable(modDataName);
+    }
 
     static CardActionPatcher()
     {
@@ -29,7 +43,7 @@ public static class CardActionPatcher
         LuaRuntime["std__debug"] = LuaRuntime["debug"];
         LuaRuntime["debug"] = DebugBridge;
         LuaRuntime[nameof(DebugBridge)] = DebugBridge;
-        LuaRuntime[nameof(SimpleAccessTool)] = new SimpleAccessTool();
+        LuaRuntime[nameof(SimpleAccessTool)] = AccessTool;
 
         LuaRuntime.Register(typeof(DataAccessTool));
         LuaRuntime.Register(typeof(CardActionPatcher));
@@ -38,6 +52,7 @@ public static class CardActionPatcher
         LuaRuntime.Register(typeof(LuaGraphics), nameof(LuaGraphics));
         LuaRuntime.Register(typeof(LuaSystem), nameof(LuaSystem));
         LuaRuntime.Register(typeof(LuaAnim), nameof(LuaAnim));
+        LuaRuntime.Register(typeof(MainBuilder), nameof(MainBuilder));
         LuaRuntime.Register<CardTypes>();
         LuaRuntime.Register<DataNode.DataNodeType>();
 
@@ -282,12 +297,42 @@ public static class CardActionPatcher
     private static void LuaActionWillHaveAnEffect(CardAction __instance, ref bool __result)
     {
         if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true ||
-            __instance.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true)
+            __instance.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true ||
+            __instance.ActionName.LocalizationKey?.StartsWith("LuaDismantleCardAction") is true)
         {
             __result = true;
         }
     }
 
+    [HarmonyPostfix,
+     HarmonyPatch(typeof(DismantleActionButton), nameof(DismantleActionButton.Setup), typeof(int),
+         typeof(DismantleCardAction), typeof(InGameCardBase), typeof(bool), typeof(bool))]
+    private static void LuaDismantleActionButton_Setup(DismantleActionButton __instance, int _Index,
+        DismantleCardAction _Action, InGameCardBase _Card)
+    {
+        if (_Action.ActionName.LocalizationKey?.StartsWith("LuaDismantleCardAction") is true)
+        {
+            var luaScriptRetValues = new LuaScriptRetValues();
+            var lua = InitRuntime(GameManager.Instance);
+            lua["Ret"] = luaScriptRetValues;
+            lua.DoString(_Action.ActionName.ParentObjectID);
+            if (luaScriptRetValues["OnSetup"] is LuaFunction OnSetup)
+            {
+                var objects = OnSetup.Call(__instance, _Action, new CardAccessBridge(_Card),
+                    _Action.ActionName.LocalizationKey);
+                if (objects.Length > 0 && objects[0] is bool show)
+                {
+                    __instance.gameObject.SafeSetActive(show);
+                }
+
+                if (objects.Length > 1 && objects[1] is bool interact)
+                {
+                    __instance.ConditionsValid = interact;
+                    __instance.Interactable = interact;
+                }
+            }
+        }
+    }
 
     [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.ActionRoutine))]
     private static void LuaCardAction(CardAction _Action, InGameCardBase _ReceivingCard, GameManager __instance,
@@ -296,6 +341,12 @@ public static class CardActionPatcher
         if (_Action.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true)
         {
             __result = __result.Prepend(LuaCardActionHelper(_Action, _ReceivingCard, __instance));
+        }
+
+        if (_Action is DismantleCardAction action &&
+            _Action.ActionName.LocalizationKey?.StartsWith("LuaDismantleCardAction") is true)
+        {
+            __result = __result.Prepend(LuaDismantleCardActionHelper(action, _ReceivingCard, __instance));
         }
     }
 
@@ -415,6 +466,59 @@ public static class CardActionPatcher
 
         var queue = __instance.ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime).ProcessCache();
 
+        while (queue.Count > 0)
+        {
+            var coroutineController = queue.Dequeue();
+            if (coroutineController == null) break;
+            while (coroutineController.state == CoroutineState.Running)
+            {
+                yield return null;
+            }
+        }
+    }
+
+    public static IEnumerator LuaDismantleCardActionHelper(DismantleCardAction _Action, InGameCardBase _ReceivingCard,
+        GameManager __instance)
+    {
+        var luaScriptRetValues = new LuaScriptRetValues();
+        var lua = InitRuntime(GameManager.Instance);
+        lua["Ret"] = luaScriptRetValues;
+        var waitTime = 0;
+        var miniWaitTime = 0;
+        var tickWaitTime = 0;
+        try
+        {
+            object? result;
+            object? miniTime;
+            object? tickTime;
+            lua.DoString(_Action.ActionName.ParentObjectID);
+            if (luaScriptRetValues["OnAct"] is LuaFunction OnAct)
+            {
+                lua["receive"] = new CardAccessBridge(_ReceivingCard);
+                OnAct.Call();
+            }
+
+            if (luaScriptRetValues.CheckKey(nameof(result), out result))
+            {
+                waitTime.TryModBy(result);
+            }
+
+            if (luaScriptRetValues.CheckKey(nameof(miniTime), out miniTime))
+            {
+                miniWaitTime.TryModBy(miniTime);
+            }
+
+            if (luaScriptRetValues.CheckKey(nameof(tickTime), out tickTime))
+            {
+                tickWaitTime.TryModBy(tickTime);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+        }
+
+        var queue = __instance.ProcessTime(_ReceivingCard, waitTime, miniWaitTime, tickWaitTime).ProcessCache();
         while (queue.Count > 0)
         {
             var coroutineController = queue.Dequeue();

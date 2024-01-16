@@ -45,8 +45,8 @@ public static class LuaSystem
         InGameCardBase _GivenCard, CardOnCardAction __result)
     {
         bool? isSendBack = null;
-        if(!_ReceivingCard)return;
-        if(!_GivenCard)return;
+        if (!_ReceivingCard) return;
+        if (!_GivenCard) return;
         if (_ReceivingCard.CardModel.CardInteractions is {Length: > 0})
         {
             foreach (var action in _ReceivingCard.CardModel.CardInteractions)
@@ -197,6 +197,8 @@ public static class LuaSystem
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.CurrentEnvData))]
     public static bool CurrentEnvData(GameManager __instance, out EnvironmentSaveData? __result, bool _CreateIfNull)
     {
+        __result = null;
+        if (!GameManager.Instance.CardsLoaded) return true;
         __instance.EnvironmentsData.TryGetValue(GetCurEnvId() ?? "", out __result);
         if (__result == null && _CreateIfNull)
             __result = __instance.SuperGetEnvSaveData(__instance.CurrentEnvironment, GetCurEnvId() ?? "");
@@ -409,5 +411,46 @@ public static class LuaSystem
                         Debug.LogWarning(e);
                     }
         }
+    }
+
+    public static readonly Dictionary<string, string> CnDict = new();
+
+    public static string CnStr(this LocalizedString s)
+    {
+        if (CnDict.Count == 0)
+        {
+            var currentLanguage = LocalizationManager.CurrentLanguage;
+            var languageSettings = LocalizationManager.Instance.Languages.ToList();
+            var languageSetting =
+                languageSettings.First(setting => setting.LanguageName == "简体中文");
+            var index = languageSettings.IndexOf(languageSetting);
+            LocalizationManager.Instance.ChangeLanguageOption = true;
+            if (currentLanguage == index)
+            {
+                if (LocalizationManager.CurrentTexts == null || LocalizationManager.CurrentTexts.Count == 0)
+                    LocalizationManager.LoadLanguage();
+                foreach (var (key, text) in LocalizationManager.CurrentTexts!)
+                {
+                    CnDict[key] = text;
+                }
+            }
+            else
+            {
+                LocalizationManager.SetLanguage(index, true);
+                foreach (var (key, text) in LocalizationManager.CurrentTexts)
+                {
+                    CnDict[key] = text;
+                }
+
+                LocalizationManager.SetLanguage(currentLanguage, true);
+            }
+        }
+
+        if (CnDict.TryGetValue(s.LocalizationKey, out var cn))
+        {
+            return cn;
+        }
+
+        return s;
     }
 }

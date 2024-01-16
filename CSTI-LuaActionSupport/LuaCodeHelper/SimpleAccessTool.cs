@@ -2,8 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Helper;
+using CSTI_LuaActionSupport.LuaBuilder;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -14,6 +16,85 @@ namespace CSTI_LuaActionSupport.LuaCodeHelper;
 
 public class SimpleAccessTool
 {
+    public static readonly Regex SUAFindCardRe = new(@"^(?<name>.+)\|Card\|(?<type>.+)$");
+    public static readonly Regex SUAFindStatRe = new(@"^(?<name>.+)\|Stat$");
+    public static readonly Dictionary<string, CardData> CardFindCache = new();
+    public static readonly Dictionary<string, GameStat> StatFindCache = new();
+
+    public static GameStat? FindStat(string key)
+    {
+        if (SUAFindStatRe.Match(key) is {Success: true} match)
+        {
+            if (StatFindCache.TryGetValue(key, out var findStat))
+            {
+                return findStat;
+            }
+
+            var name = match.Groups["name"].Value;
+            if (UniqueIDScriptable.AllUniqueObjects.FirstOrDefault(pair =>
+                        pair.Value is GameStat stat &&
+                        (stat.GameName.DefaultText == name || stat.GameName == name ||
+                         stat.name == name || stat.GameName.CnStr() == name))
+                    is var (_, _uniqueIDScriptable) && _uniqueIDScriptable != null)
+            {
+                StatFindCache[key] = (GameStat) _uniqueIDScriptable;
+                return (GameStat) _uniqueIDScriptable;
+            }
+
+            if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(us =>
+                    us is GameStat stat &&
+                    (stat.GameName.DefaultText == name || stat.GameName == name ||
+                     stat.name == name || stat.GameName.CnStr() == name))
+                is { } __uniqueIDScriptable)
+            {
+                StatFindCache[key] = (GameStat) __uniqueIDScriptable;
+                return (GameStat) __uniqueIDScriptable;
+            }
+        }
+
+        return null;
+    }
+
+    public static CardData? FindCard(string key)
+    {
+        if (MainBuilder.Name2Card.TryGetValue(key, out var namedCard))
+        {
+            return namedCard;
+        }
+
+        if (SUAFindCardRe.Match(key) is {Success: true} match)
+        {
+            if (CardFindCache.TryGetValue(key, out var findCard))
+            {
+                return findCard;
+            }
+
+            var name = match.Groups["name"].Value;
+            var type = match.Groups["type"].Value;
+            if (UniqueIDScriptable.AllUniqueObjects.FirstOrDefault(pair =>
+                        pair.Value is CardData cardData && cardData.CardType.ToString() == type &&
+                        (cardData.CardName.DefaultText == name || cardData.CardName == name ||
+                         cardData.name == name || cardData.CardName.CnStr() == name))
+                    is var (_, _uniqueIDScriptable) && _uniqueIDScriptable != null)
+            {
+                CardFindCache[key] = (CardData) _uniqueIDScriptable;
+                return (CardData) _uniqueIDScriptable;
+            }
+
+            if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(us =>
+                    us is CardData cardData && cardData.CardType.ToString() == type &&
+                    (cardData.CardName.DefaultText == name || cardData.CardName == name ||
+                     cardData.name == name || cardData.CardName.CnStr() == name))
+                is { } __uniqueIDScriptable)
+            {
+                CardFindCache[key] = (CardData) __uniqueIDScriptable;
+                return (CardData) __uniqueIDScriptable;
+            }
+        }
+
+        return null;
+    }
+
     public SimpleUniqueAccess? this[string key]
     {
         get
@@ -21,6 +102,20 @@ public class SimpleAccessTool
             if (UniqueIDScriptable.AllUniqueObjects.TryGetValue(key, out var uniqueIDScriptable))
             {
                 return new SimpleUniqueAccess(uniqueIDScriptable);
+            }
+
+            if (FindCard(key) is { } cardData)
+            {
+                return new SimpleUniqueAccess(cardData);
+            }
+
+            if (FindStat(key) is { } stat)
+            {
+                return new SimpleUniqueAccess(stat);
+            }
+            if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(scriptable => scriptable.UniqueID == key) is {} idScriptable)
+            {
+                return new SimpleUniqueAccess(idScriptable);
             }
 
             Debug.LogWarning($"no unique id : {key}");
@@ -341,7 +436,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
               local uid = "cee786e0869369d4597877e838f2586f" ---铜长矛
               local uid_1 = "3d2a3fb85bfa7d042b0388308b2b1fd5" ---箭矢蓝图
               local ext = { Usage = 5,SlotType="Location",CurrentBpStage=0 }
-              SimpleAccessTool[uid_1]:CompleteResearch()
+              ---SimpleAccessTool[uid_1]:CompleteResearch()
               SimpleAccessTool[uid_1]:Gen(1,ext)
               """)]
     public void Gen(int count = 1, LuaTable? ext = null)

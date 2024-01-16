@@ -9,7 +9,7 @@ public class AnimCard : MonoBehaviour
 {
     public InGameCardBase CardBase = null!;
     public List<string>? AnimList;
-    public List<float>? AnimTimeList;
+    public List<float> AnimTimeList;
 
     private int _CurAnimIndex;
 
@@ -31,7 +31,7 @@ public class AnimCard : MonoBehaviour
     public float CurTime;
     private readonly LuaTimer.SimpleTimer SimpleTimer = new(0.02f, 0);
 
-    public void Init(List<string>? animList, List<float>? animTimeList)
+    public void Init(List<string>? animList, List<float> animTimeList)
     {
         CurTime = 0;
         _CurAnimIndex = 0;

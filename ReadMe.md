@@ -10,6 +10,14 @@
 
 #### 如果是CardOnCardAction，ActionName的LocalizationKey以LuaCardOnCardAction开头启用lua支持
 
+#### 如果是DismantleCardAction，ActionName的LocalizationKey以LuaDismantleCardAction开头启用独特的lua支持
+
+* 特殊格式说明
+  * LuaDismantleCardAction：直接lua代码中不应当包含实际内容（因为按钮显示时和action执行时都会执行其中的代码）
+    * 设置Ret["OnSetup"]为fun(DismantleActionButton,DismantleCardAction,CardAccessBridge,LocalizationKey){与DismantleActionButton.Setup的patch要求一致，返回值效果也一致}
+    * 设置Ret["OnAct"]为无输入无输出function，该function会在action被执行时执行，对Ret的修改的效果与LuaCardAction中一致
+    * OnAct执行时，全局表中包含receive，直接代码和OnSetup执行时不包含receive
+
 ## 术语说明
 
 ### 额外参数
@@ -35,6 +43,9 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
 
 索引器 参数类型 ``string`` 传入uid
 返回``SimpleUniqueAccess``
+* 搜索格式
+  * "中文名|Card|卡牌类型"=>搜索指定名称，指定类型（如Item）的卡牌
+  * "中文名|Stat"=>搜索指定名称的GameStat
 * 成员函数
   * void ClearCurrentEnv() 清空并重置当前场景
 
@@ -292,6 +303,11 @@ receive:CheckInventory(true, 'a', 'b')
 
 ``"LiquidCard"``：``SimpleUniqueAccess``类型，伴随生成什么流体
   * `"initData"`:`DataNodeTableAccessBridge`类型，初始化携带的lua-nbt数据
+
+### `AddExpProgress`
+* 参数：`float amt`
+* 无返回值
+  * 如果卡牌是Exp类型，则增加相应的进度值（总上下限0-1）
 
 ### `Remove`：
 

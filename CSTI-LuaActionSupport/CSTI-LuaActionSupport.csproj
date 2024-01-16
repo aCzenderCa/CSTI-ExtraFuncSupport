@@ -173,6 +173,10 @@
         <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <HintPath>..\packages\System.Xml.ReaderWriter.4.3.0\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
         </Reference>
+        <Reference Include="Unity.TextMeshPro">
+          <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Card Survival Tropical Island\Card Survival - Tropical Island_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine">
           <HintPath>..\..\Libs\UnityEngine.dll</HintPath>
           <Private>False</Private>
@@ -236,6 +240,9 @@
         <Compile Include="Helper\AnotherAddCard.cs" />
         <Compile Include="Helper\CoroutineHelper.cs" />
         <Compile Include="Helper\TryModifyPack.cs" />
+        <Compile Include="LuaBuilder\CardDataModels\BaseItemModel.cs" />
+        <Compile Include="LuaBuilder\CardDataModels\CardDataPack.cs" />
+        <Compile Include="LuaBuilder\MainBuilder.cs" />
         <Compile Include="LuaCodeHelper\CardAccessBridge.cs" />
         <Compile Include="LuaCodeHelper\DataAccessTool.cs" />
         <Compile Include="LuaCodeHelper\DataChangeHelper.cs" />
@@ -251,6 +258,9 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="UIStruct\AnimCard.cs" />
         <Compile Include="UIStruct\CustomUIManager.cs" />
+        <Compile Include="UIStruct\UIManagers.cs" />
+        <Compile Include="UIStruct\UIStructs.cs" />
+        <Compile Include="UIStruct\UITools.cs" />
         <Compile Include="VFX\CFXR_Effect.CameraShake.cs" />
         <Compile Include="VFX\CFXR_Effect.cs" />
         <Compile Include="VFX\CFXR_EmissionBySurface.cs" />

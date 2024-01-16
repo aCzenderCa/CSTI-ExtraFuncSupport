@@ -1,4 +1,28 @@
+---@class ModData
+---@field [string] any
 ModData = {}
+
+---@class UIManagers
+---@field CreateModel fun(x:number, y:number, w:number, h:number, bg:string, fg:string,init:fun,slots:table, buttons:table):UIModel
+UIManagers = {}
+
+---@class UIModel
+---@field RegForCard fun(this:UIModel,uid:string):void
+---
+
+---@class MainBuilder
+---@field BuildBase fun(name:string,desc?:string,weight?:number,img?:string):CardDataPack
+---@field BuildLocation fun(name:string,desc?:string,weight?:number,img?:string):CardDataPack
+---@field BeginMod fun(id:string):void
+MainBuilder = {}
+
+---@class CardDataPack
+---@field AddButton fun(this:CardDataPack,name:string,lua:fun(),desc?:(fun():string)|string,addTo?:string):CardDataPack
+---@field SetDesc fun(this:CardDataPack,lua:(fun():string)|string,setTo?:string):CardDataPack
+---@field SetWeight fun(this:CardDataPack,weight:number,setTo?:string):CardDataPack
+---@field SetSlots fun(this:CardDataPack,count:number,content?:table<number,SimpleUniqueAccess>,setTo?:string):CardDataPack
+---@field AddInter fun(this:CardDataPack,name:string,lua:fun(),acceptCards:table<number,SimpleUniqueAccess>,acceptTags:table<number,string>,doubleWay?:boolean,desc?:(fun():string)|string,addTo?:string):CardDataPack
+---
 
 ---@type CardAccessBridge
 receive = nil
@@ -51,6 +75,7 @@ LuaTimer = {}
 ---@alias sys_type "OnUpdate"|"PostInit"
 ---@alias sys_this_type "InGameCardBase"
 ---@class LuaSystem
+---@field ClearDragStat fun():void
 ---@field AddSystem fun(type:sys_this_type,sys_type:sys_type,uid:string,function:fun(this:any):void):void
 ---@field SuperGoToEnv fun(targetUid:string,targetEnvId:string):void
 ---@field GoToEnv fun(cardData:string,TravelIndex:number):void

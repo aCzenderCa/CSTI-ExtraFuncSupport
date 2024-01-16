@@ -174,6 +174,8 @@ public static class AnotherAddCard
 
     public static EnvironmentSaveData? SuperGetEnvSaveData(this GameManager instance, CardData _Env, string envId)
     {
+        if (!GameManager.Instance) return null;
+        if (!GameManager.Instance.CardsLoaded) return null;
         if (instance.EnvironmentsData == null) return null;
         if (instance.EnvironmentsData.TryGetValue(envId, out var envSaveData)) return envSaveData;
         instance.EnvironmentsData[envId] = new EnvironmentSaveData(_Env, instance.CurrentTickInfo.z,

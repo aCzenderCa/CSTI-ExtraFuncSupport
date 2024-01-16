@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CSTI_LuaActionSupport.LuaBuilder;
+using CSTI_LuaActionSupport.LuaBuilder.CardDataModels;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
+using NLua;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +29,8 @@ public static class ObjModifyPatcher
         IP_BG_FG = Page.sprite;
     }
 
-    public static void GraphicsManager_ReInit(this GraphicsManager __instance,Sprite? ip_bg_bg = null, Sprite? ip_bg_fg = null)
+    public static void GraphicsManager_ReInit(this GraphicsManager __instance, Sprite? ip_bg_bg = null,
+        Sprite? ip_bg_fg = null)
     {
         var ShadowAndPopupWithTitle = __instance.InventoryInspectionPopup
             .GetComponentsInChildren<RectTransform>()
@@ -45,6 +49,7 @@ public static class ObjModifyPatcher
         {
             BookCover.sprite = ip_bg_bg;
         }
+
         if (ip_bg_fg == null)
         {
             if (IP_BG_FG != null)
@@ -143,5 +148,14 @@ public static class ObjModifyPatcher
         {
             Debug.LogWarning(e);
         }
+    }
+
+    public static string LuaFun2Desc(this LuaFunction function, string id)
+    {
+        var funcId = $"F_{(id + "desc").ToSha256().Substring(0, 6)}.desc__Lua__{id.ToSha256().Substring(0, 18)}_";
+        GetModTable(MainBuilder.CurModId)[funcId] = function;
+        return "###luaAction CardDescription\n" +
+               $"Ret['ret']=GetModTable('{MainBuilder.CurModId}').{funcId}()" +
+               "\n###";
     }
 }

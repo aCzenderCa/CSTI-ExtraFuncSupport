@@ -31,10 +31,10 @@ public static class EnumHelper
         }
     }
 
-    public static List<TVal>? ToList<TVal>(this LuaTable? table, Func<object, TVal>? func = null)
+    public static List<TVal?> ToList<TVal>(this LuaTable? table, Func<object, TVal>? func = null)
     {
-        if (table == null) return null;
-        List<TVal> list = new();
+        List<TVal?> list = new();
+        if (table == null) return list;
         for (var i = 1;; i++)
         {
             var o = table[i];
@@ -45,7 +45,7 @@ public static class EnumHelper
 
             if (func == null)
             {
-                list.Add((TVal) o);
+                list.Add(o is TVal val ? val : default);
             }
             else
             {

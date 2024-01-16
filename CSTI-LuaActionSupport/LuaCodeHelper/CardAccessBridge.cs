@@ -665,7 +665,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
                         return true;
                     }
 
-                    if (InGameCardBase.DroppedCard == card)
+                    if (GameManager.DraggedCardStack.Contains(card))
                     {
                         return true;
                     }
@@ -677,6 +677,33 @@ public class CardAccessBridge : LuaAnim.ITransProvider
         }
 
         GameManager.Instance.RemoveCard(CardBase, true, doDrop).Add2AllEnumerators(PriorityEnumerators.Low);
+    }
+
+    public void AddExpProgress(float amt)
+    {
+        if (CardBase == null || CardBase.CardModel.CardType != CardTypes.Explorable) return;
+        CardBase.ExplorationData.CurrentExploration = Mathf.Clamp01(amt + CardBase.ExplorationData.CurrentExploration);
+        if (GraphicsManager.Instance.ExplorationDeckPopup.ExplorationCard != CardBase)
+        {
+            for (var index = 0; index < CardBase.ExplorationData.ExplorationResults.Count; index++)
+            {
+                var result = CardBase.ExplorationData.ExplorationResults[index];
+                var shouldUnlockExplorationResults = GraphicsManager.Instance.ExplorationDeckPopup.ExploringBar
+                    .ShouldUnlockExplorationResults(index);
+                if (shouldUnlockExplorationResults &&
+                    CardBase.CardModel.ExplorationResults.FirstOrDefault(explorationResult =>
+                        explorationResult.ActionName == result.ActionName) is { } er)
+                {
+                    GameManager.Instance.ActionRoutine(er.Action, CardBase, false)
+                        .Add2AllEnumerators(PriorityEnumerators.Normal);
+                }
+            }
+        }
+        else
+        {
+            GraphicsManager.Instance.ExplorationDeckPopup.ExploringBar.Animate(GraphicsManager.Instance
+                .ExplorationDeckPopup.AddActionToPerform).Add2AllEnumerators(PriorityEnumerators.High);
+        }
     }
 
     public Transform? Transform => CardBase != null ? CardBase.transform : null;
