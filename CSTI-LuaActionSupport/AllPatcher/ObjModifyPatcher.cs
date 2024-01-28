@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CSTI_LuaActionSupport.DataStruct;
 using CSTI_LuaActionSupport.LuaBuilder;
 using CSTI_LuaActionSupport.LuaBuilder.CardDataModels;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -14,6 +15,39 @@ namespace CSTI_LuaActionSupport.AllPatcher;
 [HarmonyPatch]
 public static class ObjModifyPatcher
 {
+    [HarmonyPrefix, HarmonyPatch(typeof(GlobalCharacterInfo), nameof(GlobalCharacterInfo.LoadCustomPortraits)),
+     HarmonyPatch(typeof(MainMenu), nameof(MainMenu.SelectPortrait), typeof(string)),
+     HarmonyPatch(typeof(MainMenu), nameof(MainMenu.SelectPortrait), typeof(int)),
+     HarmonyPatch(typeof(GlobalCharacterInfo), nameof(GlobalCharacterInfo.NextPortrait)),
+     HarmonyPatch(typeof(GlobalCharacterInfo), nameof(GlobalCharacterInfo.PrevPortrait)),
+     HarmonyPatch(typeof(GlobalCharacterInfo), nameof(GlobalCharacterInfo.GetCharacterPortrait)),
+     HarmonyPatch(typeof(GlobalCharacterInfo), nameof(GlobalCharacterInfo.AlreadyHasCustomPortrait))
+    ]
+    public static void LoadPortrait()
+    {
+        PortraitInfo.LoadAllInQueue();
+        var infos = Resources.FindObjectsOfTypeAll<GlobalCharacterInfo>();
+        foreach (var characterInfo in infos)
+        {
+            var characterInfoPortraitSprites =
+                characterInfo.PortraitSprites.ToDictionary(cpRef => cpRef.PortraitID, cpRef => cpRef);
+            var all_characterInfoPortraitSprites =
+                characterInfo.AllPortraits.ToDictionary(cpRef => cpRef.PortraitID, cpRef => cpRef);
+            foreach (var (id, info) in PortraitInfo.PortraitInfos)
+            {
+                if (info.CachePortraitSprite == null) info.LoadSprite();
+                if (info.CachePortraitSprite == null) return;
+                characterInfoPortraitSprites[id] = new CharacterPortraitRef
+                    {PortraitID = id, PortraitSprite = info.CachePortraitSprite};
+                all_characterInfoPortraitSprites[id] = new CharacterPortraitRef
+                    {PortraitID = id, PortraitSprite = info.CachePortraitSprite};
+            }
+
+            characterInfo.PortraitSprites = characterInfoPortraitSprites.Values.ToArray();
+            characterInfo.AllPortraits = all_characterInfoPortraitSprites.Values.ToList();
+        }
+    }
+
     public static Sprite? IP_BG_BG;
     public static Sprite? IP_BG_FG;
 

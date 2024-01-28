@@ -76,7 +76,8 @@ SimpleAccessTool[卡id或encounter的id].Gen(生成次数,不填生成一次)
     * `SlotType:String`设置卡牌生成的槽位类型（设置为非Blueprint生成蓝图可以生成而非解锁），值与SlotsTypes枚举各项名称一致
     * `CurrentBpStage:int`设置生成蓝图时其阶段，0=刚创建，1=建造过一次，以此类推
   * 特殊部分：
-  * `GenAfterEnvChange:boolen`为true时在场景变更完成后再生成卡牌
+  * `GenAfterEnvChange:boolean`为true时在场景变更完成后再生成卡牌
+  * `NeedPreInit:boolean`为true时生成的蓝图卡不会自动打开
 
 ### 方法`void CacheRawValRange(float x, float y)`
 

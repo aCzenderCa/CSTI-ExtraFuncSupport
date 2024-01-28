@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using gfoidl.Base64;
 using UnityEngine;
@@ -175,9 +176,9 @@ public static class AnotherAddCard
     public static EnvironmentSaveData? SuperGetEnvSaveData(this GameManager instance, CardData _Env, string envId)
     {
         if (!GameManager.Instance) return null;
-        if (!GameManager.Instance.CardsLoaded) return null;
         if (instance.EnvironmentsData == null) return null;
         if (instance.EnvironmentsData.TryGetValue(envId, out var envSaveData)) return envSaveData;
+        if (!GameManager.Instance.CardsLoaded) return null;
         instance.EnvironmentsData[envId] = new EnvironmentSaveData(_Env, instance.CurrentTickInfo.z,
             UniqueIDScriptable.AddNamesToComplexID(envId))
         {
@@ -352,6 +353,12 @@ public static class AnotherAddCard
     public static IEnumerator CommonChangeEnvironment(this GameManager instance)
     {
         var curEnvId = LuaSystem.GetCurEnvId();
+        if (curEnvId.IsNullOrWhiteSpace())
+        {
+            curEnvId = instance.CurrentEnvironment.EnvironmentDictionaryKey(instance.PrevEnvironment,
+                instance.CurrentTravelIndex);
+        }
+
         Debug.Log($"CommonChangeEnvironment from {curEnvId}");
         var curReturnStack = LuaSystem.CurReturnStack();
         curReturnStack.Push(instance.CurrentEnvironment.UniqueID, curEnvId ?? "");

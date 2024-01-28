@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.LuaCodeHelper;
@@ -10,7 +11,7 @@ public static class MoniEnum
         InGameCardBase? _FromCard, TransferedDurabilities _TransferedDurabilites, SlotInfo forceSlotInfo,
         BlueprintSaveData forceBpData,
         bool _UseDefaultInventory, SpawningLiquid _WithLiquid, Vector2Int _Tick,
-        Action<InGameCardBase, TArg>? action, TArg arg)
+        Action<InGameCardBase, TArg>? action, TArg arg,bool pre_init = false)
     {
         var addCard = AddCard();
         var b = true;
@@ -26,7 +27,7 @@ public static class MoniEnum
         {
             return manager.AddCard(_Data, slotInfo,
                 _FromCard != null ? _FromCard.Environment : manager.CurrentEnvironment, container, true,
-                _TransferedDurabilites, null, null, null,
+                _TransferedDurabilites, null, pre_init?new List<StatTriggeredActionStatus>():null, null,
                 forceBpData.CurrentStage != -10086 ? forceBpData : null,
                 _FromCard != null
                     ? _FromCard.ValidPosition

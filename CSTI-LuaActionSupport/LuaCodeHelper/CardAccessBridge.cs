@@ -23,7 +23,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
     public SimpleUniqueAccess? CardModel => CardBase != null ? new SimpleUniqueAccess(CardBase.CardModel) : null;
 
     public bool IsEquipped => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Equipment;
-    public bool IsInHand => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Hand;
+    public bool IsInHand => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Item;
     public bool IsInBase => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Base;
     public bool IsInLocation => CardBase != null && CardBase.CurrentSlot.SlotType == SlotsTypes.Location;
     public bool IsInBackground => CardBase != null && CardBase.InBackground;

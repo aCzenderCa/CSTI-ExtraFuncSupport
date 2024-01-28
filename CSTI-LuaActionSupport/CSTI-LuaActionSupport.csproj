@@ -12,7 +12,7 @@
         <AssemblyName>CSTI_LuaActionSupport</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
-        <LangVersion>11</LangVersion>
+        <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -236,6 +236,7 @@
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
         <Compile Include="Const\GameManagerConst.cs" />
+        <Compile Include="DataStruct\PortraitInfo.cs" />
         <Compile Include="GlobalUsings.cs" />
         <Compile Include="Helper\AnotherAddCard.cs" />
         <Compile Include="Helper\CoroutineHelper.cs" />
@@ -273,7 +274,7 @@
         <Content Include="..\license.txt">
           <Link>CSTI-LuaActionSupport\license.txt</Link>
         </Content>
-        <Content Include="..\ReadMe.md"/>
+        <Content Include="..\ReadMe.md" />
       <Content Include="FodyWeavers.xml" />
       <Content Include="luaActionReadMe.docx">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -287,7 +288,6 @@
       <None Include="packages.config" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="DataStruct\" />
         <EmbeddedResource Include="cfxr.bundle" LogicalName="cfxr.bundle" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -23,7 +23,7 @@ public class SimpleAccessTool
 
     public static GameStat? FindStat(string key)
     {
-        if (SUAFindStatRe.Match(key) is {Success: true} match)
+        if (SUAFindStatRe.Match(key) is { Success: true } match)
         {
             if (StatFindCache.TryGetValue(key, out var findStat))
             {
@@ -37,8 +37,8 @@ public class SimpleAccessTool
                          stat.name == name || stat.GameName.CnStr() == name))
                     is var (_, _uniqueIDScriptable) && _uniqueIDScriptable != null)
             {
-                StatFindCache[key] = (GameStat) _uniqueIDScriptable;
-                return (GameStat) _uniqueIDScriptable;
+                StatFindCache[key] = (GameStat)_uniqueIDScriptable;
+                return (GameStat)_uniqueIDScriptable;
             }
 
             if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(us =>
@@ -47,8 +47,8 @@ public class SimpleAccessTool
                      stat.name == name || stat.GameName.CnStr() == name))
                 is { } __uniqueIDScriptable)
             {
-                StatFindCache[key] = (GameStat) __uniqueIDScriptable;
-                return (GameStat) __uniqueIDScriptable;
+                StatFindCache[key] = (GameStat)__uniqueIDScriptable;
+                return (GameStat)__uniqueIDScriptable;
             }
         }
 
@@ -62,7 +62,7 @@ public class SimpleAccessTool
             return namedCard;
         }
 
-        if (SUAFindCardRe.Match(key) is {Success: true} match)
+        if (SUAFindCardRe.Match(key) is { Success: true } match)
         {
             if (CardFindCache.TryGetValue(key, out var findCard))
             {
@@ -77,8 +77,8 @@ public class SimpleAccessTool
                          cardData.name == name || cardData.CardName.CnStr() == name))
                     is var (_, _uniqueIDScriptable) && _uniqueIDScriptable != null)
             {
-                CardFindCache[key] = (CardData) _uniqueIDScriptable;
-                return (CardData) _uniqueIDScriptable;
+                CardFindCache[key] = (CardData)_uniqueIDScriptable;
+                return (CardData)_uniqueIDScriptable;
             }
 
             if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(us =>
@@ -87,8 +87,8 @@ public class SimpleAccessTool
                      cardData.name == name || cardData.CardName.CnStr() == name))
                 is { } __uniqueIDScriptable)
             {
-                CardFindCache[key] = (CardData) __uniqueIDScriptable;
-                return (CardData) __uniqueIDScriptable;
+                CardFindCache[key] = (CardData)__uniqueIDScriptable;
+                return (CardData)__uniqueIDScriptable;
             }
         }
 
@@ -113,7 +113,9 @@ public class SimpleAccessTool
             {
                 return new SimpleUniqueAccess(stat);
             }
-            if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(scriptable => scriptable.UniqueID == key) is {} idScriptable)
+
+            if (GameLoad.Instance.DataBase.AllData.FirstOrDefault(scriptable => scriptable.UniqueID == key) is
+                { } idScriptable)
             {
                 return new SimpleUniqueAccess(idScriptable);
             }
@@ -279,7 +281,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
     private static readonly Action<UniqueIDScriptable>? GenEncounter;
     private readonly UniqueIDScriptable _uniqueIDScriptable;
     public const string SaveKey = "zender." + nameof(SimpleUniqueAccess);
-    public bool IsInstanceEnv => _uniqueIDScriptable is CardData {InstancedEnvironment: true};
+    public bool IsInstanceEnv => _uniqueIDScriptable is CardData { InstancedEnvironment: true };
 
     public override object? this[string key]
     {
@@ -360,7 +362,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
                     {
                         accessBridge[cardData.UniqueID] = new Dictionary<string, object>
                         {
-                            {nameof(CardData.CardDescription), value}
+                            { nameof(CardData.CardDescription), value }
                         };
                     }
                 }
@@ -371,7 +373,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
                         {
                             cardData.UniqueID, new Dictionary<string, object>
                             {
-                                {nameof(CardData.CardDescription), value}
+                                { nameof(CardData.CardDescription), value }
                             }
                         }
                     });
@@ -382,7 +384,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
 
     public void CompleteResearch()
     {
-        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (UniqueIDScriptable is not CardData { CardType: CardTypes.Blueprint } cardData) return;
         if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
             state = BlueprintModelState.Hidden;
 
@@ -400,7 +402,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
 
     public void UnlockBlueprint()
     {
-        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (UniqueIDScriptable is not CardData { CardType: CardTypes.Blueprint } cardData) return;
         if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
             state = BlueprintModelState.Hidden;
         if (state is BlueprintModelState.Available or BlueprintModelState.Purchasable) return;
@@ -412,7 +414,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
 
     public void ProcessBlueprint(int time)
     {
-        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Blueprint} cardData) return;
+        if (UniqueIDScriptable is not CardData { CardType: CardTypes.Blueprint } cardData) return;
         if (!GameManager.Instance.BlueprintModelStates.TryGetValue(cardData, out var state))
             state = BlueprintModelState.Hidden;
         if (state is BlueprintModelState.Available) return;
@@ -465,7 +467,9 @@ public class SimpleUniqueAccess : CommonSimpleAccess
             };
             DataNodeTableAccessBridge? initData = null;
             var forceSlotInfo = new SlotInfo(SlotsTypes.Base, -10086);
-            var forceBpData = new BlueprintSaveData(null, null) {CurrentStage = -10086};
+            var forceBpData = new BlueprintSaveData(null, null) { CurrentStage = -10086 };
+            // ReSharper disable once InconsistentNaming
+            var NeedPreInit = false;
             if (ext != null)
             {
                 tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -477,6 +481,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
                 tDur.Special2.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special2)]);
                 tDur.Special3.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special3)]);
                 tDur.Special4.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Special4)]);
+                NeedPreInit.TryModBy(ext[nameof(NeedPreInit)]);
 
                 GenAfterEnvChange.TryModBy(ext[nameof(GenAfterEnvChange)]);
 
@@ -508,7 +513,7 @@ public class SimpleUniqueAccess : CommonSimpleAccess
                     GameManager.Instance.MoniAddCard(cardData, null,
                         tDur, forceSlotInfo, forceBpData, true, sLiq,
                         new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
-                        SetInitData, initData).Add2Li(enumerators);
+                        SetInitData, initData, NeedPreInit).Add2Li(enumerators);
                 }
             }
 
@@ -660,18 +665,18 @@ public class SimpleUniqueAccess : CommonSimpleAccess
 
     public EnvDataAccessBridge? GetEnvData(long? index = null)
     {
-        if (UniqueIDScriptable is not CardData {CardType: CardTypes.Environment} cardData)
+        if (UniqueIDScriptable is not CardData { CardType: CardTypes.Environment } cardData)
         {
             return null;
         }
 
-        if (cardData is {InstancedEnvironment: false} &&
+        if (cardData is { InstancedEnvironment: false } &&
             GameManager.Instance.EnvironmentsData.TryGetValue(cardData.UniqueID, out var environmentSaveData))
         {
             return new EnvDataAccessBridge(environmentSaveData);
         }
 
-        if (index != null && cardData is {InstancedEnvironment: true} &&
+        if (index != null && cardData is { InstancedEnvironment: true } &&
             GameManager.Instance.EnvironmentsData.FirstOrDefault(pair =>
                 pair.Key.StartsWith(cardData.UniqueID) && pair.Key.EndsWith(index.ToString())) is var dataPair)
         {

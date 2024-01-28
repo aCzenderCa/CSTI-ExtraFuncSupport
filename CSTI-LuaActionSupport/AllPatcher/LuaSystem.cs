@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using BepInEx;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using gfoidl.Base64;
@@ -16,12 +17,43 @@ namespace CSTI_LuaActionSupport.AllPatcher;
 [HarmonyPatch]
 public static class LuaSystem
 {
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.LoadCards))]
+    private static void SuPreGameManager_LoadCards(GameManager __instance)
+    {
+        if (GetCurEnvId().IsNullOrWhiteSpace())
+        {
+            if (__instance.CurrentGameData != null)
+            {
+                var env = UniqueIDScriptable.GetFromID<CardData>(__instance.CurrentGameData.CurrentEnvironmentCard
+                    .EnvironmentID);
+                if (env == null) return;
+                var pre_env =
+                    UniqueIDScriptable.GetFromID<CardData>(__instance.CurrentGameData.CurrentEnvironmentCard
+                        .PrevEnvironmentID);
+                var curId = env.EnvironmentDictionaryKey(pre_env,
+                    __instance.CurrentGameData.CurrentEnvironmentCard.PrevEnvTravelIndex);
+                SetCurEnvId(curId);
+            }
+            else
+            {
+                var realEnv = GameManager.CurrentPlayerCharacter.Environment;
+                foreach (var perk in GameManager.CurrentPlayerCharacter.CharacterPerks)
+                {
+                    if (perk.OverrideEnvironment != null) realEnv = perk.OverrideEnvironment;
+                }
+
+                SetCurEnvId(realEnv.EnvironmentDictionaryKey(realEnv, 0));
+            }
+        }
+    }
+
     [HarmonyPostfix, HarmonyPatch(typeof(CardData), nameof(CardData.EnvironmentDictionaryKey))]
     private static void SuEnvironmentDictionaryKey(CardData __instance, CardData _FromEnvironment, int _ID,
         ref string __result)
     {
-        if (!__instance.InstancedEnvironment) return;
-        if (!_FromEnvironment.InstancedEnvironment) return;
+        if (!GameManager.Instance || !GameManager.Instance.CurrentEnvironment) return;
+        if (!__instance || !_FromEnvironment) return;
+        if (!__instance.InstancedEnvironment || !_FromEnvironment.InstancedEnvironment) return;
         if (_FromEnvironment.UniqueID != GameManager.Instance.CurrentEnvironment.UniqueID) return;
         var newEnvKey = GetCurEnvId() ?? "";
         var sha256 = SHA256.Create();
@@ -206,12 +238,30 @@ public static class LuaSystem
         return false;
     }
 
-    [HarmonyPrefix]
+    [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ChangeEnvironment))]
-    public static bool GameManager_ChangeEnvironment(GameManager __instance, out IEnumerator __result)
+    public static void GameManager_ChangeEnvironment(GameManager __instance, ref IEnumerator __result)
     {
-        __result = __instance.CommonChangeEnvironment();
-        return false;
+        __result = __result.Prepend(MoniChangeEnvironment());
+        return;
+
+        IEnumerator MoniChangeEnvironment()
+        {
+            var curEnvId = GetCurEnvId();
+            if (curEnvId.IsNullOrWhiteSpace() && __instance.CurrentEnvironment)
+            {
+                curEnvId = __instance.CurrentEnvironment.EnvironmentDictionaryKey(__instance.PrevEnvironment,
+                    __instance.CurrentTravelIndex);
+            }
+
+            Debug.Log($"CommonChangeEnvironment from {curEnvId}");
+            var curReturnStack = CurReturnStack();
+            curReturnStack.Push(__instance.CurrentEnvironment.UniqueID, curEnvId ?? "");
+            var newEnvKey = __instance.NextEnvironment.EnvironmentDictionaryKey(__instance.CurrentEnvironment,
+                __instance.NextTravelIndex);
+            SetCurEnvId(newEnvKey);
+            yield break;
+        }
     }
 
     [HarmonyPrefix]
@@ -222,9 +272,6 @@ public static class LuaSystem
         foreach (var perk in GameManager.CurrentPlayerCharacter.CharacterPerks)
         {
             if (perk.OverrideEnvironment != null) realEnv = perk.OverrideEnvironment;
-
-            if (perk.AddedCards?.FirstOrDefault(data => data.CardType == CardTypes.Environment) is
-                { } envCard) realEnv = envCard;
         }
 
         SetCurEnvId(realEnv.EnvironmentDictionaryKey(realEnv, 0));
