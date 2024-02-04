@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using CSTI_LuaActionSupport.DataStruct;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaBuilder;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -22,7 +23,7 @@ public static class CardActionPatcher
     public static readonly Dictionary<int, Dictionary<string, DataNode>> GSlotSaveData = new();
     private const string _InnerFuncBase = "CSTI_LuaActionSupport__InnerFunc";
     public static readonly SimpleAccessTool AccessTool = new();
-    public static LuaTable InnerFuncBase => (LuaTable) LuaRuntime[_InnerFuncBase];
+    public static LuaTable InnerFuncBase => (LuaTable)LuaRuntime[_InnerFuncBase];
 
     public static LuaTable GetModTable(string modId)
     {
@@ -82,6 +83,12 @@ public static class CardActionPatcher
     public static void SaveCurrentSlot(string key, object val)
     {
         CurrentGSlotSaveData().CommonSave(key, val);
+    }
+
+    public static LuaTable GetTempTable()
+    {
+        LuaRuntime.NewTable(nameof(ModData) + ".__TEMP__");
+        return LuaRuntime.GetTable(nameof(ModData) + ".__TEMP__");
     }
 
     [LuaFunc]
@@ -298,7 +305,9 @@ public static class CardActionPatcher
     {
         if (__instance.ActionName.LocalizationKey?.StartsWith("LuaCardAction") is true ||
             __instance.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true ||
-            __instance.ActionName.LocalizationKey?.StartsWith("LuaDismantleCardAction") is true)
+            __instance.ActionName.LocalizationKey?.StartsWith("LuaDismantleCardAction") is true ||
+            __instance.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true ||
+            __instance.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true)
         {
             __result = true;
         }
@@ -348,6 +357,13 @@ public static class CardActionPatcher
         {
             __result = __result.Prepend(LuaDismantleCardActionHelper(action, _ReceivingCard, __instance));
         }
+
+        if (_Action.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
+            CardActionPack.GetActionPack(_Action.ActionName.ParentObjectID) is { } pack)
+        {
+            __result = __result.Prepend(pack.ProcessAction(__instance, _ReceivingCard, null,
+                _Action));
+        }
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(GameManager), nameof(GameManager.CardOnCardActionRoutine))]
@@ -357,6 +373,13 @@ public static class CardActionPatcher
         if (_Action.ActionName.LocalizationKey?.StartsWith("LuaCardOnCardAction") is true)
         {
             __result = __result.Prepend(LuaCardOnCardActionHelper(_Action, _ReceivingCard, _GivenCard, __instance));
+        }
+
+        if (_Action.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true &&
+            CardActionPack.GetActionPack(_Action.ActionName.ParentObjectID) is { } pack)
+        {
+            __result = __result.Prepend(pack.ProcessAction(__instance, _ReceivingCard, _GivenCard,
+                _Action));
         }
     }
 
@@ -398,7 +421,7 @@ public static class CardActionPatcher
 
     public static void Add2AllEnumerators(this IEnumerator enumerator, int _Priority)
     {
-        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> {enumerator});
+        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> { enumerator });
     }
 
     public static void Add2AllEnumerators(this List<IEnumerator> enumerators, int _Priority)
@@ -408,15 +431,15 @@ public static class CardActionPatcher
 
     public static readonly Dictionary<int, PriorityEnumerators> AllEnumerators = new()
     {
-        {PriorityEnumerators.BeforeAll, PriorityEnumerators.Get(PriorityEnumerators.BeforeAll)},
-        {PriorityEnumerators.BeforeTimeChange, PriorityEnumerators.Get(PriorityEnumerators.BeforeTimeChange)},
-        {PriorityEnumerators.SuperHigh, PriorityEnumerators.Get(PriorityEnumerators.SuperHigh)},
-        {PriorityEnumerators.High, PriorityEnumerators.Get(PriorityEnumerators.High)},
-        {PriorityEnumerators.Normal, PriorityEnumerators.Get(PriorityEnumerators.Normal)},
-        {PriorityEnumerators.Low, PriorityEnumerators.Get(PriorityEnumerators.Low)},
-        {PriorityEnumerators.SuperLow, PriorityEnumerators.Get(PriorityEnumerators.SuperLow)},
-        {PriorityEnumerators.EnvChange, PriorityEnumerators.Get(PriorityEnumerators.EnvChange)},
-        {PriorityEnumerators.AfterEnvChange, PriorityEnumerators.Get(PriorityEnumerators.AfterEnvChange)},
+        { PriorityEnumerators.BeforeAll, PriorityEnumerators.Get(PriorityEnumerators.BeforeAll) },
+        { PriorityEnumerators.BeforeTimeChange, PriorityEnumerators.Get(PriorityEnumerators.BeforeTimeChange) },
+        { PriorityEnumerators.SuperHigh, PriorityEnumerators.Get(PriorityEnumerators.SuperHigh) },
+        { PriorityEnumerators.High, PriorityEnumerators.Get(PriorityEnumerators.High) },
+        { PriorityEnumerators.Normal, PriorityEnumerators.Get(PriorityEnumerators.Normal) },
+        { PriorityEnumerators.Low, PriorityEnumerators.Get(PriorityEnumerators.Low) },
+        { PriorityEnumerators.SuperLow, PriorityEnumerators.Get(PriorityEnumerators.SuperLow) },
+        { PriorityEnumerators.EnvChange, PriorityEnumerators.Get(PriorityEnumerators.EnvChange) },
+        { PriorityEnumerators.AfterEnvChange, PriorityEnumerators.Get(PriorityEnumerators.AfterEnvChange) },
     };
 
     public static Lua InitRuntime(GameManager __instance)

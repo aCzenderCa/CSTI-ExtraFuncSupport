@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using gfoidl.Base64;
+using HarmonyLib;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
@@ -46,6 +47,11 @@ public static class AnotherAddCard
         instance.EnvironmentsData[envKey].CurrentMaxWeight = instance.MaxEnvWeight;
         var waitFor = new List<CoroutineController>();
         InGameCardBase[] array2 = instance.AllCards.ToArray();
+        if (!array2.Contains(instance.CurrentExplorableCard))
+        {
+            array2 = array2.AddToArray(instance.CurrentExplorableCard);
+        }
+
         List<InGameRefCardSaveData> updatedBGCards = new();
         List<InGameCardBase> cardsRemainingInBG = new();
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);

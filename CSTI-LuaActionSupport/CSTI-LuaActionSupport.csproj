@@ -235,7 +235,10 @@
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
+        <Compile Include="Attr\Note.cs" />
         <Compile Include="Const\GameManagerConst.cs" />
+        <Compile Include="DataStruct\ActionEffectPack.cs" />
+        <Compile Include="DataStruct\CardActionPack.cs" />
         <Compile Include="DataStruct\PortraitInfo.cs" />
         <Compile Include="GlobalUsings.cs" />
         <Compile Include="Helper\AnotherAddCard.cs" />
