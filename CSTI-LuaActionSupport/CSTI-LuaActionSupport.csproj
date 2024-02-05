@@ -239,6 +239,8 @@
         <Compile Include="Const\GameManagerConst.cs" />
         <Compile Include="DataStruct\ActionEffectPack.cs" />
         <Compile Include="DataStruct\CardActionPack.cs" />
+        <Compile Include="DataStruct\GraphicsPack.cs" />
+        <Compile Include="DataStruct\IModLoaderJsonObj.cs" />
         <Compile Include="DataStruct\PortraitInfo.cs" />
         <Compile Include="GlobalUsings.cs" />
         <Compile Include="Helper\AnotherAddCard.cs" />

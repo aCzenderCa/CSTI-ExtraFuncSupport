@@ -79,7 +79,7 @@ public static class LuaSystem
         bool? isSendBack = null;
         if (!_ReceivingCard) return;
         if (!_GivenCard) return;
-        if (_ReceivingCard.CardModel.CardInteractions is {Length: > 0})
+        if (_ReceivingCard.CardModel.CardInteractions is { Length: > 0 })
         {
             foreach (var action in _ReceivingCard.CardModel.CardInteractions)
             {
@@ -98,7 +98,7 @@ public static class LuaSystem
             }
         }
 
-        if (isSendBack == null && _ReceivingCard.CardModel.DismantleActions is {Count: > 0})
+        if (isSendBack == null && _ReceivingCard.CardModel.DismantleActions is { Count: > 0 })
         {
             foreach (var action in _ReceivingCard.CardModel.DismantleActions)
             {
@@ -131,7 +131,14 @@ public static class LuaSystem
     {
         var curReturnStack = CurReturnStack();
         __state = _TravelToPrevEnv;
-        if (curReturnStack.Peek() is null)
+        if (curReturnStack.Peek() is not var (uid, eid))
+        {
+            __state = false;
+            return;
+        }
+
+        if (UniqueIDScriptable.GetFromID<CardData>(uid)?.InstancedEnvironment is false &&
+            UniqueIDScriptable.GetFromID<CardData>(uid)?.CardName.LocalizationKey.StartsWith("NeedSuReturn") is false)
         {
             __state = false;
             return;
@@ -392,7 +399,7 @@ public static class LuaSystem
             case string uid when UniqueIDScriptable.GetFromID<CardData>(uid) is { } cd:
                 GameManager.Instance.NextEnvironment = cd;
                 break;
-            case SimpleUniqueAccess {UniqueIDScriptable: CardData cd}:
+            case SimpleUniqueAccess { UniqueIDScriptable: CardData cd }:
                 GameManager.Instance.NextEnvironment = cd;
                 break;
             default:

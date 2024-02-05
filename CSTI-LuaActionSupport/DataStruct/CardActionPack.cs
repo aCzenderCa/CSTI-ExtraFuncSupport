@@ -12,20 +12,25 @@ public class CardActionPack : ScriptableObject
     private static readonly Dictionary<string, CardActionPack> AllActionPacks = new();
     private static readonly Queue<CardActionPack> ProcessQueue = new();
 
-    [Note("ActionPack的id")]
+    [Note("ActionPack的id")] [DefaultFieldVal("CardActionPack_ModId")]
     public string uid = "";
-    [Note("针对包含该action本身卡的条件")]
-    public GeneralCondition recCondition;
+
+    [Note("针对包含该action本身卡的条件")] public GeneralCondition recCondition;
+
     [Note("针对交互action时拖到卡上的卡的条件(与原版一样,开启双向不会改变)")]
     public GeneralCondition giveCondition;
-    [Note("高级action效果组")]
-    public List<ActionEffectPack> effectPacks = new();
+
+    [Note("高级action效果组")] public List<ActionEffectPack> effectPacks = new();
+
     [Note("action要经过的tp(15分钟),最终经过时间为所有效果综合")]
     public int waitTime;
+
     [Note("action要经过的mini tp(3分钟),最终经过时间为所有效果综合")]
     public int miniWaitTime;
+
     [Note("action要经过的tick tp(18秒),最终经过时间为所有效果综合")]
     public int tickWaitTime;
+
     [Note("是否是baseAction(类似营火这样不能随身携带的物体的效果不是base,所以类似探索的action应设置为true)")]
     public bool isNotInBase;
 

@@ -47,6 +47,22 @@ public static class LuaAnim
     }
 
     public static Transform? _CurMouse;
+    public static Transform? _SpecialPos;
+
+    [LuaFunc]
+    public static ITransProvider? SpecialScreenPos(Vector2 pos)
+    {
+        if (Camera.main == null) return null;
+        if (_SpecialPos == null)
+        {
+            var gameObject = new GameObject("SpecialPos_TransProvider");
+            _SpecialPos = gameObject.transform;
+        }
+
+        _SpecialPos.position =
+            (Vector2)Camera.main.ViewportToWorldPoint(new Vector3(pos.x, pos.y, Camera.main.nearClipPlane));
+        return new TransProvider(_SpecialPos);
+    }
 
     [LuaFunc]
     public static ITransProvider? CurMouse()
