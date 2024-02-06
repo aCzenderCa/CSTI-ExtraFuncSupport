@@ -222,8 +222,8 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         }
     }
 
-    public void CreateByJson(dynamic json)
+    public void CreateByJson(string json)
     {
-        JsonUtility.FromJsonOverwrite(json.ToJson(), this);
+        JsonUtility.FromJsonOverwrite(json, this);
     }
 }

@@ -2,5 +2,5 @@
 
 public interface IModLoaderJsonObj
 {
-    void CreateByJson(dynamic json);
+    void CreateByJson(string json);
 }
