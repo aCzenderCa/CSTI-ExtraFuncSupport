@@ -34,6 +34,9 @@ public class CardActionPack : ScriptableObject
     [Note("是否是baseAction(类似营火这样不能随身携带的物体的效果不是base,所以类似探索的action应设置为true)")]
     public bool isNotInBase;
 
+    [Note("是否在卡牌初始化时执行引用该pack的action,初始化调用时将会忽略时间消耗")]
+    public bool actOnCardInit;
+
     public static CardActionPack? GetActionPack(string id)
     {
         while (ProcessQueue.Count > 0)

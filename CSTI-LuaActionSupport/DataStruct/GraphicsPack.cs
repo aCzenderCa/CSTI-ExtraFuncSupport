@@ -4,11 +4,12 @@ using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Attr;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using LitJson;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.DataStruct;
 
-public class GraphicsPack : ScriptableObject
+public class GraphicsPack : ScriptableObject, IModLoaderJsonObj
 {
     [Note("要使用的特效组的id(暂时只有CFXR)")] [DefaultFieldVal("CFXR")]
     public string fxPack = "";
@@ -38,6 +39,20 @@ public class GraphicsPack : ScriptableObject
         foreach (var subGraphics in subGraphicsList)
         {
             subGraphics.Act(this, gameManager, recCard, giveCard);
+        }
+    }
+
+    public void CreateByJson(string json)
+    {
+        JsonUtility.FromJsonOverwrite(json, this);
+        var jsonData = JsonMapper.ToObject(json);
+        if (jsonData.ContainsKey(nameof(subGraphicsList)))
+        {
+            var data = jsonData[nameof(subGraphicsList)];
+            for (var i = 0; i < data.Count; i++)
+            {
+                subGraphicsList.Add(JsonUtility.FromJson<SubGraphics>(data[i].ToJson()));
+            }
         }
     }
 }

@@ -36,7 +36,7 @@ public static class LuaTimer
             {
                 var coroutineController = controllers.Dequeue();
                 if (coroutineController == null) break;
-                while (coroutineController.state != CoroutineState.Finished) yield return null;
+                while (coroutineController.state == CoroutineState.Running) yield return null;
             }
 
             OnWaitCA = false;

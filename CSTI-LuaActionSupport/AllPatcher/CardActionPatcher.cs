@@ -640,4 +640,36 @@ public static class CardActionPatcher
 
         return manager;
     }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.Init))]
+    public static void OnCardInit(InGameCardBase __instance)
+    {
+        if (__instance.CardModel == null) return;
+        if (__instance.IsPinned) return;
+        var cardAccessBridge = new CardAccessBridge(__instance);
+        cardAccessBridge.InitData();
+        var acted = false;
+        foreach (var dismantleAction in __instance.CardModel.DismantleActions)
+        {
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is
+                    { actOnCardInit: true } pack &&
+                cardAccessBridge.Data![pack.uid] is not true)
+            {
+                acted = true;
+                cardAccessBridge.Data[pack.uid] = true;
+                var luaScriptRetValues = new LuaScriptRetValues();
+                pack.Act(GameManager.Instance, __instance, null, luaScriptRetValues, dismantleAction);
+            }
+        }
+
+        if (!acted)
+        {
+            return;
+        }
+
+        cardAccessBridge.SaveData();
+
+        LuaTimer.Wait4CA();
+    }
 }
