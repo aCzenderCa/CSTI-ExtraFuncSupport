@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Attr;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using LitJson;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -12,10 +13,13 @@ namespace CSTI_LuaActionSupport.DataStruct;
 public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
 {
     [Note("效果是否包含条件")] public bool hasCondition;
+    [Note("简易通用变量条件表")] public List<SimpleVarCond> simpleVarConditions = new();
     [Note("针对包含该action本身卡的条件")] public GeneralCondition recCondition;
 
     [Note("针对交互action时拖到卡上的卡的条件(与原版一样,开启双向不会改变)")]
     public GeneralCondition giveCondition;
+
+    [Note("对场上其他牌的修改(根据tag或cardData搜索)")] public List<FindAndActEntry> extActEntries = new();
 
     [Note("action要经过的tp(15分钟),最终经过时间为所有效果综合")]
     public int waitTime;
@@ -66,6 +70,9 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
 
     [Note("效果有效时播放的特效(条件满足)")] public GraphicsPack? graphicsPack;
 
+    [Note("通用变量修改,支持卡牌耐久,状态,卡牌变量三者间任意加减互操作")]
+    public List<SimpleVarModEntry> simpleVarModEntries = new();
+
     [Note("如果receive卡本身是exp卡,为其探索进度增加该值,注意:满进度=1.0")]
     public float expProgress;
 
@@ -76,6 +83,8 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         {
             if (!recCondition.ConditionsValid(isNotInBase, recCard)) return;
             if (giveCard != null && !giveCondition.ConditionsValid(isNotInBase, giveCard)) return;
+            if (!simpleVarConditions.TrueForAll(cond => cond.Check(gameManager, recCard, giveCard)))
+                return;
         }
 
         retValues["result"] = waitTime + retValues["result"].TryNum<int>();
@@ -200,6 +209,14 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
             }
         }
 
+        if (simpleVarModEntries.Count > 0)
+        {
+            foreach (var modEntry in simpleVarModEntries)
+            {
+                modEntry.Act(gameManager, recCard, giveCard);
+            }
+        }
+
         if (expProgress > 0 && recCard.CardModel.CardType == CardTypes.Explorable)
         {
             new CardAccessBridge(recCard).AddExpProgress(expProgress);
@@ -225,5 +242,298 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     public void CreateByJson(string json)
     {
         JsonUtility.FromJsonOverwrite(json, this);
+        var jsonData = JsonMapper.ToObject(json);
+        if (jsonData.ContainsKey(nameof(simpleVarModEntries)))
+        {
+            var data = jsonData[nameof(simpleVarModEntries)];
+            if (data.IsArray)
+                for (var i = 0; i < data.Count; i++)
+                {
+                    var simpleVarModEntry = new SimpleVarModEntry();
+                    simpleVarModEntry.CreateByJson(data[i].ToJson());
+                    simpleVarModEntries.Add(simpleVarModEntry);
+                }
+        }
+
+        if (jsonData.ContainsKey(nameof(simpleVarConditions)))
+        {
+            var data = jsonData[nameof(simpleVarConditions)];
+            if (data.IsArray)
+                for (var i = 0; i < data.Count; i++)
+                {
+                    simpleVarConditions.Add(JsonUtility.FromJson<SimpleVarCond>(data[i].ToJson()));
+                }
+        }
+
+        if (jsonData.ContainsKey(nameof(extActEntries)))
+        {
+            var data = jsonData[nameof(extActEntries)];
+            if (data.IsArray)
+                for (var i = 0; i < data.Count; i++)
+                {
+                    extActEntries.Add(JsonUtility.FromJson<FindAndActEntry>(data[i].ToJson()));
+                }
+        }
+    }
+}
+
+[Serializable]
+public class FindAndActEntry
+{
+    [Note("是否应用到搜索到的所有卡上")] public bool actAll;
+    [Note("是否应用到搜索到的所有卡槽正确的卡上")] public bool actAllInSlot;
+    [Note("所需的卡槽类型")] public SlotsTypes needSlot;
+    [Note("所要搜索的tag")] public CardTag? targetTag;
+
+    [Note("所要搜索的cardData,仅在无targetTag时使用")]
+    public CardData? targetCard;
+
+    [Note("要执行的action")] public CardActionPack? actionPack;
+
+    private void Act2Li(List<CardAccessBridge>? cardAccessBridges, GameManager gameManager,
+        LuaScriptRetValues retValues,
+        CardAction action)
+    {
+        if (cardAccessBridges == null) return;
+        if (actionPack == null) return;
+        if (actAll)
+        {
+            foreach (var card in cardAccessBridges)
+            {
+                if (card == null || card.CardBase == null) continue;
+                actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+            }
+        }
+        else if (actAllInSlot)
+        {
+            foreach (var card in cardAccessBridges)
+            {
+                if (card == null || card.CardBase == null) continue;
+                if (card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
+                actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+            }
+        }
+        else
+        {
+            var card = cardAccessBridges.FirstOrDefault(bridge =>
+                bridge.CardBase != null && bridge.CardBase.CurrentSlotInfo.SlotType == needSlot);
+            if (card == null || card.CardBase == null) return;
+            actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+        }
+    }
+
+    public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
+        LuaScriptRetValues retValues, CardAction action)
+    {
+        if (actionPack == null) return;
+        if (targetTag != null)
+        {
+            var gameCardsByTag = DataAccessTool.GetGameCardsByTag(targetTag.name);
+            Act2Li(gameCardsByTag, gameManager, retValues, action);
+        }
+        else if (targetCard != null)
+        {
+            var gameCards = DataAccessTool.GetGameCards(targetCard.UniqueID);
+            Act2Li(gameCards, gameManager, retValues, action);
+        }
+    }
+}
+
+[Serializable]
+public class SimpleVarCond
+{
+    [Note("检测范围的变量的id")] [DefaultFieldVal("Special1")]
+    public string id = "";
+
+    [Note("需求变量值在的范围,如果x>y则该条件固定有效")] [DefaultFieldValStr("""{"x":1.0,"y":-1.0}""")]
+    public Vector2 needRange;
+
+    public bool Check(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard)
+    {
+        if (needRange.x > needRange.y) return true;
+        var id2Val = SimpleVarModEntry.Id2Val(recCard, giveCard, id);
+        if (float.IsNaN(id2Val)) return false;
+        if (id2Val < needRange.x) return false;
+        if (id2Val > needRange.y) return false;
+        return true;
+    }
+}
+
+[Serializable]
+public class SimpleVarModEntry : IModLoaderJsonObj
+{
+    [Note("要修改的变量,默认情况下实现了Sp1=Sp1+Sp1*0")] [DefaultFieldVal("Special1")]
+    public string toId = "";
+
+    [Note("to=to*funcTo.x+funcTo.y+...")] [DefaultFieldValStr("""{"x":1.0,"y":0.0}""")]
+    public Vector2 modFuncTo;
+
+    [Note("用于修改的变量实体,to+=byEntity.by*byEntity.modFunc")] [DefaultFieldValStr("""[{"byId":"Special1","modFunc":0.0}]""")]
+    public List<ByModEntity> byEntities = new();
+
+    [Serializable]
+    public struct ByModEntity
+    {
+        [Note("使用的变量的id")] public string byId;
+        [Note("修改系数")] public float modFunc;
+    }
+
+    public static bool SubStrC(string s, string start, out string sub)
+    {
+        if (!s.StartsWith(start))
+        {
+            sub = "";
+            return false;
+        }
+
+        sub = s.Substring(start.Length);
+        return true;
+    }
+
+    public static float DurType2Val(CardAccessBridge accessBridge, DurabilitiesTypes types)
+    {
+        return types switch
+        {
+            DurabilitiesTypes.Spoilage => accessBridge.Spoilage,
+            DurabilitiesTypes.Usage => accessBridge.Usage,
+            DurabilitiesTypes.Fuel => accessBridge.Fuel,
+            DurabilitiesTypes.Progress => accessBridge.Progress,
+            DurabilitiesTypes.Liquid => accessBridge.LiquidQuantity,
+            DurabilitiesTypes.Special1 => accessBridge.Special1,
+            DurabilitiesTypes.Special2 => accessBridge.Special2,
+            DurabilitiesTypes.Special3 => accessBridge.Special3,
+            DurabilitiesTypes.Special4 => accessBridge.Special4,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    public static float Id2Val(InGameCardBase recCard, InGameCardBase? giveCard, string id)
+    {
+        if (Enum.TryParse<DurabilitiesTypes>(id, out var durType))
+        {
+            var rec = new CardAccessBridge(recCard);
+            return DurType2Val(rec, durType);
+        }
+
+        if (giveCard != null && SubStrC(id, "Give|", out var gId) &&
+            Enum.TryParse<DurabilitiesTypes>(gId, out var gDurType))
+        {
+            var give = new CardAccessBridge(giveCard);
+            return DurType2Val(give, gDurType);
+        }
+
+        if (SubStrC(id, "Stat|", out var sId) &&
+            UniqueIDScriptable.GetFromID<GameStat>(sId) is { } stat)
+        {
+            return new SimpleUniqueAccess(stat).StatValue;
+        }
+
+        if (SubStrC(id, "Val|", out var vId))
+        {
+            var rec = new CardAccessBridge(recCard);
+            rec.InitData();
+            return rec.Data![vId].TryNum<float>() ?? 0;
+        }
+
+        if (giveCard != null && SubStrC(id, "ValGive|", out var vgId))
+        {
+            var give = new CardAccessBridge(giveCard);
+            give.InitData();
+            return give.Data![vgId].TryNum<float>() ?? 0;
+        }
+
+        return float.NaN;
+    }
+
+    public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard)
+    {
+        var rawVal = Id2Val(recCard, giveCard, toId);
+        if (float.IsNaN(rawVal)) return;
+        if (Enum.TryParse<DurabilitiesTypes>(toId, out var durType))
+        {
+            var rec = new CardAccessBridge(recCard);
+            var val = CalcModVal(recCard, giveCard, rawVal);
+
+            if (Math.Abs(val - rawVal) > 0.001)
+                rec.ModifyDurability(val, durType).Add2AllEnumerators(PriorityEnumerators.High);
+            return;
+        }
+
+
+        if (SubStrC(toId, "Give|", out var gId) &&
+            Enum.TryParse<DurabilitiesTypes>(gId, out var gDurType))
+        {
+            var give = new CardAccessBridge(giveCard);
+            var val = CalcModVal(recCard, giveCard, rawVal);
+
+            if (Math.Abs(val - rawVal) > 0.001)
+                give.ModifyDurability(val, gDurType).Add2AllEnumerators(PriorityEnumerators.High);
+            return;
+        }
+
+        if (SubStrC(toId, "Stat|", out var sId) &&
+            UniqueIDScriptable.GetFromID<GameStat>(sId) is { } stat)
+        {
+            var statAccess = new SimpleUniqueAccess(stat);
+            var val = CalcModVal(recCard, giveCard, rawVal);
+
+            if (Math.Abs(val - rawVal) > 0.001) statAccess.StatValue = val;
+            return;
+        }
+
+        if (SubStrC(toId, "Val|", out var vId))
+        {
+            var rec = new CardAccessBridge(recCard);
+            var val = CalcModVal(recCard, giveCard, rawVal);
+
+            rec.InitData();
+            rec.Data![vId] = (double)val;
+            rec.SaveData();
+
+            return;
+        }
+
+        if (SubStrC(toId, "ValGive|", out var vgId))
+        {
+            var give = new CardAccessBridge(giveCard);
+            var val = CalcModVal(recCard, giveCard, rawVal);
+
+            give.InitData();
+            give.Data![vgId] = (double)val;
+            give.SaveData();
+
+            return;
+        }
+    }
+
+    private float CalcModVal(InGameCardBase recCard, InGameCardBase? giveCard, float rawVal)
+    {
+        var val = rawVal * modFuncTo.x + modFuncTo.y;
+        for (var index = 0; index < byEntities.Count; index++)
+        {
+            var byId = byEntities[index].byId;
+            var modFunc = byEntities[index].modFunc;
+            var id2Val = Id2Val(recCard, giveCard, byId);
+            if (!float.IsNaN(id2Val)) val += id2Val * modFunc;
+        }
+
+        return val;
+    }
+
+    public void CreateByJson(string json)
+    {
+        JsonUtility.FromJsonOverwrite(json, this);
+        var jsonData = JsonMapper.ToObject(json);
+        if (jsonData.ContainsKey(nameof(byEntities)))
+        {
+            var eData = jsonData[nameof(byEntities)];
+            if (eData.IsArray)
+            {
+                for (int i = 0; i < eData.Count; i++)
+                {
+                    byEntities.Add(JsonUtility.FromJson<ByModEntity>(eData[i].ToJson()));
+                }
+            }
+        }
     }
 }

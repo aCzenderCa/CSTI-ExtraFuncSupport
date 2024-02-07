@@ -11,6 +11,14 @@ namespace CSTI_LuaActionSupport.Attr
     }
 
     [AttributeUsage(AttributeTargets.Field)]
+    public class DefaultFieldValStr : Attribute
+    {
+        public DefaultFieldValStr(string defaultFieldValStr)
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
     public class Note : Attribute
     {
         public string note;

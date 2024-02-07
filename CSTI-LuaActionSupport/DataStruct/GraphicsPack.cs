@@ -49,10 +49,11 @@ public class GraphicsPack : ScriptableObject, IModLoaderJsonObj
         if (jsonData.ContainsKey(nameof(subGraphicsList)))
         {
             var data = jsonData[nameof(subGraphicsList)];
-            for (var i = 0; i < data.Count; i++)
-            {
-                subGraphicsList.Add(JsonUtility.FromJson<SubGraphics>(data[i].ToJson()));
-            }
+            if (data.IsArray)
+                for (var i = 0; i < data.Count; i++)
+                {
+                    subGraphicsList.Add(JsonUtility.FromJson<SubGraphics>(data[i].ToJson()));
+                }
         }
     }
 }

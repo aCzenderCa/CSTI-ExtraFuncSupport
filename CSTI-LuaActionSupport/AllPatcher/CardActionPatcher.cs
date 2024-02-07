@@ -419,8 +419,9 @@ public static class CardActionPatcher
         list.Add(item);
     }
 
-    public static void Add2AllEnumerators(this IEnumerator enumerator, int _Priority)
+    public static void Add2AllEnumerators(this IEnumerator? enumerator, int _Priority)
     {
+        if (enumerator == null) return;
         PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> { enumerator });
     }
 
@@ -646,11 +647,11 @@ public static class CardActionPatcher
     {
         if (__instance.CardModel == null) return;
         if (__instance.IsPinned) return;
-        var cardAccessBridge = new CardAccessBridge(__instance);
-        cardAccessBridge.InitData();
         var acted = false;
         foreach (var dismantleAction in __instance.CardModel.DismantleActions)
         {
+            var cardAccessBridge = new CardAccessBridge(__instance);
+            cardAccessBridge.InitData();
             if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
                 CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is
                     { actOnCardInit: true } pack &&
@@ -658,6 +659,7 @@ public static class CardActionPatcher
             {
                 acted = true;
                 cardAccessBridge.Data[pack.uid] = true;
+                cardAccessBridge.SaveData();
                 var luaScriptRetValues = new LuaScriptRetValues();
                 pack.Act(GameManager.Instance, __instance, null, luaScriptRetValues, dismantleAction);
             }
@@ -667,8 +669,6 @@ public static class CardActionPatcher
         {
             return;
         }
-
-        cardAccessBridge.SaveData();
 
         LuaTimer.Wait4CA();
     }
