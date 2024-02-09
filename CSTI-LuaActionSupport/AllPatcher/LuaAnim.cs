@@ -106,12 +106,13 @@ public static class LuaAnim
         if (CFXR == null) return transProvider;
         var transform = transProvider.Transform;
         if (transform == null) return transProvider;
-        if (CFXR.LoadAsset<GameObject>(fxName) is not { } fx_prefab) return transProvider;
-        var fx = Object.Instantiate(fx_prefab, transform.position, Quaternion.identity);
+        if (CFXR.LoadAsset<GameObject>(fxName) is not { } fxPrefab) return transProvider;
+        var fx = Object.Instantiate(fxPrefab, transform.position, Quaternion.identity);
         if (moveWithProvider)
         {
             var followTransform = fx.AddComponent<FollowTransform>();
             followTransform.Follow = transform;
+            followTransform.BeginFollow();
         }
 
         var cfxrEffect = fx.AddComponent<CFXR_Effect>();
@@ -131,6 +132,7 @@ public static class LuaAnim
                 fx.AddComponent<FollowMouse>();
             }
 
+            var loop = false;
             if (ext[nameof(CFXR_Effect.animatedLights)] is LuaTable _animatedLights)
             {
                 var animatedLights = new List<CFXR_Effect.AnimatedLight>();
@@ -142,6 +144,7 @@ public static class LuaAnim
                         light = fx.GetComponentInChildren<Light>()
                     };
                     animatedLight.loop.TryModBy(_animatedLight[nameof(animatedLight.loop)]);
+                    loop |= animatedLight.loop;
 
                     animatedLight.animateIntensity.TryModBy(_animatedLight[nameof(animatedLight.animateIntensity)]);
                     animatedLight.intensityStart.TryModBy(_animatedLight[nameof(animatedLight.intensityStart)]);
@@ -175,6 +178,18 @@ public static class LuaAnim
                 }
 
                 cfxrEffect.animatedLights = animatedLights.ToArray();
+            }
+
+            if (loop)
+            {
+                if (moveWithProvider)
+                {
+                    cfxrEffect.clearBehavior = CFXR_Effect.ClearBehavior.None;
+                }
+
+                var cfxrAnimLoop = fx.AddComponent<CfxrAnimLoop>();
+                cfxrAnimLoop.effect = cfxrEffect;
+                cfxrAnimLoop.loopTime = ext["LoopTime"].TryNum<float>();
             }
         }
         else

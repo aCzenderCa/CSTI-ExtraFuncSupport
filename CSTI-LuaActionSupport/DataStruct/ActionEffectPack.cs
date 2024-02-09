@@ -281,7 +281,9 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
 public class FindAndActEntry
 {
     [Note("是否应用到搜索到的所有卡上")] public bool actAll;
-    [Note("是否应用到搜索到的所有卡槽正确的卡上")] public bool actAllInSlot;
+    [Note("是否仅应用到卡槽正确的卡上")] public bool actAllInSlot;
+    [Note("是否应用到搜索到的在rec卡里的卡(一般容器内/液体容器里的液体)")] public bool actAllInRec;
+    [Note("是否应用到搜索到的在give卡里的卡(一般容器内/液体容器里的液体)")] public bool actAllInGive;
     [Note("所需的卡槽类型")] public SlotsTypes needSlot;
     [Note("所要搜索的tag")] public CardTag? targetTag;
 
@@ -291,7 +293,7 @@ public class FindAndActEntry
     [Note("要执行的action")] public CardActionPack? actionPack;
 
     private void Act2Li(List<CardAccessBridge>? cardAccessBridges, GameManager gameManager,
-        LuaScriptRetValues retValues,
+        LuaScriptRetValues retValues, InGameCardBase recCard, InGameCardBase? giveCard,
         CardAction action)
     {
         if (cardAccessBridges == null) return;
@@ -301,24 +303,37 @@ public class FindAndActEntry
             foreach (var card in cardAccessBridges)
             {
                 if (card == null || card.CardBase == null) continue;
+                if (actAllInSlot&&card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
                 actionPack.Act(gameManager, card.CardBase, null, retValues, action);
             }
         }
-        else if (actAllInSlot)
+        else if (actAllInRec)
         {
             foreach (var card in cardAccessBridges)
             {
                 if (card == null || card.CardBase == null) continue;
-                if (card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
+                if (card.CardBase.CurrentContainer != recCard) continue;
+                actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+            }
+        }
+        else if (actAllInGive)
+        {
+            foreach (var card in cardAccessBridges)
+            {
+                if (card == null || card.CardBase == null) continue;
+                if (card.CardBase.CurrentContainer != giveCard) continue;
                 actionPack.Act(gameManager, card.CardBase, null, retValues, action);
             }
         }
         else
         {
-            var card = cardAccessBridges.FirstOrDefault(bridge =>
-                bridge.CardBase != null && bridge.CardBase.CurrentSlotInfo.SlotType == needSlot);
-            if (card == null || card.CardBase == null) return;
-            actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+            foreach (var card in cardAccessBridges)
+            {
+                if (card == null || card.CardBase == null) continue;
+                if (actAllInSlot&&card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
+                actionPack.Act(gameManager, card.CardBase, null, retValues, action);
+                break;
+            }
         }
     }
 
@@ -329,12 +344,12 @@ public class FindAndActEntry
         if (targetTag != null)
         {
             var gameCardsByTag = DataAccessTool.GetGameCardsByTag(targetTag.name);
-            Act2Li(gameCardsByTag, gameManager, retValues, action);
+            Act2Li(gameCardsByTag, gameManager, retValues, recCard, giveCard, action);
         }
         else if (targetCard != null)
         {
             var gameCards = DataAccessTool.GetGameCards(targetCard.UniqueID);
-            Act2Li(gameCards, gameManager, retValues, action);
+            Act2Li(gameCards, gameManager, retValues, recCard, giveCard, action);
         }
     }
 }

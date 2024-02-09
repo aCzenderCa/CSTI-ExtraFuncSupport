@@ -27,7 +27,7 @@ public static class TryModifyPack
 
     public static T? TryNum<T>(this object? o) where T : struct
     {
-        if (o == null) return default;
+        if (o == null) return null;
         var type = o.GetType();
         if (FloatLike.ContainsKey(typeof(T)) && FloatLike.ContainsKey(type))
         {
@@ -42,7 +42,7 @@ public static class TryModifyPack
             return ((_TryNum<T>) genTryNum)(o);
         }
 
-        return default;
+        return null;
     }
 
     private static readonly Dictionary<Type, OpCode> FloatLike = new()
