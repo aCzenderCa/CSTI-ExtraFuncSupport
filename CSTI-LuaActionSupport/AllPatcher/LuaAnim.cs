@@ -189,7 +189,7 @@ public static class LuaAnim
 
                 var cfxrAnimLoop = fx.AddComponent<CfxrAnimLoop>();
                 cfxrAnimLoop.effect = cfxrEffect;
-                cfxrAnimLoop.loopTime = ext["LoopTime"].TryNum<float>();
+                cfxrAnimLoop.LoopTime = ext["LoopTime"].TryNum<float>();
             }
         }
         else

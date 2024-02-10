@@ -455,16 +455,16 @@ public class CardAccessBridge : LuaAnim.ITransProvider
         switch (types)
         {
             case DurabilitiesTypes.Spoilage:
-                if (InnerModify(cardBaseCardModel.SpoilageTime, CardBase.CurrentSpoilage, CardBase,
-                        ref CardBase.CurrentSpoilage, ref CardBase.SpoilEmpty, ref CardBase.SpoilFull,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.SpoilageTime, CardBase.CurrentSpoilage, CardBase,
+                    ref CardBase.CurrentSpoilage, ref CardBase.SpoilEmpty, ref CardBase.SpoilFull,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Usage:
-                if (InnerModify(cardBaseCardModel.UsageDurability, CardBase.CurrentUsageDurability, CardBase,
-                        ref CardBase.CurrentUsageDurability, ref CardBase.UsageEmpty, ref CardBase.UsageFull,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.UsageDurability, CardBase.CurrentUsageDurability, CardBase,
+                    ref CardBase.CurrentUsageDurability, ref CardBase.UsageEmpty, ref CardBase.UsageFull,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Fuel:
                 if (InnerModify(cardBaseCardModel.FuelCapacity, CardBase.CurrentFuel, CardBase,
@@ -473,10 +473,10 @@ public class CardAccessBridge : LuaAnim.ITransProvider
                     RefreshDur();
                 break;
             case DurabilitiesTypes.Progress:
-                if (InnerModify(cardBaseCardModel.Progress, CardBase.CurrentProgress, CardBase,
-                        ref CardBase.CurrentProgress, ref CardBase.ProgressEmpty, ref CardBase.ProgressFull,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.Progress, CardBase.CurrentProgress, CardBase,
+                    ref CardBase.CurrentProgress, ref CardBase.ProgressEmpty, ref CardBase.ProgressFull,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Liquid:
                 if (!CardBase.IsLiquid) break;
@@ -489,34 +489,35 @@ public class CardAccessBridge : LuaAnim.ITransProvider
                 CardBase.WeightHasChanged();
                 if (!rawLiquidEmpty && CardBase.LiquidEmpty)
                 {
-                    RefreshDur();
                     coroutine = GameManager.Instance.ActionRoutine(CardData.OnEvaporatedAction, CardBase, false);
                 }
 
+                RefreshDur();
+
                 break;
             case DurabilitiesTypes.Special1:
-                if (InnerModify(cardBaseCardModel.SpecialDurability1, CardBase.CurrentSpecial1, CardBase,
-                        ref CardBase.CurrentSpecial1, ref CardBase.Special1Empty, ref CardBase.Special1Full,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.SpecialDurability1, CardBase.CurrentSpecial1, CardBase,
+                    ref CardBase.CurrentSpecial1, ref CardBase.Special1Empty, ref CardBase.Special1Full,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Special2:
-                if (InnerModify(cardBaseCardModel.SpecialDurability2, CardBase.CurrentSpecial2, CardBase,
-                        ref CardBase.CurrentSpecial2, ref CardBase.Special2Empty, ref CardBase.Special2Full,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.SpecialDurability2, CardBase.CurrentSpecial2, CardBase,
+                    ref CardBase.CurrentSpecial2, ref CardBase.Special2Empty, ref CardBase.Special2Full,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Special3:
-                if (InnerModify(cardBaseCardModel.SpecialDurability3, CardBase.CurrentSpecial3, CardBase,
-                        ref CardBase.CurrentSpecial3, ref CardBase.Special3Empty, ref CardBase.Special3Full,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.SpecialDurability3, CardBase.CurrentSpecial3, CardBase,
+                    ref CardBase.CurrentSpecial3, ref CardBase.Special3Empty, ref CardBase.Special3Full,
+                    out coroutine);
+                RefreshDur();
                 break;
             case DurabilitiesTypes.Special4:
-                if (InnerModify(cardBaseCardModel.SpecialDurability4, CardBase.CurrentSpecial4, CardBase,
-                        ref CardBase.CurrentSpecial4, ref CardBase.Special4Empty, ref CardBase.Special4Full,
-                        out coroutine))
-                    RefreshDur();
+                InnerModify(cardBaseCardModel.SpecialDurability4, CardBase.CurrentSpecial4, CardBase,
+                    ref CardBase.CurrentSpecial4, ref CardBase.Special4Empty, ref CardBase.Special4Full,
+                    out coroutine);
+                RefreshDur();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(types), types, null);

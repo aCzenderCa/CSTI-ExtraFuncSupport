@@ -4,6 +4,7 @@ using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Attr;
 using CSTI_LuaActionSupport.LuaCodeHelper;
+using CSTI_LuaActionSupport.VFX;
 using LitJson;
 using UnityEngine;
 
@@ -33,12 +34,15 @@ public class GraphicsPack : ScriptableObject, IModLoaderJsonObj
     [Note("指定位置(0,0=左下角;0,1=左上角;1,0=右下角;1,1=右上角)")]
     public Vector2 specialScreenPos;
 
+    [Note("将指定位置作为偏移量(0.5,0.5是不变,小于是向左下,大于是向右上)")]
+    public bool specialPosAsOffset;
+
     [Note("子特效表,同时生成多个特效,可以复用一些字段")] public List<SubGraphics> subGraphicsList = new();
 
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard)
     {
         new GenGraphicsData(fxPack, fxId, genOnReceiveCard, genOnGiveCard, genOnMouse, moveWithGenObj, genOnSpecial,
-            specialScreenPos, loop, time, loopTime).Gen(recCard, giveCard);
+            specialScreenPos, loop, time, loopTime, specialPosAsOffset).Gen(recCard, giveCard);
         foreach (var subGraphics in subGraphicsList)
         {
             subGraphics.Act(this, gameManager, recCard, giveCard);
@@ -71,13 +75,14 @@ public readonly struct GenGraphicsData
     public readonly bool MoveWithGenObj;
     public readonly bool GenOnSpecial;
     public readonly Vector2 SpecialScreenPos;
+    public readonly bool SpecialPosAsOffset;
     public readonly bool Loop;
     public readonly OptionalFloatValue Time;
     public readonly OptionalFloatValue LoopTime;
 
     public GenGraphicsData(string fxPack, string fxId, bool genOnReceiveCard, bool genOnGiveCard, bool genOnMouse,
         bool moveWithGenObj, bool genOnSpecial, Vector2 specialScreenPos, bool loop, OptionalFloatValue time,
-        OptionalFloatValue loopTime)
+        OptionalFloatValue loopTime, bool specialPosAsOffset)
     {
         FXPack = fxPack;
         FXId = fxId;
@@ -90,6 +95,7 @@ public readonly struct GenGraphicsData
         Loop = loop;
         Time = time;
         LoopTime = loopTime;
+        SpecialPosAsOffset = specialPosAsOffset;
     }
 
     public void Gen(InGameCardBase recCard, InGameCardBase? giveCard)
@@ -106,20 +112,21 @@ public readonly struct GenGraphicsData
                 animLight["fadeInDuration"] = 0.1;
                 animLight["fadeOut"] = true;
                 animLight["fadeOutDuration"] = 0.1;
-                animLight["loop"] = Loop;
+                animLight["loop"] = Loop && (MoveWithGenObj || Time.Active);
                 if (LoopTime.Active)
                 {
                     tempTable[nameof(LoopTime)] = LoopTime.FloatValue;
                 }
 
+                LuaAnim.ITransProvider? fx = null;
                 if (GenOnReceiveCard)
                 {
-                    LuaAnim.GenCFXR(new CardAccessBridge(recCard), FXId, MoveWithGenObj,
+                    fx = LuaAnim.GenCFXR(new CardAccessBridge(recCard), FXId, MoveWithGenObj,
                         Time.Active ? Time.FloatValue : null, tempTable);
                 }
                 else if (GenOnGiveCard)
                 {
-                    LuaAnim.GenCFXR(new CardAccessBridge(giveCard), FXId, MoveWithGenObj,
+                    fx = LuaAnim.GenCFXR(new CardAccessBridge(giveCard), FXId, MoveWithGenObj,
                         Time.Active ? Time.FloatValue : null, tempTable);
                 }
                 else if (GenOnMouse)
@@ -127,20 +134,51 @@ public readonly struct GenGraphicsData
                     if (MoveWithGenObj)
                     {
                         tempTable["FollowMouse"] = true;
-                        LuaAnim.GenCFXR(new CardAccessBridge(recCard), FXId, false,
+                        fx = LuaAnim.GenCFXR(new CardAccessBridge(recCard), FXId, false,
                             Time.Active ? Time.FloatValue : null, tempTable);
                     }
                     else if (LuaAnim.CurMouse() is { } mouse)
                     {
-                        LuaAnim.GenCFXR(mouse, FXId, false, Time.Active ? Time.FloatValue : null, tempTable);
+                        fx = LuaAnim.GenCFXR(mouse, FXId, false, Time.Active ? Time.FloatValue : null, tempTable);
                     }
                 }
                 else if (GenOnSpecial)
                 {
                     if (LuaAnim.SpecialScreenPos(SpecialScreenPos) is { } specialScreenPosProvider)
                     {
-                        LuaAnim.GenCFXR(specialScreenPosProvider, FXId, false,
+                        fx = LuaAnim.GenCFXR(specialScreenPosProvider, FXId, false,
                             Time.Active ? Time.FloatValue : null, tempTable);
+                    }
+                }
+
+                if (SpecialPosAsOffset && fx is { Transform: { } trFx } &&
+                    LuaAnim.SpecialScreenPos(SpecialScreenPos) is { Transform: { } trSpecial })
+                {
+                    trFx.position += (Vector3)(Vector2)trSpecial.position;
+                }
+
+                if (MoveWithGenObj && fx is { Transform: { } tr } && tr.GetComponent<CfxrAnimLoop>() is { } animLoop)
+                {
+                    if (GenOnReceiveCard)
+                    {
+                        animLoop.loopObj = recCard;
+                    }
+                    else if (giveCard && GenOnGiveCard)
+                    {
+                        animLoop.loopObj = giveCard;
+                    }
+                    else
+                    {
+                        animLoop.loopObj = recCard;
+                    }
+
+                    if (SpecialPosAsOffset && tr.GetComponent<FollowMouse>() is { } followMouse)
+                    {
+                        followMouse.withOffset = SpecialScreenPos;
+                    }
+                    else if (SpecialPosAsOffset && tr.GetComponent<FollowTransform>() is { } followTransform)
+                    {
+                        followTransform.withOffset = SpecialScreenPos;
                     }
                 }
 
@@ -170,6 +208,9 @@ public class SubGraphics
     [Note("指定位置(0,0=左下角;0,1=左上角;1,0=右下角;1,1=右上角)")]
     public Vector2 specialScreenPos;
 
+    [Note("将指定位置作为偏移量(0.5,0.5是不变,小于是向左下,大于是向右上)")]
+    public bool specialPosAsOffset;
+
     [Note("使特效循环")] public bool loop;
     [Note("特效循环周期")] public OptionalFloatValue loopTime = new(false, 0);
     [Note("播放时间")] public OptionalFloatValue time = new(false, 0);
@@ -180,7 +221,7 @@ public class SubGraphics
         new GenGraphicsData(fxPack.IsNullOrWhiteSpace() ? mainGraphics.fxPack : fxPack,
             fxId.IsNullOrWhiteSpace() ? mainGraphics.fxId : fxId,
             genOnReceiveCard, genOnGiveCard, genOnMouse, moveWithGenObj,
-            genOnSpecial, specialScreenPos, loop, time, loopTime
+            genOnSpecial, specialScreenPos, loop, time, loopTime, specialPosAsOffset
         ).Gen(recCard, giveCard);
     }
 }

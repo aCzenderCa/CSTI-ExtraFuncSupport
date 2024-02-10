@@ -282,8 +282,13 @@ public class FindAndActEntry
 {
     [Note("是否应用到搜索到的所有卡上")] public bool actAll;
     [Note("是否仅应用到卡槽正确的卡上")] public bool actAllInSlot;
-    [Note("是否应用到搜索到的在rec卡里的卡(一般容器内/液体容器里的液体)")] public bool actAllInRec;
-    [Note("是否应用到搜索到的在give卡里的卡(一般容器内/液体容器里的液体)")] public bool actAllInGive;
+
+    [Note("是否应用到搜索到的在rec卡里的卡(一般容器内/液体容器里的液体)")]
+    public bool actAllInRec;
+
+    [Note("是否应用到搜索到的在give卡里的卡(一般容器内/液体容器里的液体)")]
+    public bool actAllInGive;
+
     [Note("所需的卡槽类型")] public SlotsTypes needSlot;
     [Note("所要搜索的tag")] public CardTag? targetTag;
 
@@ -303,7 +308,7 @@ public class FindAndActEntry
             foreach (var card in cardAccessBridges)
             {
                 if (card == null || card.CardBase == null) continue;
-                if (actAllInSlot&&card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
+                if (actAllInSlot && card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
                 actionPack.Act(gameManager, card.CardBase, null, retValues, action);
             }
         }
@@ -330,7 +335,7 @@ public class FindAndActEntry
             foreach (var card in cardAccessBridges)
             {
                 if (card == null || card.CardBase == null) continue;
-                if (actAllInSlot&&card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
+                if (actAllInSlot && card.CardBase.CurrentSlotInfo.SlotType != needSlot) continue;
                 actionPack.Act(gameManager, card.CardBase, null, retValues, action);
                 break;
             }
@@ -391,6 +396,7 @@ public class SimpleVarModEntry : IModLoaderJsonObj
     {
         [Note("使用的变量的id")] public string byId;
         [Note("修改系数")] public float modFunc;
+        [Note("可变修改系数")] public string modFuncById;
     }
 
     public static bool SubStrC(string s, string start, out string sub)
@@ -457,7 +463,40 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             return give.Data![vgId].TryNum<float>() ?? 0;
         }
 
+        if (SubStrC(id, "ConstVal|", out var cvId))
+        {
+            var timeObjective =
+                recCard.CardModel.TimeValues.FirstOrDefault(FindObjective(cvId));
+            if (timeObjective != null)
+            {
+                return timeObjective.Value / 1000.0f;
+            }
+
+            return 0;
+        }
+
+        if (giveCard != null && SubStrC(id, "ConstValGive|", out var cvgId))
+        {
+            var timeObjective = giveCard.CardModel.TimeValues.FirstOrDefault(FindObjective(cvgId));
+            if (timeObjective != null)
+            {
+                return timeObjective.Value / 1000.0f;
+            }
+
+            return 0;
+        }
+
+        if (id == "Random")
+        {
+            return Random.value;
+        }
+
         return float.NaN;
+
+        Func<TimeObjective, bool> FindObjective(string objId)
+        {
+            return objective => objective.ObjectiveName == objId;
+        }
     }
 
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard)
@@ -528,8 +567,18 @@ public class SimpleVarModEntry : IModLoaderJsonObj
         {
             var byId = byEntities[index].byId;
             var modFunc = byEntities[index].modFunc;
+            var modFuncById = byEntities[index].modFuncById;
             var id2Val = Id2Val(recCard, giveCard, byId);
-            if (!float.IsNaN(id2Val)) val += id2Val * modFunc;
+            var modFuncByIdVal = Id2Val(recCard, giveCard, modFuncById);
+            if (float.IsNaN(id2Val)) continue;
+            if (!float.IsNaN(modFuncByIdVal))
+            {
+                val += id2Val * modFuncByIdVal;
+            }
+            else
+            {
+                val += id2Val * modFunc;
+            }
         }
 
         return val;
