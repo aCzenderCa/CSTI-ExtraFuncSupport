@@ -25,13 +25,19 @@ public static class LuaRegistrable
         }
     }
 
-    public static void Register(this Lua LuaRuntime, Type typeInfo, string? basePath = null)
+    public static void Register(this Lua luaRuntime, Type typeInfo, string? basePath = null)
     {
-        var declaredMethods = AccessTools.GetDeclaredMethods(typeInfo);
-        if (basePath != null && LuaRuntime.GetTable(basePath) == null)
+        if (basePath != null && luaRuntime.GetTable(basePath) == null)
         {
-            LuaRuntime.NewTable(basePath);
+            luaRuntime.NewTable(basePath);
         }
+
+        if (typeInfo.CustomAttributes.FirstOrDefault(data => data.AttributeType == typeof(LuaFuncTodo)) is not null)
+        {
+            return;
+        }
+
+        var declaredMethods = AccessTools.GetDeclaredMethods(typeInfo);
 
         foreach (var methodInfo in declaredMethods)
         {
@@ -39,7 +45,7 @@ public static class LuaRegistrable
             var customAttributeData =
                 methodInfo.CustomAttributes.FirstOrDefault(data => data.AttributeType == typeof(LuaFuncAttribute));
             if (customAttributeData == null) continue;
-            LuaRuntime.RegisterFunction(
+            luaRuntime.RegisterFunction(
                 (basePath == null ? "" : basePath + '.') +
                 (customAttributeData.NamedArguments?.FirstOrDefault(namedArgument =>
                         namedArgument.MemberName == nameof(LuaFuncAttribute.FuncName)).TypedValue
@@ -49,6 +55,11 @@ public static class LuaRegistrable
                 methodInfo);
         }
     }
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public class LuaFuncTodo : Attribute
+{
 }
 
 [AttributeUsage(AttributeTargets.Method)]

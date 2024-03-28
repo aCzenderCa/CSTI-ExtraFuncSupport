@@ -18,6 +18,8 @@ public class CardActionPack : ScriptableObject, IModLoaderJsonObj
     [Note("ActionPack的id")] [DefaultFieldVal("CardActionPack_ModId")]
     public string uid = "";
 
+    [Note("简易通用变量条件表")] public List<SimpleVarCond> simpleVarConditions = new();
+
     [Note("针对包含该action本身卡的条件")] public GeneralCondition recCondition;
 
     [Note("针对交互action时拖到卡上的卡的条件(与原版一样,开启双向不会改变)")]
@@ -70,7 +72,21 @@ public class CardActionPack : ScriptableObject, IModLoaderJsonObj
             {
                 if (card == recCard) continue;
                 if (tags.All(tag => !card.CardModel.HasTag(tag)) && cards.All(data => card.CardModel != data)) continue;
-                if (needSlot && card.CurrentSlotInfo.SlotType != onSlot) continue;
+                if (needSlot)
+                {
+                    if (onSlot == SlotsTypes.Hand)
+                    {
+                        if (!GameManager.Instance.InGameCardIsInHand(card, false))
+                        {
+                            continue;
+                        }
+                    }
+                    else if (card.CurrentSlotInfo.SlotType != onSlot)
+                    {
+                        continue;
+                    }
+                }
+
                 if (!condition.ConditionsValid(actionPack.isNotInBase, card)) continue;
                 if (!needFindBest)
                 {
@@ -125,12 +141,21 @@ public class CardActionPack : ScriptableObject, IModLoaderJsonObj
         }
     }
 
+    public bool CheckCondition(GameManager gameManager, InGameCardBase recCard, ref InGameCardBase? giveCard)
+    {
+        giveCard = autoFindGive.Find(this, recCard, giveCard);
+        if (!recCondition.ConditionsValid(isNotInBase, recCard)) return false;
+        if (giveCard != null && !giveCondition.ConditionsValid(isNotInBase, giveCard)) return false;
+        var give = giveCard;
+        if (!simpleVarConditions.TrueForAll(cond => cond.Check(gameManager, recCard, give)))
+            return false;
+        return true;
+    }
+
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
         LuaScriptRetValues retValues, CardAction action)
     {
-        giveCard = autoFindGive.Find(this, recCard, giveCard);
-        if (!recCondition.ConditionsValid(isNotInBase, recCard)) return;
-        if (giveCard != null && !giveCondition.ConditionsValid(isNotInBase, giveCard)) return;
+        if (!CheckCondition(gameManager, recCard, ref giveCard)) return;
 
         retValues["result"] = waitTime;
         retValues["miniTime"] = miniWaitTime;

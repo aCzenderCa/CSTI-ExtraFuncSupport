@@ -16,6 +16,15 @@ public static class LuaGraphics
     }
 
     [LuaFunc]
+    public static void UpdateCard(CardAccessBridge accessBridge)
+    {
+        if (accessBridge.CardBase && accessBridge.CardBase!.CardVisuals)
+        {
+            accessBridge.CardBase.CardVisuals.Setup(accessBridge.CardBase);
+        }
+    }
+
+    [LuaFunc]
     public static void UpdatePopup()
     {
         foreach (var popup in Object.FindObjectsOfType<InspectionPopup>())

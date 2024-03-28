@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Attr;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -12,14 +13,41 @@ namespace CSTI_LuaActionSupport.DataStruct;
 
 public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
 {
+    [Serializable]
+    public class SpriteSetItem
+    {
+        [Note("在该范围内时生效")] public Vector2 InRange;
+        [Note("状态值id，详见介绍中通用变量修改一节")] public string StatValId = "";
+        [Note("要设置成什么图")] public Sprite? ToSetSprite;
+
+        public void Set(InGameCardBase? cardBase, ref Sprite? sprite)
+        {
+            if (ToSetSprite == null) return;
+            if (cardBase == null)
+            {
+                cardBase = GameManager.Instance.CurrentEnvironmentCard;
+            }
+
+            var id2Val = SimpleVarModEntry.Id2Val(cardBase, null, StatValId);
+            if (float.IsNaN(id2Val)) return;
+            if (id2Val >= InRange.x && id2Val <= InRange.y)
+            {
+                sprite = ToSetSprite;
+            }
+        }
+    }
+
+    [Note("效果是否包含lua代码")] public bool hasLuaCode;
+    [Note("效果的lua代码")] public string luaCode = "";
+
     [Note("效果是否包含条件")] public bool hasCondition;
-    [Note("简易通用变量条件表")] public List<SimpleVarCond> simpleVarConditions = new();
+    [Note("简易通用变量条件表")] public List<SimpleVarCond> simpleVarConditions = [];
     [Note("针对包含该action本身卡的条件")] public GeneralCondition recCondition;
 
     [Note("针对交互action时拖到卡上的卡的条件(与原版一样,开启双向不会改变)")]
     public GeneralCondition giveCondition;
 
-    [Note("对场上其他牌的修改(根据tag或cardData搜索)")] public List<FindAndActEntry> extActEntries = new();
+    [Note("对场上其他牌的修改(根据tag或cardData搜索)")] public List<FindAndActEntry> extActEntries = [];
 
     [Note("action要经过的tp(15分钟),最终经过时间为所有效果综合")]
     public int waitTime;
@@ -34,33 +62,33 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     public bool isNotInBase;
 
     [Note("生成卡组,与CardAction.ProducedCards类似")]
-    public List<CardsDropCollection> dropCollections = new();
+    public List<CardsDropCollection> dropCollections = [];
 
-    [Note("对状态的修改,注意:rate修改有效")] public List<StatModifier> statModifications = new();
+    [Note("对状态的修改,注意:rate修改有效")] public List<StatModifier> statModifications = [];
 
     [Note("总是会生成的一些卡(dropCollections则是按权重随机选一个)")]
-    public List<CardDrop> alwaysDrops = new();
+    public List<CardDrop> alwaysDrops = [];
 
     [Note("为相应的蓝图研究增加进度,Quantity是要增加的进度,DroppedCard是要增加的蓝图卡")]
-    public List<CardDrop> blueprintProgress = new();
+    public List<CardDrop> blueprintProgress = [];
 
     [Note("状态加状态功能,statModByStatBy每一项的值加到对应statModByStatTo项上")]
-    public List<GameStat> statModByStatTo = new();
+    public List<GameStat> statModByStatTo = [];
 
     [Note("状态加状态功能,statModByStatBy每一项的值加到对应statModByStatTo项上")]
-    public List<GameStat> statModByStatBy = new();
+    public List<GameStat> statModByStatBy = [];
 
     [Note("状态加状态功能,statModByStatFunc中如果存在对应的项,to=func.x*to+func.y*by+func.z")]
-    public List<Vector3> statModByStatFunc = new();
+    public List<Vector3> statModByStatFunc = [];
 
     [Note("生成状态值张卡,cardDropByStatTo每一项生成对应cardDropByStatBy值向下取整次")]
-    public List<CardData> cardDropByStatTo = new();
+    public List<CardData> cardDropByStatTo = [];
 
     [Note("生成状态值张卡,cardDropByStatTo每一项生成对应cardDropByStatBy值向下取整次")]
-    public List<GameStat> cardDropByStatBy = new();
+    public List<GameStat> cardDropByStatBy = [];
 
     [Note("专门生成蓝图卡,不会解锁蓝图而是生成一个可以建造的卡到location,没有解锁,没有研究的蓝图也能生成")]
-    public List<CardDrop> blueprintDrops = new();
+    public List<CardDrop> blueprintDrops = [];
 
     [Note("针对包含该action本身卡的修改(CardAction.ReceivingCardChanges)")]
     public CardStateChange recCardStateChange;
@@ -71,10 +99,12 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     [Note("效果有效时播放的特效(条件满足)")] public GraphicsPack? graphicsPack;
 
     [Note("通用变量修改,支持卡牌耐久,状态,卡牌变量三者间任意加减互操作")]
-    public List<SimpleVarModEntry> simpleVarModEntries = new();
+    public List<SimpleVarModEntry> simpleVarModEntries = [];
 
     [Note("如果receive卡本身是exp卡,为其探索进度增加该值,注意:满进度=1.0")]
     public float expProgress;
+
+    [Note("设置卡牌贴图，详见内部字段的note")] public List<SpriteSetItem> spriteSet = [];
 
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
         LuaScriptRetValues retValues, CardAction action)
@@ -116,18 +146,21 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
                 for (; i < dropCollections.Count; i++)
                 {
                     cur += dropCollections[i].CollectionWeight;
-                    if (rand > cur)
+                    if (rand <= cur)
                     {
                         break;
                     }
                 }
 
-                var drop = dropCollections[i];
-                drop.FillStatModsList();
-                drop.FillDropList(true, 1);
-                gameManager.ProduceCards(drop, recCard, false,
-                    recCard.CardModel.CardType == CardTypes.Explorable,
-                    false).Add2AllEnumerators(PriorityEnumerators.Normal);
+                if (i < dropCollections.Count)
+                {
+                    var drop = dropCollections[i];
+                    drop.FillStatModsList();
+                    drop.FillDropList(true, 1);
+                    gameManager.ProduceCards(drop, recCard, false,
+                        recCard.CardModel.CardType == CardTypes.Explorable,
+                        false).Add2AllEnumerators(PriorityEnumerators.Normal);
+                }
             }
         }
 
@@ -191,7 +224,7 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
                 if (cardDropByStatBy.Count <= i) break;
                 var by = new SimpleUniqueAccess(cardDropByStatBy[i]);
                 var to = new SimpleUniqueAccess(cardDropByStatTo[i]);
-                to.Gen((int)by.StatValue);
+                to.Gen((int) by.StatValue);
             }
         }
 
@@ -225,7 +258,7 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         gameManager.ActionRoutine(
             new CardAction
             {
-                ActionName = new LocalizedString { DefaultText = "ByGen" },
+                ActionName = new LocalizedString {DefaultText = "ByGen"},
                 ReceivingCardChanges = recCardStateChange
             }, recCard, false).Add2AllEnumerators(PriorityEnumerators.Normal);
         if (giveCard != null)
@@ -233,9 +266,28 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
             gameManager.ActionRoutine(
                 new CardAction
                 {
-                    ActionName = new LocalizedString { DefaultText = "ByGen" },
+                    ActionName = new LocalizedString {DefaultText = "ByGen"},
                     ReceivingCardChanges = giveCardStateChange
                 }, giveCard, false).Add2AllEnumerators(PriorityEnumerators.Normal);
+        }
+
+        if (hasLuaCode)
+        {
+            var lua = InitRuntime(gameManager);
+            lua["receive"] = new CardAccessBridge(recCard);
+            if (giveCard)
+            {
+                lua["given"] = new CardAccessBridge(giveCard);
+            }
+
+            lua["Ret"] = retValues;
+            lua.DoString(luaCode, nameof(ActionEffectPack) + "_" + name);
+        }
+
+        if (spriteSet.Count != 0)
+        {
+            LuaGraphics.UpdateCard(new CardAccessBridge(recCard));
+            LuaGraphics.UpdateCard(new CardAccessBridge(giveCard));
         }
     }
 
@@ -272,6 +324,16 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
                 for (var i = 0; i < data.Count; i++)
                 {
                     extActEntries.Add(JsonUtility.FromJson<FindAndActEntry>(data[i].ToJson()));
+                }
+        }
+
+        if (jsonData.ContainsKey(nameof(spriteSet)))
+        {
+            var data = jsonData[nameof(spriteSet)];
+            if (data.IsArray)
+                for (var i = 0; i < data.Count; i++)
+                {
+                    spriteSet.Add(JsonUtility.FromJson<SpriteSetItem>(data[i].ToJson()));
                 }
         }
     }
@@ -388,7 +450,8 @@ public class SimpleVarModEntry : IModLoaderJsonObj
     [Note("to=to*funcTo.x+funcTo.y+...")] [DefaultFieldValStr("""{"x":1.0,"y":0.0}""")]
     public Vector2 modFuncTo;
 
-    [Note("用于修改的变量实体,to+=byEntity.by*byEntity.modFunc")] [DefaultFieldValStr("""[{"byId":"Special1","modFunc":0.0}]""")]
+    [Note("用于修改的变量实体,to+=byEntity.by*byEntity.modFunc")]
+    [DefaultFieldValStr("""[{"byId":"Special1","modFunc":0.0,"modFuncById":""}]""")]
     public List<ByModEntity> byEntities = new();
 
     [Serializable]
@@ -443,24 +506,26 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             return DurType2Val(give, gDurType);
         }
 
-        if (SubStrC(id, "Stat|", out var sId) &&
-            UniqueIDScriptable.GetFromID<GameStat>(sId) is { } stat)
+        if (SubStrC(id, "Stat|", out var sId))
         {
-            return new SimpleUniqueAccess(stat).StatValue;
+            if (SimpleAccessTool.FindStat(sId) is { } findStat)
+                return new SimpleUniqueAccess(findStat).StatValue;
+            if (UniqueIDScriptable.GetFromID<GameStat>(sId) is { } stat)
+                return new SimpleUniqueAccess(stat).StatValue;
         }
 
         if (SubStrC(id, "Val|", out var vId))
         {
             var rec = new CardAccessBridge(recCard);
             rec.InitData();
-            return rec.Data![vId].TryNum<float>() ?? 0;
+            return rec.Data![vId].TryNum<float>() ?? Id2Val(recCard, giveCard, "Const" + id);
         }
 
         if (giveCard != null && SubStrC(id, "ValGive|", out var vgId))
         {
             var give = new CardAccessBridge(giveCard);
             give.InitData();
-            return give.Data![vgId].TryNum<float>() ?? 0;
+            return give.Data![vgId].TryNum<float>() ?? Id2Val(recCard, giveCard, "Const" + id);
         }
 
         if (SubStrC(id, "ConstVal|", out var cvId))
@@ -525,14 +590,18 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             return;
         }
 
-        if (SubStrC(toId, "Stat|", out var sId) &&
-            UniqueIDScriptable.GetFromID<GameStat>(sId) is { } stat)
+        if (SubStrC(toId, "Stat|", out var sId))
         {
-            var statAccess = new SimpleUniqueAccess(stat);
-            var val = CalcModVal(recCard, giveCard, rawVal);
+            var stat = UniqueIDScriptable.GetFromID<GameStat>(sId);
+            if (stat == null) stat = SimpleAccessTool.FindStat(sId);
+            if (stat != null)
+            {
+                var statAccess = new SimpleUniqueAccess(stat);
+                var val = CalcModVal(recCard, giveCard, rawVal);
 
-            if (Math.Abs(val - rawVal) > 0.001) statAccess.StatValue = val;
-            return;
+                if (Math.Abs(val - rawVal) > 0.001) statAccess.StatValue = val;
+                return;
+            }
         }
 
         if (SubStrC(toId, "Val|", out var vId))
@@ -541,7 +610,7 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             var val = CalcModVal(recCard, giveCard, rawVal);
 
             rec.InitData();
-            rec.Data![vId] = (double)val;
+            rec.Data![vId] = (double) val;
             rec.SaveData();
 
             return;
@@ -553,7 +622,7 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             var val = CalcModVal(recCard, giveCard, rawVal);
 
             give.InitData();
-            give.Data![vgId] = (double)val;
+            give.Data![vgId] = (double) val;
             give.SaveData();
 
             return;

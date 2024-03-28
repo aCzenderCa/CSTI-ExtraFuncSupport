@@ -1,14 +1,70 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using CSTI_LuaActionSupport.AllPatcher;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CSTI_LuaActionSupport.UIStruct;
 
 public static class UIStructs
 {
+    public class MyTrPin : MonoBehaviour, IDropHandler
+    {
+        [NonSerialized] public Transform? PinedTr;
+        public Func<Transform, bool>? NeedPin;
+        public Func<Transform?, Transform, bool>? CanPinNew;
+        public string uid = "";
+
+        public static MyTrPin CreateOn(Vector3 pos, Func<Transform, bool>? needPin,
+            Func<Transform?, Transform, bool>? canPinNew, string uid, Transform parent)
+        {
+            var o = new GameObject("MyTrPin_" + uid, typeof(MyTrPin));
+            var oTransform = o.transform;
+            oTransform.SetParent(parent);
+            oTransform.position = pos;
+            var myTrPin = o.GetComponent<MyTrPin>();
+            myTrPin.Init(null, needPin, canPinNew, uid);
+            return myTrPin;
+        }
+
+        public void Init(Transform? pinedTr, Func<Transform, bool>? needPin,
+            Func<Transform?, Transform, bool>? canPinNew, string uid)
+        {
+            PinedTr = pinedTr;
+            NeedPin = needPin;
+            CanPinNew = canPinNew;
+            this.uid = uid;
+        }
+
+        private void Update()
+        {
+            if (PinedTr != null)
+            {
+                if (NeedPin != null)
+                {
+                    if (NeedPin(PinedTr)) PinedTr.position = transform.position;
+                }
+                else
+                {
+                    PinedTr.position = transform.position;
+                }
+            }
+        }
+
+        public void OnDrop(PointerEventData eventData)
+        {
+            if (GameManager.DraggedCard && CanPinNew != null &&
+                CanPinNew(PinedTr, GameManager.DraggedCard.transform))
+            {
+                PinedTr = GameManager.DraggedCard.transform;
+            }
+        }
+    }
+
     [RequireComponent(typeof(RectTransform))]
     public class MyCardSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler,
         IPointerUpHandler, IEventSystemHandler
@@ -382,13 +438,13 @@ public static class UIStructs
             CardSlotPrefab = new GameObject("{MyCardSlot}", typeof(RectTransform), typeof(MyCardSlot));
             CardSlotPrefab.SafeSetActive(false);
             var myCardSlot = CardSlotPrefab.GetComponent<MyCardSlot>();
-            var prefabTransform = (RectTransform) CardSlotPrefab.transform;
+            var prefabTransform = (RectTransform)CardSlotPrefab.transform;
             prefabTransform.sizeDelta = new Vector2(200, 300);
             prefabTransform.SetParent(UITools.BaseCanvasContentTransform);
             myCardSlot.Transform = prefabTransform;
 
             var fg = new GameObject("{MyCardSlotFg}", typeof(RectTransform), typeof(Image));
-            var fgTransform = (RectTransform) fg.transform;
+            var fgTransform = (RectTransform)fg.transform;
             fgTransform.SetParent(prefabTransform);
             myCardSlot.FgImg = fg.GetComponent<Image>();
             fgTransform.sizeDelta = new Vector2(200, 300);
@@ -400,7 +456,7 @@ public static class UIStructs
             myCardSlot.FgImg.color = new Color(1, 1, 1, 0.1f);
 
             var bg = new GameObject("{MyCardSlotBg}", typeof(RectTransform), typeof(Image));
-            var bgTransform = (RectTransform) bg.transform;
+            var bgTransform = (RectTransform)bg.transform;
             bgTransform.SetParent(prefabTransform);
             myCardSlot.BgImg = bg.GetComponent<Image>();
             bgTransform.sizeDelta = new Vector2(200, 300);
@@ -416,7 +472,7 @@ public static class UIStructs
             content.GetComponent<MyCardSlotUITag>().Slot = myCardSlot;
 
             var contentImg = new GameObject("{MyCardSlotContentImg}", typeof(RectTransform), typeof(Image));
-            var contentImgTransform = (RectTransform) contentImg.transform;
+            var contentImgTransform = (RectTransform)contentImg.transform;
             contentImgTransform.SetParent(prefabTransform);
             contentImgTransform.sizeDelta = new Vector2(200, 300);
             contentImg.SetActive(false);
@@ -424,7 +480,7 @@ public static class UIStructs
             myCardSlot.ContentImg.color = new Color(1, 1, 1, 0);
 
             var pileCountBg = new GameObject("{MyCardSlotPileCountBg}", typeof(RectTransform), typeof(Image));
-            var pileCountBgTr = (RectTransform) pileCountBg.transform;
+            var pileCountBgTr = (RectTransform)pileCountBg.transform;
             pileCountBgTr.SetParent(prefabTransform);
             pileCountBgTr.localPosition = new Vector3(100, 150);
             pileCountBgTr.sizeDelta = new Vector2(60, 60);
@@ -439,7 +495,7 @@ public static class UIStructs
 
             var pileCount = new GameObject("{MyCardSlotPileCount}", typeof(RectTransform), typeof(TextMeshProUGUI),
                 typeof(DynamicFontText));
-            var pileCountTr = (RectTransform) pileCount.transform;
+            var pileCountTr = (RectTransform)pileCount.transform;
             pileCountTr.SetParent(prefabTransform);
             pileCountTr.localPosition = new Vector3(108, 140);
             pileCountTr.sizeDelta = new Vector2(60, 60);

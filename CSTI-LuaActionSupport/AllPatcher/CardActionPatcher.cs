@@ -54,6 +54,7 @@ public static class CardActionPatcher
         LuaRuntime.Register(typeof(LuaSystem), nameof(LuaSystem));
         LuaRuntime.Register(typeof(LuaAnim), nameof(LuaAnim));
         LuaRuntime.Register(typeof(MainBuilder), nameof(MainBuilder));
+        LuaRuntime.Register(typeof(UIManagers), nameof(UIManagers));
         LuaRuntime.Register<CardTypes>();
         LuaRuntime.Register<DataNode.DataNodeType>();
 
@@ -310,6 +311,36 @@ public static class CardActionPatcher
             __instance.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true)
         {
             __result = true;
+        }
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(CardAction), nameof(CardAction.CardsAndTagsAreCorrect))]
+    public static void LuaCardActionQuickRequirementsCheck(CardAction __instance, InGameCardBase _ForCard,
+        ref bool __result)
+    {
+        if (__instance.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true)
+        {
+            if (CardActionPack.GetActionPack(__instance.ActionName.ParentObjectID) is { } pack)
+            {
+                InGameCardBase? give = null;
+                __result &= pack.CheckCondition(GameManager.Instance, _ForCard, ref give);
+            }
+        }
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(CardOnCardAction), nameof(CardOnCardAction.CardsAndTagsAreCorrect),
+         typeof(InGameCardBase), typeof(InGameCardBase), typeof(List<CardData>), typeof(List<CardTag>))]
+    public static void LuaCardOnCardActionCardsAndTagsAreCorrect(CardAction __instance, InGameCardBase _Receiving,
+        InGameCardBase _Given, ref bool __result)
+    {
+        if (__instance.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true ||
+            __instance.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true)
+        {
+            if (CardActionPack.GetActionPack(__instance.ActionName.ParentObjectID) is { } pack)
+            {
+                InGameCardBase? give = _Given;
+                __result &= pack.CheckCondition(GameManager.Instance, _Receiving, ref give);
+            }
         }
     }
 

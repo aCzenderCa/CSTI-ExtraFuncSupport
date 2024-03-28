@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -15,8 +16,19 @@ using UnityEngine;
 namespace CSTI_LuaActionSupport.AllPatcher;
 
 [HarmonyPatch]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class LuaSystem
 {
+    public static GameObject? PlayerCardPrefab;
+
+    [LuaFunc]
+    public static GameObject InitPlayerCardModel()
+    {
+        if (PlayerCardPrefab != null) return PlayerCardPrefab;
+        PlayerCardPrefab = new GameObject("|" + nameof(PlayerCardPrefab) + "|",typeof(Transform));
+        throw new NotImplementedException("New UI");
+    }
+
     [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.LoadCards))]
     private static void SuPreGameManager_LoadCards(GameManager __instance)
     {
@@ -51,10 +63,9 @@ public static class LuaSystem
     private static void SuEnvironmentDictionaryKey(CardData __instance, CardData _FromEnvironment, int _ID,
         ref string __result)
     {
-        if (!GameManager.Instance || !GameManager.Instance.CurrentEnvironment) return;
+        if (!GameManager.Instance) return;
         if (!__instance || !_FromEnvironment) return;
-        if (!__instance.InstancedEnvironment || !_FromEnvironment.InstancedEnvironment) return;
-        if (_FromEnvironment.UniqueID != GameManager.Instance.CurrentEnvironment.UniqueID) return;
+        if (!_FromEnvironment.InstancedEnvironment || !__instance.InstancedEnvironment) return;
         var newEnvKey = GetCurEnvId() ?? "";
         var sha256 = SHA256.Create();
         var memoryStream = new MemoryStream();
@@ -63,6 +74,7 @@ public static class LuaSystem
         binaryWriter.Write(newEnvKey + "_From");
         binaryWriter.Write(newEnvKey + "_Super");
         var encode = Base64.Default.Encode(sha256.ComputeHash(memoryStream.ToArray()));
+        sha256.Clear();
         newEnvKey = encode + "_" + __instance.UniqueID;
         if (_ID != 0)
         {
@@ -137,12 +149,12 @@ public static class LuaSystem
             return;
         }
 
-        if (UniqueIDScriptable.GetFromID<CardData>(uid)?.InstancedEnvironment is false &&
-            UniqueIDScriptable.GetFromID<CardData>(uid)?.CardName.LocalizationKey.StartsWith("NeedSuReturn") is false)
-        {
-            __state = false;
-            return;
-        }
+        // if (UniqueIDScriptable.GetFromID<CardData>(uid)?.InstancedEnvironment is false &&
+        //     UniqueIDScriptable.GetFromID<CardData>(uid)?.CardName.LocalizationKey.StartsWith("NeedSuReturn") is false)
+        // {
+        //     __state = false;
+        //     return;
+        // }
 
         _TravelToPrevEnv = false;
     }
@@ -249,7 +261,7 @@ public static class LuaSystem
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ChangeEnvironment))]
     public static void GameManager_ChangeEnvironment(GameManager __instance, ref IEnumerator __result)
     {
-        __result = __result.Prepend(MoniChangeEnvironment());
+        __result = __instance.CommonChangeEnvironment();
         return;
 
         IEnumerator MoniChangeEnvironment()
@@ -261,12 +273,13 @@ public static class LuaSystem
                     __instance.CurrentTravelIndex);
             }
 
-            Debug.Log($"CommonChangeEnvironment from {curEnvId}");
-            var curReturnStack = CurReturnStack();
-            curReturnStack.Push(__instance.CurrentEnvironment.UniqueID, curEnvId ?? "");
             var newEnvKey = __instance.NextEnvironment.EnvironmentDictionaryKey(__instance.CurrentEnvironment,
                 __instance.NextTravelIndex);
+            Debug.Log($"CommonChangeEnvironment from {curEnvId} to {newEnvKey}");
+            var curReturnStack = CurReturnStack();
+            curReturnStack.Push(__instance.CurrentEnvironment.UniqueID, curEnvId ?? "");
             SetCurEnvId(newEnvKey);
+            __instance.SuperGetEnvSaveData(__instance.NextEnvironment, newEnvKey);
             yield break;
         }
     }

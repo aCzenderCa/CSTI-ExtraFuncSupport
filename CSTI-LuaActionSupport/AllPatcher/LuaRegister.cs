@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using CSTI_LuaActionSupport.DataStruct;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using HarmonyLib;
@@ -79,23 +81,50 @@ public class LuaRegister
         }
 
         if (card == null || card.CardModel == null) return;
-        if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CurrentImage) + "_Getter",
-                card.CardModel.UniqueID, out var regs)) return;
-        foreach (var luaFunction in regs)
+        if (Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CurrentImage) + "_Getter",
+                card.CardModel.UniqueID, out var regs))
         {
-            try
+            foreach (var luaFunction in regs)
             {
-                var objects = luaFunction.Call(__instance, new CardAccessBridge(card),
-                    new SimpleUniqueAccess(card.CardModel), __result != null ? __result.name : null);
-                if (objects.Length > 0 && objects[0] is string spriteName &&
-                    SpriteDict.TryGetValue(spriteName, out var sprite))
+                try
                 {
-                    __result = sprite;
+                    var objects = luaFunction.Call(__instance, new CardAccessBridge(card),
+                        new SimpleUniqueAccess(card.CardModel), __result != null ? __result.name : null);
+                    if (objects.Length > 0 && objects[0] is string spriteName &&
+                        SpriteDict.TryGetValue(spriteName, out var sprite))
+                    {
+                        __result = sprite;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
                 }
             }
-            catch (Exception e)
+        }
+
+        foreach (var dismantleAction in card.CardModel.DismantleActions)
+        {
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack)
             {
-                Debug.LogWarning(e);
+                foreach (var spriteSetItem in from actionEffectPack in pack.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.Set(__instance as InGameCardBase, ref __result);
+                }
+            }
+
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack1)
+            {
+                foreach (var spriteSetItem in from actionEffectPack in pack1.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.Set(__instance as InGameCardBase, ref __result);
+                }
             }
         }
     }

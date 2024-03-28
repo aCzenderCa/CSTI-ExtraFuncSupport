@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
-using gfoidl.Base64;
 using HarmonyLib;
 using UnityEngine;
 
@@ -47,7 +44,7 @@ public static class AnotherAddCard
         instance.EnvironmentsData[envKey].CurrentMaxWeight = instance.MaxEnvWeight;
         var waitFor = new List<CoroutineController>();
         InGameCardBase[] array2 = instance.AllCards.ToArray();
-        if (!array2.Contains(instance.CurrentExplorableCard))
+        if (instance.CurrentExplorableCard && !array2.Contains(instance.CurrentExplorableCard))
         {
             array2 = array2.AddToArray(instance.CurrentExplorableCard);
         }
@@ -100,6 +97,24 @@ public static class AnotherAddCard
                     instance.PinnedCards.Add(
                         new InGamePinData(pinData));
                 }
+            }
+
+            var hasExp = false;
+            foreach (var inventoryCardSaveData in superGetEnvSaveData!.AllInventoryCards)
+            {
+                if (UniqueIDScriptable.GetFromID<CardData>(UniqueIDScriptable.LoadID(inventoryCardSaveData.CardID))
+                        .CardType == CardTypes.Explorable)
+                {
+                    hasExp = true;
+                    break;
+                }
+            }
+
+            if (!hasExp && instance.NextEnvironment.DefaultEnvCards.FirstOrDefault(data =>
+                    data && data.CardType == CardTypes.Explorable && data.AlwaysUpdate == false) is { } expCard)
+            {
+                instance.AddCard(expCard, null, true, null, true, SpawningLiquid.Empty,
+                    new Vector2Int(0, instance.CurrentTickInfo.z), false);
             }
 
             yield return instance.StartCoroutine(instance.LoadCardSet(instance.EnvironmentsData[newEnv].AllRegularCards,
@@ -385,7 +400,6 @@ public static class AnotherAddCard
         }
 
         var num = instance.GameGraphics.SetLoading(true);
-        yield return new WaitForSeconds(num);
         instance.GameGraphics.ClearFilterTags();
         var envKey = curEnvId ?? "";
         CreateCurEnv(instance, envKey);
@@ -395,11 +409,17 @@ public static class AnotherAddCard
         instance.EnvironmentsData[envKey].CurrentMaxWeight = instance.MaxEnvWeight;
         var waitFor = new List<CoroutineController>();
         InGameCardBase[] array2 = instance.AllCards.ToArray();
+        if (instance.CurrentExplorableCard && !array2.Contains(instance.CurrentExplorableCard))
+        {
+            array2 = array2.AddToArray(instance.CurrentExplorableCard);
+        }
+
         List<InGameRefCardSaveData> updatedBGCards = new();
         List<InGameCardBase> cardsRemainingInBG = new();
         SaveCurCards(instance, array2, cardsRemainingInBG, updatedBGCards, envKey);
 
         SaveCurPins(instance, envKey);
+        yield return null;
         SaveRemoveAllCards(instance, array2, waitFor);
 
         foreach (var c in waitFor)
@@ -430,31 +450,9 @@ public static class AnotherAddCard
             }
         }
 
-        var newEnvKey = "";
-        if (instance.CurrentEnvironment.InstancedEnvironment && instance.NextEnvironment.InstancedEnvironment)
-        {
-            newEnvKey = LuaSystem.GetCurEnvId() ?? "";
-            var sha256 = SHA256.Create();
-            var memoryStream = new MemoryStream();
-            var binaryWriter = new BinaryWriter(memoryStream);
-            binaryWriter.Write(newEnvKey);
-            binaryWriter.Write(newEnvKey + "_From");
-            binaryWriter.Write(newEnvKey + "_Super");
-            var encode = Base64.Default.Encode(sha256.ComputeHash(memoryStream.ToArray()));
-            newEnvKey = encode + "_" + instance.NextEnvironment.UniqueID;
-            if (instance.NextTravelIndex != 0)
-            {
-                newEnvKey += "=" + instance.NextTravelIndex;
-            }
-
-            LuaSystem.SetCurEnvId(newEnvKey);
-        }
-        else
-        {
-            newEnvKey = instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
-                instance.NextTravelIndex);
-            LuaSystem.SetCurEnvId(newEnvKey);
-        }
+        var newEnvKey = instance.NextEnvironment.EnvironmentDictionaryKey(instance.CurrentEnvironment,
+            instance.NextTravelIndex);
+        LuaSystem.SetCurEnvId(newEnvKey);
 
         var superGetEnvSaveData = instance.SuperGetEnvSaveData(instance.NextEnvironment, newEnvKey)!;
 
@@ -467,6 +465,24 @@ public static class AnotherAddCard
                 instance.PinnedCards.Add(
                     new InGamePinData(pinData));
             }
+        }
+
+        var hasExp = false;
+        foreach (var inventoryCardSaveData in superGetEnvSaveData.AllInventoryCards)
+        {
+            if (UniqueIDScriptable.GetFromID<CardData>(UniqueIDScriptable.LoadID(inventoryCardSaveData.CardID))
+                    .CardType == CardTypes.Explorable)
+            {
+                hasExp = true;
+                break;
+            }
+        }
+
+        if (!hasExp && instance.NextEnvironment.DefaultEnvCards.FirstOrDefault(data =>
+                data && data.CardType == CardTypes.Explorable && data.AlwaysUpdate == false) is { } expCard)
+        {
+            instance.AddCard(expCard, null, true, null, true, SpawningLiquid.Empty,
+                new Vector2Int(0, instance.CurrentTickInfo.z), false);
         }
 
         yield return instance.StartCoroutine(instance.LoadCardSet(
@@ -552,6 +568,14 @@ public static class AnotherAddCard
             {
                 instance.EnvironmentsData[envKey].AllRegularCards.Add(card.Save());
             }
+        }
+
+        if (instance.CurrentExplorableCard && !instance.CurrentExplorableCard.CardModel.AlwaysUpdate && instance
+                .EnvironmentsData[envKey].AllInventoryCards.TrueForAll(data =>
+                    UniqueIDScriptable.LoadID(data.CardID) != instance.CurrentExplorableCard.CardModel.UniqueID))
+        {
+            instance.EnvironmentsData[envKey].AllInventoryCards.Add(
+                instance.CurrentExplorableCard.SaveInventory(instance.EnvironmentsData[envKey].NestedInventoryCards));
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaCodeHelper;
@@ -12,6 +13,8 @@ using UnityEngine.UI;
 namespace CSTI_LuaActionSupport.UIStruct;
 
 [HarmonyPatch]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+[LuaFuncTodo]
 public static class UIManagers
 {
     public static readonly Dictionary<string, UIModel> AllUIModel = new();
@@ -39,8 +42,6 @@ public static class UIManagers
             if (uiModel.AllSlots.Count > 0)
             {
                 var mainSlot = uiModel.AllSlots[0];
-                mainSlot.CanPile = false;
-                mainSlot.SetCard(_Card, true);
             }
 
             for (var i = 1; i < uiModel.AllSlots.Count && i < _Card.CardsInInventory.Count; i++)
@@ -48,11 +49,6 @@ public static class UIManagers
                 var inventorySlot = _Card.CardsInInventory[i - 1];
                 var list = inventorySlot.AllCards.ToList();
                 list.Remove(inventorySlot.MainCard);
-                uiModel.AllSlots[i].SetCard(inventorySlot.MainCard, true);
-                foreach (var card in list)
-                {
-                    uiModel.AllSlots[i].AddCard(card, true);
-                }
             }
 
             return false;
@@ -82,7 +78,7 @@ public static class UIManagers
               model:RegForCard("0269179428204eaca0955e49090b680e")
               """)]
     [LuaFunc]
-    public static UIModel CreateModel(float x, float y, float w, float h, string bg, string fg, LuaFunction init,
+    public static UIModel CreateModel(float x, float y, float w, float h, string bg, LuaFunction init,
         LuaTable slots, LuaTable buttons)
     {
         var slotsLi = new List<Vector2>();
@@ -111,14 +107,14 @@ public static class UIManagers
             }
         }
 
-        var uiModel = new UIModel(x, y, w, h, fg, bg, init, slotsLi, buttonsLi);
+        var uiModel = new UIModel(x, y, w, h, bg, init, slotsLi, buttonsLi);
         return uiModel;
     }
 
     public class UIModel
     {
         public GameObject? GO;
-        public readonly List<UIStructs.MyCardSlot> AllSlots = new();
+        public readonly List<UIStructs.MyTrPin> AllSlots = new();
         public readonly List<GameObject> AllLuaButtons = new();
         public InGameCardBase? Card;
 
@@ -132,7 +128,7 @@ public static class UIManagers
             if (GO) return;
             GO = new GameObject("SimpleUIModel", typeof(RectTransform), typeof(Image));
             GO.SetActive(false);
-            var goTransform = (RectTransform) GO.transform;
+            var goTransform = (RectTransform)GO.transform;
             goTransform.SetParent(UITools.BaseCanvasContentTransform);
             goTransform.position = new Vector2(X, Y);
             goTransform.sizeDelta = new Vector2(Width, Height);
@@ -144,24 +140,13 @@ public static class UIManagers
             bg.type = Image.Type.Sliced;
             bg.color = new Color(1, 1, 1, 0.5f);
 
-            var fgGameObject = new GameObject("SimpleUIModel_FG", typeof(RectTransform), typeof(Image));
-            var fgTransform = (RectTransform) fgGameObject.transform;
-            fgTransform.SetParent(goTransform);
-            fgTransform.localPosition = Vector3.zero;
-            fgTransform.sizeDelta = new Vector2(Width, Height);
-            var fgImg = fgGameObject.GetComponent<Image>();
-            if (SpriteDict.TryGetValue(FgImg, out var fgSprite)) fgImg.sprite = fgSprite;
-            fgImg.material = bg.material;
-            fgImg.type = Image.Type.Sliced;
-            fgImg.color = new Color(1, 1, 1, 0.7f);
-
             var CardSlotParent = new GameObject("CardSlotParent", typeof(RectTransform));
             var CardSlotParentTransform = CardSlotParent.transform;
             CardSlotParentTransform.SetParent(goTransform);
             CardSlotParentTransform.localPosition = Vector3.zero;
 
             foreach (var myCardSlot in SlotSet.Select(slotPos =>
-                         UIStructs.MyCardSlot.CreateOn(slotPos, Vector3.one, CardSlotParentTransform)))
+                         UIStructs.MyTrPin.CreateOn(slotPos, null, null, "",CardSlotParentTransform)))
             {
                 AllSlots.Add(myCardSlot);
             }
@@ -179,8 +164,8 @@ public static class UIManagers
                 var luaButton = new GameObject("LuaButton", typeof(RectTransform), typeof(Button),
                     typeof(TextMeshProUGUI), typeof(DynamicFontText));
                 AllLuaButtons.Add(luaButton);
-                var luaButtonImgTransform = (RectTransform) luaButtonImg.transform;
-                var luaButtonTransform = (RectTransform) luaButton.transform;
+                var luaButtonImgTransform = (RectTransform)luaButtonImg.transform;
+                var luaButtonTransform = (RectTransform)luaButton.transform;
                 luaButtonImgTransform.SetParent(luaButtonParentTransform);
                 luaButtonTransform.SetParent(luaButtonImgTransform);
                 var image = luaButtonImg.GetComponent<Image>();
@@ -215,6 +200,8 @@ public static class UIManagers
             public readonly LuaFunction? Function;
             public readonly LuaFunction? TextFunction;
             public readonly string Text;
+            public readonly string ButtonId;
+            public readonly string ButtonText;
             public readonly float TextSize;
 
             public static Vector2 Table2Vector2(LuaTable table)
@@ -239,17 +226,22 @@ public static class UIManagers
                 var _Function = table[nameof(Function)] as LuaFunction;
                 var _TextFunction = table[nameof(TextFunction)] as LuaFunction;
                 var _Text = table[nameof(Text)] as string ?? "";
+                var _ButtonId = table[nameof(ButtonId)] as string ?? "";
+                var _ButtonText = table[nameof(ButtonText)] as string ?? "";
                 var _TextSize = table[nameof(TextSize)].TryNum<float>() ?? 24;
-                return new UILuaButton(_PlacePos, _ButtonSize, _Function, _TextFunction, _Text, _TextSize);
+                return new UILuaButton(_PlacePos, _ButtonSize, _Function, _TextFunction, _Text, _TextSize, _ButtonId,
+                    _ButtonText);
             }
 
             public UILuaButton(Vector2 placePos, Vector2 buttonSize, LuaFunction? function, LuaFunction? textFunction,
-                string text, float textSize)
+                string text, float textSize, string buttonId, string buttonText)
             {
                 Function = function;
                 TextFunction = textFunction;
                 Text = text;
                 TextSize = textSize;
+                ButtonId = buttonId;
+                ButtonText = buttonText;
                 PlacePos = placePos;
                 ButtonSize = buttonSize;
             }
@@ -260,12 +252,11 @@ public static class UIManagers
         public readonly float Width;
         public readonly float Height;
         public readonly string BgImg;
-        public readonly string FgImg;
         public readonly LuaFunction InitCode;
         public readonly List<Vector2> SlotSet;
         public readonly List<UILuaButton> Buttons;
 
-        public UIModel(float x, float y, float w, float h, string fgImg, string bgImg, LuaFunction initCode,
+        public UIModel(float x, float y, float w, float h, string bgImg, LuaFunction initCode,
             List<Vector2> slotSet, List<UILuaButton> buttons)
         {
             X = x;
@@ -276,7 +267,6 @@ public static class UIManagers
             SlotSet = slotSet;
             Buttons = buttons;
             BgImg = bgImg;
-            FgImg = fgImg;
         }
 
         public void Init(InGameCardBase card)
