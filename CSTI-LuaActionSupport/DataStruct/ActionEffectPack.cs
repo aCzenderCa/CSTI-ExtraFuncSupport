@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx;
 using CSTI_LuaActionSupport.AllPatcher;
 using CSTI_LuaActionSupport.Attr;
 using CSTI_LuaActionSupport.Helper;
@@ -493,6 +494,11 @@ public class SimpleVarModEntry : IModLoaderJsonObj
 
     public static float Id2Val(InGameCardBase recCard, InGameCardBase? giveCard, string id)
     {
+        if (id.IsNullOrWhiteSpace())
+        {
+            return float.NaN;
+        }
+
         if (Enum.TryParse<DurabilitiesTypes>(id, out var durType))
         {
             var rec = new CardAccessBridge(recCard);
