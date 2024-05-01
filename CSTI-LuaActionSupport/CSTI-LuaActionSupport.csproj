@@ -239,10 +239,14 @@
         <Compile Include="AllPatcher\OnGameLoad.cs" />
         <Compile Include="AllPatcher\SafeAttrPatcher.cs" />
         <Compile Include="AllPatcher\SavePatcher.cs" />
+        <Compile Include="AllPatcher\UIPatcher.cs" />
+        <Compile Include="Attr\ClsExport.cs" />
         <Compile Include="Attr\Note.cs" />
         <Compile Include="Const\GameManagerConst.cs" />
         <Compile Include="DataStruct\ActionEffectPack.cs" />
         <Compile Include="DataStruct\CardActionPack.cs" />
+        <Compile Include="DataStruct\CommonCardFinder.cs" />
+        <Compile Include="DataStruct\CommonCardGen.cs" />
         <Compile Include="DataStruct\GraphicsPack.cs" />
         <Compile Include="DataStruct\IModLoaderJsonObj.cs" />
         <Compile Include="DataStruct\PortraitInfo.cs" />

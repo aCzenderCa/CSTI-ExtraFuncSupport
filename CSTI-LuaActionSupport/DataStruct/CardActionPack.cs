@@ -153,7 +153,7 @@ public class CardActionPack : ScriptableObject, IModLoaderJsonObj
     }
 
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
-        LuaScriptRetValues retValues, CardAction action)
+        LuaScriptRetValues retValues, CardAction? action)
     {
         if (!CheckCondition(gameManager, recCard, ref giveCard)) return;
 

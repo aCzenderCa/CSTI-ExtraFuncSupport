@@ -103,7 +103,8 @@ public class LuaRegister
             }
         }
 
-        foreach (var dismantleAction in card.CardModel.DismantleActions)
+        foreach (var dismantleAction in card.CardModel.DismantleActions.Concat<CardAction>(card.CardModel
+                     .OnStatsChangeActions).Concat(card.CardModel.CardInteractions))
         {
             if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
                 CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack)
@@ -307,21 +308,49 @@ public class LuaRegister
     public static void LuaCardName(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
     {
         if (__instance == null || __instance.CardModel == null) return;
-        if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardName), __instance.CardModel.UniqueID,
-                out var regs)) return;
-        foreach (var luaFunction in regs)
+        if (Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardName), __instance.CardModel.UniqueID,
+                out var regs))
         {
-            try
+            foreach (var luaFunction in regs)
             {
-                var objects = luaFunction.Call(new CardAccessBridge(__instance), _IgnoreLiquid);
-                if (objects.Length > 0 && objects[0] is string s)
+                try
                 {
-                    __result = s;
+                    var objects = luaFunction.Call(new CardAccessBridge(__instance), _IgnoreLiquid);
+                    if (objects.Length > 0 && objects[0] is string s)
+                    {
+                        __result = s;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
                 }
             }
-            catch (Exception e)
+        }
+
+        foreach (var dismantleAction in __instance.CardModel.DismantleActions.Concat<CardAction>(__instance.CardModel
+                     .OnStatsChangeActions).Concat(__instance.CardModel.CardInteractions))
+        {
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack)
             {
-                Debug.LogWarning(e);
+                foreach (var spriteSetItem in from actionEffectPack in pack.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.SetName(__instance, ref __result);
+                }
+            }
+
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack1)
+            {
+                foreach (var spriteSetItem in from actionEffectPack in pack1.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.SetName(__instance, ref __result);
+                }
             }
         }
     }
@@ -330,21 +359,49 @@ public class LuaRegister
     public static void LuaCardDescription(InGameCardBase __instance, bool _IgnoreLiquid, ref string __result)
     {
         if (__instance == null || __instance.CardModel == null) return;
-        if (!Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardDescription),
-                __instance.CardModel.UniqueID, out var regs)) return;
-        foreach (var luaFunction in regs)
+        if (Register.TryGet(nameof(InGameCardBase), nameof(InGameCardBase.CardDescription),
+                __instance.CardModel.UniqueID, out var regs))
         {
-            try
+            foreach (var luaFunction in regs)
             {
-                var objects = luaFunction.Call(new CardAccessBridge(__instance), _IgnoreLiquid);
-                if (objects.Length > 0 && objects[0] is string s)
+                try
                 {
-                    __result = s;
+                    var objects = luaFunction.Call(new CardAccessBridge(__instance), _IgnoreLiquid);
+                    if (objects.Length > 0 && objects[0] is string s)
+                    {
+                        __result = s;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
                 }
             }
-            catch (Exception e)
+        }
+
+        foreach (var dismantleAction in __instance.CardModel.DismantleActions.Concat<CardAction>(__instance.CardModel
+                     .OnStatsChangeActions).Concat(__instance.CardModel.CardInteractions))
+        {
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack)
             {
-                Debug.LogWarning(e);
+                foreach (var spriteSetItem in from actionEffectPack in pack.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.SetDesc(__instance, ref __result);
+                }
+            }
+
+            if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardOnCardActionPack") is true &&
+                CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is { } pack1)
+            {
+                foreach (var spriteSetItem in from actionEffectPack in pack1.effectPacks
+                         from spriteSetItem in actionEffectPack.spriteSet
+                         select spriteSetItem)
+                {
+                    spriteSetItem.SetDesc(__instance, ref __result);
+                }
             }
         }
     }

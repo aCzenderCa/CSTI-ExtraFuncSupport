@@ -257,7 +257,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
             if (CardBase == null) return;
             if (value is double i)
             {
-                CardBase.DroppedCollections[key] = new Vector2Int(Mathf.RoundToInt((float)i), 0);
+                CardBase.DroppedCollections[key] = new Vector2Int(Mathf.RoundToInt((float) i), 0);
             }
             else
             {
@@ -348,7 +348,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
         get
         {
             if (CardBase == null) return null;
-            if (_dataNode is { NodeType: DataNode.DataNodeType.Table }) goto end;
+            if (_dataNode is {NodeType: DataNode.DataNodeType.Table}) goto end;
             foreach (var key in CardBase.DroppedCollections.Keys)
             {
                 if (DataNodeReg.Match(key) is not { } match) continue;
@@ -360,7 +360,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
             }
 
             end: ;
-            return _dataNode is { NodeType: DataNode.DataNodeType.Table }
+            return _dataNode is {NodeType: DataNode.DataNodeType.Table}
                 ? new DataNodeTableAccessBridge(_dataNode.Value.table)
                 : null;
         }
@@ -379,13 +379,13 @@ public class CardAccessBridge : LuaAnim.ITransProvider
     public void SaveData()
     {
         if (CardBase == null) return;
-        if (_dataNode is not { NodeType: DataNode.DataNodeType.Table } dataNode) return;
+        if (_dataNode is not {NodeType: DataNode.DataNodeType.Table} dataNode) return;
         var memoryStream = new MemoryStream();
         var binaryWriter = new BinaryWriter(memoryStream);
         dataNode.Save(binaryWriter);
         var array = memoryStream.ToArray();
         memoryStream.Close();
-        if (CardBase.DroppedCollections.FirstOrDefault(pair => DataNodeReg.IsMatch(pair.Key)) is { Key: not null } p)
+        if (CardBase.DroppedCollections.FirstOrDefault(pair => DataNodeReg.IsMatch(pair.Key)) is {Key: not null} p)
         {
             CardBase.DroppedCollections.Remove(p.Key);
         }
@@ -610,7 +610,7 @@ public class CardAccessBridge : LuaAnim.ITransProvider
         };
         DataNodeTableAccessBridge? initData = null;
         var forceSlotInfo = new SlotInfo(SlotsTypes.Base, -10086);
-        var forceBpData = new BlueprintSaveData(null, null) { CurrentStage = -10086 };
+        var forceBpData = new BlueprintSaveData(null, null) {CurrentStage = -10086};
         if (ext != null)
         {
             tDur.Usage.FloatValue.TryModBy(ext[nameof(TransferedDurabilities.Usage)]);
@@ -648,8 +648,8 @@ public class CardAccessBridge : LuaAnim.ITransProvider
             i += 1;
 
             GameManager.Instance.MoniAddCard(cardData, CardBase, tDur, forceSlotInfo, forceBpData, true,
-                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1), SimpleUniqueAccess.SetInitData,
-                initData).Add2Li(enumerators);
+                sLiq, new Vector2Int(GameManager.Instance.CurrentTickInfo.z, -1),
+                initData != null ? [initData.IntoSave()] : null).Add2Li(enumerators);
         } while (i < count && cardData.CardType != CardTypes.Liquid);
 
         enumerators.Add2AllEnumerators(PriorityEnumerators.Normal);

@@ -20,6 +20,9 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         [Note("在该范围内时生效")] public Vector2 InRange;
         [Note("状态值id，详见介绍中通用变量修改一节")] public string StatValId = "";
         [Note("要设置成什么图")] public Sprite? ToSetSprite;
+        [Note("额外随机项，主图权重为3，其他图权重为1")] public Sprite[] SubSprites = [];
+        [Note("设置的新描述，不填则不更改")] public string Desc;
+        [Note("设置的新卡名，不填则不更改")] public string Name;
 
         public void Set(InGameCardBase? cardBase, ref Sprite? sprite)
         {
@@ -33,7 +36,40 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
             if (float.IsNaN(id2Val)) return;
             if (id2Val >= InRange.x && id2Val <= InRange.y)
             {
-                sprite = ToSetSprite;
+                var i = Random.Range(0, 3 + SubSprites.Length);
+                sprite = i < 3 ? ToSetSprite : SubSprites[i - 3];
+            }
+        }
+
+        public void SetDesc(InGameCardBase? cardBase, ref string desc)
+        {
+            if (Desc.IsNullOrWhiteSpace()) return;
+            if (cardBase == null)
+            {
+                cardBase = GameManager.Instance.CurrentEnvironmentCard;
+            }
+
+            var id2Val = SimpleVarModEntry.Id2Val(cardBase, null, StatValId);
+            if (float.IsNaN(id2Val)) return;
+            if (id2Val >= InRange.x && id2Val <= InRange.y)
+            {
+                desc = Desc;
+            }
+        }
+
+        public void SetName(InGameCardBase? cardBase, ref string name)
+        {
+            if (Name.IsNullOrWhiteSpace()) return;
+            if (cardBase == null)
+            {
+                cardBase = GameManager.Instance.CurrentEnvironmentCard;
+            }
+
+            var id2Val = SimpleVarModEntry.Id2Val(cardBase, null, StatValId);
+            if (float.IsNaN(id2Val)) return;
+            if (id2Val >= InRange.x && id2Val <= InRange.y)
+            {
+                name = Name;
             }
         }
     }
@@ -91,6 +127,8 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     [Note("专门生成蓝图卡,不会解锁蓝图而是生成一个可以建造的卡到location,没有解锁,没有研究的蓝图也能生成")]
     public List<CardDrop> blueprintDrops = [];
 
+    [Note("阻止生成出的蓝图卡被取消")] public bool bpDropDisableCancel;
+
     [Note("针对包含该action本身卡的修改(CardAction.ReceivingCardChanges)")]
     public CardStateChange recCardStateChange;
 
@@ -102,13 +140,22 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     [Note("通用变量修改,支持卡牌耐久,状态,卡牌变量三者间任意加减互操作")]
     public List<SimpleVarModEntry> simpleVarModEntries = [];
 
+    [Note("通用卡牌生成，功能远强于CardsDropCollection")]
+    public CommonCardGen[] cardGens = [];
+
     [Note("如果receive卡本身是exp卡,为其探索进度增加该值,注意:满进度=1.0")]
     public float expProgress;
 
     [Note("设置卡牌贴图，详见内部字段的note")] public List<SpriteSetItem> spriteSet = [];
 
+    [Note("rec卡要移动到的位置，搜索不到卡则移动到需求的槽位上，移动到卡牌上会自动放入容器")]
+    public CommonCardFinder? recMoveToFinder;
+
+    [Note("give卡要移动到的位置，搜索不到卡则移动到需求的槽位上，移动到卡牌上会自动放入容器")]
+    public CommonCardFinder? giveMoveToFinder;
+
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
-        LuaScriptRetValues retValues, CardAction action)
+        LuaScriptRetValues retValues, CardAction? action)
     {
         if (hasCondition)
         {
@@ -169,11 +216,22 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         {
             foreach (var modifier in statModifications)
             {
-                gameManager.ChangeStat(modifier, StatModification.Permanent,
-                        StatModifierReport.SourceFromAction(action, recCard), action.NoveltyID(recCard),
-                        -1, null,
-                        null, false)
-                    .Add2AllEnumerators(PriorityEnumerators.High);
+                if (action != null)
+                {
+                    gameManager.ChangeStat(modifier, StatModification.Permanent,
+                            StatModifierReport.SourceFromAction(action, recCard), action.NoveltyID(recCard),
+                            -1, null,
+                            null, false)
+                        .Add2AllEnumerators(PriorityEnumerators.High);
+                }
+                else
+                {
+                    gameManager.ChangeStat(modifier, StatModification.Permanent,
+                            recCard.CardModel.UniqueID, "",
+                            -1, null,
+                            null, false)
+                        .Add2AllEnumerators(PriorityEnumerators.High);
+                }
             }
         }
 
@@ -234,6 +292,15 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
             var temp = GetTempTable();
             temp["SlotType"] = "Location";
             temp["NeedPreInit"] = true;
+            if (bpDropDisableCancel)
+            {
+                var dataNodeTableAccessBridge = new DataNodeTableAccessBridge(new Dictionary<string, DataNode>())
+                {
+                    [nameof(bpDropDisableCancel)] = true
+                };
+                temp["initData"] = dataNodeTableAccessBridge;
+            }
+
             foreach (var bpDrop in blueprintDrops)
             {
                 if (bpDrop.DroppedCard.CardType != CardTypes.Blueprint) continue;
@@ -254,6 +321,38 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         if (expProgress > 0 && recCard.CardModel.CardType == CardTypes.Explorable)
         {
             new CardAccessBridge(recCard).AddExpProgress(expProgress);
+        }
+
+        if (cardGens.Length > 0)
+        {
+            foreach (var cardGen in cardGens)
+            {
+                cardGen.Act();
+            }
+        }
+
+        if (recMoveToFinder != null)
+        {
+            if (!recMoveToFinder.OnlySlot && recMoveToFinder.FindFirst() is { } find)
+            {
+                new CardAccessBridge(recCard).MoveTo(new CardAccessBridge(find));
+            }
+            else
+            {
+                new CardAccessBridge(recCard).MoveToSlot(recMoveToFinder.SlotsType);
+            }
+        }
+
+        if (giveCard != null && giveMoveToFinder != null)
+        {
+            if (!giveMoveToFinder.OnlySlot && giveMoveToFinder.FindFirst() is { } find)
+            {
+                new CardAccessBridge(giveCard).MoveTo(new CardAccessBridge(find));
+            }
+            else
+            {
+                new CardAccessBridge(giveCard).MoveToSlot(giveMoveToFinder.SlotsType);
+            }
         }
 
         gameManager.ActionRoutine(
@@ -562,6 +661,11 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             return Random.value;
         }
 
+        if (id == "Sp|DropChance")
+        {
+            return CommonCardGen.TempChance;
+        }
+
         return float.NaN;
 
         Func<TimeObjective, bool> FindObjective(string objId)
@@ -632,6 +736,12 @@ public class SimpleVarModEntry : IModLoaderJsonObj
             give.SaveData();
 
             return;
+        }
+
+
+        if (toId == "Sp|DropChance")
+        {
+            CommonCardGen.TempChance = CalcModVal(recCard, giveCard, rawVal);
         }
     }
 

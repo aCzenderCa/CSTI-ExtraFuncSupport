@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using CSTI_LuaActionSupport.DataStruct;
 using CSTI_LuaActionSupport.Helper;
 using CSTI_LuaActionSupport.LuaBuilder;
 using CSTI_LuaActionSupport.LuaCodeHelper;
 using CSTI_LuaActionSupport.UIStruct;
+using gfoidl.Base64;
 using HarmonyLib;
 using NLua;
 using UnityEngine;
@@ -23,7 +25,7 @@ public static class CardActionPatcher
     public static readonly Dictionary<int, Dictionary<string, DataNode>> GSlotSaveData = new();
     private const string _InnerFuncBase = "CSTI_LuaActionSupport__InnerFunc";
     public static readonly SimpleAccessTool AccessTool = new();
-    public static LuaTable InnerFuncBase => (LuaTable)LuaRuntime[_InnerFuncBase];
+    public static LuaTable InnerFuncBase => (LuaTable) LuaRuntime[_InnerFuncBase];
 
     public static LuaTable GetModTable(string modId)
     {
@@ -233,6 +235,15 @@ public static class CardActionPatcher
 
     public class DataNodeTableAccessBridge
     {
+        public CollectionDropsSaveData IntoSave()
+        {
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+            new DataNode(Table ?? new Dictionary<string, DataNode>()).Save(binaryWriter);
+            var array = memoryStream.ToArray();
+            return new CollectionDropsSaveData($"LNbt|>{Base64.Default.Encode(array)}<|", Vector2Int.zero);
+        }
+
         public LuaTable? LuaTable
         {
             get
@@ -453,7 +464,7 @@ public static class CardActionPatcher
     public static void Add2AllEnumerators(this IEnumerator? enumerator, int _Priority)
     {
         if (enumerator == null) return;
-        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> { enumerator });
+        PriorityEnumerators.Get(_Priority).ThisEnumerators.Add(new List<IEnumerator> {enumerator});
     }
 
     public static void Add2AllEnumerators(this List<IEnumerator> enumerators, int _Priority)
@@ -463,15 +474,15 @@ public static class CardActionPatcher
 
     public static readonly Dictionary<int, PriorityEnumerators> AllEnumerators = new()
     {
-        { PriorityEnumerators.BeforeAll, PriorityEnumerators.Get(PriorityEnumerators.BeforeAll) },
-        { PriorityEnumerators.BeforeTimeChange, PriorityEnumerators.Get(PriorityEnumerators.BeforeTimeChange) },
-        { PriorityEnumerators.SuperHigh, PriorityEnumerators.Get(PriorityEnumerators.SuperHigh) },
-        { PriorityEnumerators.High, PriorityEnumerators.Get(PriorityEnumerators.High) },
-        { PriorityEnumerators.Normal, PriorityEnumerators.Get(PriorityEnumerators.Normal) },
-        { PriorityEnumerators.Low, PriorityEnumerators.Get(PriorityEnumerators.Low) },
-        { PriorityEnumerators.SuperLow, PriorityEnumerators.Get(PriorityEnumerators.SuperLow) },
-        { PriorityEnumerators.EnvChange, PriorityEnumerators.Get(PriorityEnumerators.EnvChange) },
-        { PriorityEnumerators.AfterEnvChange, PriorityEnumerators.Get(PriorityEnumerators.AfterEnvChange) },
+        {PriorityEnumerators.BeforeAll, PriorityEnumerators.Get(PriorityEnumerators.BeforeAll)},
+        {PriorityEnumerators.BeforeTimeChange, PriorityEnumerators.Get(PriorityEnumerators.BeforeTimeChange)},
+        {PriorityEnumerators.SuperHigh, PriorityEnumerators.Get(PriorityEnumerators.SuperHigh)},
+        {PriorityEnumerators.High, PriorityEnumerators.Get(PriorityEnumerators.High)},
+        {PriorityEnumerators.Normal, PriorityEnumerators.Get(PriorityEnumerators.Normal)},
+        {PriorityEnumerators.Low, PriorityEnumerators.Get(PriorityEnumerators.Low)},
+        {PriorityEnumerators.SuperLow, PriorityEnumerators.Get(PriorityEnumerators.SuperLow)},
+        {PriorityEnumerators.EnvChange, PriorityEnumerators.Get(PriorityEnumerators.EnvChange)},
+        {PriorityEnumerators.AfterEnvChange, PriorityEnumerators.Get(PriorityEnumerators.AfterEnvChange)},
     };
 
     public static Lua InitRuntime(GameManager __instance)
@@ -685,7 +696,7 @@ public static class CardActionPatcher
             cardAccessBridge.InitData();
             if (dismantleAction.ActionName.LocalizationKey?.StartsWith("CardActionPack") is true &&
                 CardActionPack.GetActionPack(dismantleAction.ActionName.ParentObjectID) is
-                    { actOnCardInit: true } pack &&
+                    {actOnCardInit: true} pack &&
                 cardAccessBridge.Data![pack.uid] is not true)
             {
                 acted = true;
@@ -694,6 +705,23 @@ public static class CardActionPatcher
                 var luaScriptRetValues = new LuaScriptRetValues();
                 pack.Act(GameManager.Instance, __instance, null, luaScriptRetValues, dismantleAction);
             }
+        }
+
+        var accessBridge = new CardAccessBridge(__instance);
+        if (accessBridge.Data is { } data && data[nameof(CommonCardGen.ActOnCardGen)] is string cardActionPackId
+                                          && CardActionPack.GetActionPack(cardActionPackId) is { } cardActionPack)
+        {
+            var luaScriptRetValues = new LuaScriptRetValues();
+            cardActionPack.Act(GameManager.Instance, __instance, null, luaScriptRetValues, null);
+            var tp = luaScriptRetValues["result"].TryNum<int>() ?? 0;
+            var miniTp = luaScriptRetValues["miniTime"].TryNum<int>() ?? 0;
+            var tickTp = luaScriptRetValues["tickTime"].TryNum<int>() ?? 0;
+            GameManager.Instance.ProcessTime(__instance, tp, miniTp, tickTp);
+            acted = true;
+            accessBridge = new CardAccessBridge(__instance);
+            accessBridge.InitData();
+            accessBridge.Data![nameof(CommonCardGen.ActOnCardGen)] = null;
+            accessBridge.SaveData();
         }
 
         if (!acted)
