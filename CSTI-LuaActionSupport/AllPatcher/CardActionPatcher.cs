@@ -70,6 +70,7 @@ public static class CardActionPatcher
 
     public static Dictionary<string, DataNode> CurrentGSlotSaveData()
     {
+        
         if (GSlotSaveData.TryGetValue(GameLoad.Instance.CurrentGameDataIndex, out var dataNodes))
         {
             return dataNodes;
@@ -730,5 +731,15 @@ public static class CardActionPatcher
         }
 
         LuaTimer.Wait4CA();
+    }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(InGameCardBase), nameof(InGameCardBase.ApplyPassiveEffect))]
+    public static void OnApplyPassiveEffect(InGameCardBase __instance, ref IEnumerator __result, PassiveEffect _Effect)
+    {
+        if (SimpleVarModEntry.SubStrC(_Effect.EffectName, "CAP|", out var id) &&
+            CardActionPack.GetActionPack(id) is { } cap)
+        {
+            __result = __result.Concat(cap.ProcessAction(GameManager.Instance, __instance, null, null));
+        }
     }
 }

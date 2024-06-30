@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CSTI_LuaActionSupport.AllPatcher;
+using HarmonyLib;
 using UnityEngine;
 
 namespace CSTI_LuaActionSupport.Helper;
@@ -112,7 +113,8 @@ public static class CoroutineHelper
         if (popup == null) return;
         if (!popup.isActiveAndEnabled) return;
         if (popup.CurrentCard == null) return;
-        popup.CommonSetup(popup.CurrentCard.CardName(), popup.CurrentCard.CardDescription());
+        if (popup.DescriptionText) popup.DescriptionText.text = popup.CurrentCard.CardDescription();
+        if (popup.PopupTitle) popup.PopupTitle.text = popup.CurrentCard.CardName();
         if (popup.CurrentCard == null) return;
         if (popup.CurrentCard.DismantleActions == null) return;
         popup.SetupActions(popup.CurrentCard.DismantleActions, true);

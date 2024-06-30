@@ -12,6 +12,7 @@ namespace CSTI_LuaActionSupport.DataStruct;
 [Serializable]
 public class CommonCardFinder
 {
+    [Note("为true时有效")] public bool Active;
     [Note("为true则仅卡槽约束有效")] public bool OnlySlot;
     [Note("卡牌所需要在的槽位类型")] public string SlotsType = "";
     [Note("为true则接受任意card，且忽视CardToFind")] public bool AllowAnyCard;

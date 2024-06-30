@@ -122,7 +122,7 @@ public class CardActionPack : ScriptableObject, IModLoaderJsonObj
     }
 
     public IEnumerator ProcessAction(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
-        CardAction action)
+        CardAction? action)
     {
         var retValues = new LuaScriptRetValues();
         Act(gameManager, recCard, giveCard, retValues, action);

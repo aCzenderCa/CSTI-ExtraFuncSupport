@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ChatTreeLoader.ScriptObjects;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace ChatTreeLoader.Behaviors

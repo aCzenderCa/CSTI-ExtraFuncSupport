@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -230,5 +231,4 @@ public static class SavePatcher
     {
         _SaveData.AllEndgameLogs = __state;
     }
-        
 }

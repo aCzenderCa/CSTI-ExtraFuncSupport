@@ -57,7 +57,7 @@ public class CommonCardGen : ScriptableObject, IModLoaderJsonObj
 
     [Note("在卡牌被生成时执行在卡牌上的action")] public CardActionPack? ActOnCardGen;
 
-    public void Act()
+    public void Act(InGameCardBase recCard)
     {
         if (CardData == null) return;
         TempChance = BaseChance;
@@ -67,19 +67,14 @@ public class CommonCardGen : ScriptableObject, IModLoaderJsonObj
             dropOn = PosProvider.CardFinder.FindFirst();
         }
 
-        if (dropOn != null)
+        if (dropOn == null)
         {
-            foreach (var modEntry in ChanceMod)
-            {
-                modEntry.Act(GameManager.Instance, dropOn, null);
-            }
+            dropOn = recCard;
         }
-        else
+
+        foreach (var modEntry in ChanceMod)
         {
-            foreach (var modEntry in ChanceMod)
-            {
-                modEntry.Act(GameManager.Instance, GameManager.Instance.CurrentExplorableCard, null);
-            }
+            modEntry.Act(GameManager.Instance, dropOn, null);
         }
 
         if (Random.value > TempChance)

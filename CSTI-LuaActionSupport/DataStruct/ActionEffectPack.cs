@@ -10,6 +10,8 @@ using LitJson;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+// ReSharper disable InconsistentNaming
+
 namespace CSTI_LuaActionSupport.DataStruct;
 
 public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
@@ -84,7 +86,8 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
     [Note("针对交互action时拖到卡上的卡的条件(与原版一样,开启双向不会改变)")]
     public GeneralCondition giveCondition;
 
-    [Note("对场上其他牌的修改(根据tag或cardData搜索)")] public List<FindAndActEntry> extActEntries = [];
+    [ToDo] [Note("对场上其他牌的修改(根据tag或cardData搜索)")]
+    public List<FindAndActEntry> extActEntries = [];
 
     [Note("action要经过的tp(15分钟),最终经过时间为所有效果综合")]
     public int waitTime;
@@ -153,6 +156,8 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
 
     [Note("give卡要移动到的位置，搜索不到卡则移动到需求的槽位上，移动到卡牌上会自动放入容器")]
     public CommonCardFinder? giveMoveToFinder;
+
+    [ToDo] [Note("在容器内的卡上执行action")] public CardActionPack[] actToInv = [];
 
     public void Act(GameManager gameManager, InGameCardBase recCard, InGameCardBase? giveCard,
         LuaScriptRetValues retValues, CardAction? action)
@@ -327,11 +332,11 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
         {
             foreach (var cardGen in cardGens)
             {
-                cardGen.Act();
+                cardGen.Act(recCard);
             }
         }
 
-        if (recMoveToFinder != null)
+        if (recMoveToFinder?.Active is true)
         {
             if (!recMoveToFinder.OnlySlot && recMoveToFinder.FindFirst() is { } find)
             {
@@ -343,7 +348,7 @@ public class ActionEffectPack : ScriptableObject, IModLoaderJsonObj
             }
         }
 
-        if (giveCard != null && giveMoveToFinder != null)
+        if (giveCard != null && giveMoveToFinder?.Active is true)
         {
             if (!giveMoveToFinder.OnlySlot && giveMoveToFinder.FindFirst() is { } find)
             {
